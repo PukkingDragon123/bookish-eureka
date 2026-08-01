@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#171426">
+<title>Ritual Beasts — habit-powered idle RPG</title>
+<link rel="icon" href="assets/creatures/s02_00.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ======================= HUD ======================= -->
+  <header id="hud">
+    <div class="hud-row">
+      <button id="hud-level" class="hud-chip level-chip" title="Discipline level">
+        <span class="lvl-num" id="hud-lvl-num">1</span>
+        <span class="xpbar"><i id="hud-xp-fill"></i></span>
+      </button>
+      <div class="hud-spacer"></div>
+      <div class="hud-chip gold-chip"><span class="ico">🪙</span><b id="hud-gold">0</b></div>
+      <div class="hud-chip gem-chip"><span class="ico">💎</span><b id="hud-gems">0</b></div>
+      <button id="btn-settings" class="hud-chip icon-btn" title="Settings">⚙️</button>
+    </div>
+    <div class="hud-row">
+      <div class="hud-chip mana-chip" title="Mana — earned by real-life rituals, spent on summons">
+        <span class="ico">🔮</span>
+        <span class="manabar"><i id="hud-mana-fill"></i></span>
+        <b id="hud-mana">0</b>
+      </div>
+      <div class="hud-chip ess-chip" title="Essence — evolution material"><span class="ico">✨</span><b id="hud-ess">0</b></div>
+      <div class="hud-chip streak-chip" title="Daily streak"><span class="ico">🔥</span><b id="hud-streak">0</b></div>
+    </div>
+  </header>
+
+  <!-- ======================= MAIN ======================= -->
+  <main id="view">
+
+    <!-- ~~~~~~~~~ BATTLE ~~~~~~~~~ -->
+    <section id="tab-battle" class="tab active">
+      <div id="scene">
+        <div id="scene-bg"></div>
+        <div id="scene-vignette"></div>
+        <div id="stage-plate">
+          <span id="stage-area">Dewy Meadow</span>
+          <span id="stage-num">Stage 1-1</span>
+        </div>
+        <div id="wave-pips"></div>
+        <div id="boost-badge" class="hidden">⚡ x3 REWARDS <b id="boost-time"></b></div>
+        <div id="enemy-holder">
+          <div id="enemy-plate"><span id="enemy-name"></span><div id="enemy-hpbar"><i></i><b id="enemy-hp-txt"></b></div></div>
+          <img id="enemy-img" alt="">
+        </div>
+        <div id="party-holder"></div>
+        <div id="party-hp-holder"><div id="party-hpbar" title="Party vitality"><i></i></div></div>
+        <div id="fx-layer"></div>
+        <button id="btn-boss" class="hidden">⚔️ Challenge Boss</button>
+      </div>
+      <div id="battle-stats">
+        <div class="bstat"><span>DPS</span><b id="stat-dps">0</b></div>
+        <div class="bstat"><span>Gold / kill</span><b id="stat-gpk">0</b></div>
+        <div class="bstat"><span>Kills</span><b id="stat-kills">0</b></div>
+      </div>
+    </section>
+
+    <!-- ~~~~~~~~~ BEASTS ~~~~~~~~~ -->
+    <section id="tab-beasts" class="tab">
+      <h2 class="tab-title">Your Party <span class="subtle" id="party-count"></span></h2>
+      <div id="party-slots"></div>
+      <h2 class="tab-title">Collection <span class="subtle" id="dex-count"></span></h2>
+      <div id="dex-filters"></div>
+      <div id="collection-grid"></div>
+    </section>
+
+    <!-- ~~~~~~~~~ SUMMON ~~~~~~~~~ -->
+    <section id="tab-summon" class="tab">
+      <h2 class="tab-title">Summoning Circle</h2>
+      <div id="altar">
+        <div id="altar-glow"></div>
+        <div id="altar-ring">🜁</div>
+      </div>
+      <p class="summon-hint">Mana flows from real-world rituals — water, meals, movement.<br>Channel it to call new companions.</p>
+      <div id="summon-btns">
+        <button id="btn-summon-mana" class="big-btn mana-btn">
+          <b>Wild Summon</b><span>🔮 <i id="cost-mana">40</i> mana</span>
+        </button>
+        <button id="btn-summon-gem" class="big-btn gem-btn">
+          <b>Radiant Summon</b><span>💎 <i id="cost-gem">30</i> gems</span>
+        </button>
+      </div>
+      <div id="pity-note" class="subtle"></div>
+      <h2 class="tab-title">Relics <span class="subtle">passive blessings</span></h2>
+      <div id="relic-shelf"></div>
+    </section>
+
+    <!-- ~~~~~~~~~ RITUALS (habits) ~~~~~~~~~ -->
+    <section id="tab-rituals" class="tab">
+      <h2 class="tab-title">Daily Rituals <span class="subtle">real life → real power</span></h2>
+      <div id="ritual-list"></div>
+      <h2 class="tab-title">Nourishment Log</h2>
+      <div id="food-panel">
+        <div id="kcal-row">
+          <div id="kcal-ring"><svg viewBox="0 0 80 80"><circle class="track" cx="40" cy="40" r="34"/><circle class="fill" id="kcal-arc" cx="40" cy="40" r="34"/></svg><div id="kcal-mid"><b id="kcal-now">0</b><span id="kcal-goal">/ 2000</span></div></div>
+          <div id="kcal-side">
+            <button id="btn-log-meal" class="big-btn small">🍽️ Log food</button>
+            <button id="btn-kcal-target" class="ghost-btn">🎯 Set target</button>
+          </div>
+        </div>
+        <div id="meal-list"></div>
+      </div>
+      <h2 class="tab-title">Your Own Rituals</h2>
+      <div id="custom-list"></div>
+      <button id="btn-add-custom" class="ghost-btn">＋ Create a ritual</button>
+    </section>
+
+    <!-- ~~~~~~~~~ QUESTS ~~~~~~~~~ -->
+    <section id="tab-quests" class="tab">
+      <h2 class="tab-title">Today's Path <span class="subtle" id="quest-day"></span></h2>
+      <div id="quest-list"></div>
+      <h2 class="tab-title">Journey</h2>
+      <div id="journey-panel"></div>
+    </section>
+  </main>
+
+  <!-- ======================= TABBAR ======================= -->
+  <nav id="tabbar">
+    <button data-tab="battle" class="active"><span>⚔️</span>Battle</button>
+    <button data-tab="beasts"><span>🐾</span>Beasts</button>
+    <button data-tab="summon"><span>🔮</span>Summon</button>
+    <button data-tab="rituals"><span>🌱</span>Rituals</button>
+    <button data-tab="quests"><span>🗺️</span>Quests</button>
+  </nav>
+</div>
+
+<div id="modal-root"></div>
+<div id="toast-root"></div>
+<canvas id="party-canvas"></canvas>
+
+<script src="js/creatures-data.js"></script>
+<script src="js/util.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/state.js"></script>
+<script src="js/battle.js"></script>
+<script src="js/habits.js"></script>
+<script src="js/quests.js"></script>
+<script src="js/summon.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
