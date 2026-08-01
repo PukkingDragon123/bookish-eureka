@@ -6,30 +6,30 @@ const Quests = (() => {
   /* quest templates keyed by goal; {} = battle/general */
   const TEMPLATES = {
     fitness: [
-      { key: 'habit_exercise', icon: '💪', name: 'Complete an exercise session', target: 1, reward: { gems: 6, ess: 4 } },
-      { key: 'habit_walk', icon: '🚶', name: 'Finish a walk timer', target: 1, reward: { gems: 4, mana: 30 } },
-      { key: 'timer_mins', icon: '⏱️', name: 'Put in 20 active minutes', target: 20, reward: { gems: 5, ess: 3 } },
+      { key: 'habit_exercise', icon: 'muscle', name: 'Complete an exercise session', target: 1, reward: { gems: 6, ess: 4 } },
+      { key: 'habit_walk', icon: 'walk', name: 'Finish a walk timer', target: 1, reward: { gems: 4, mana: 30 } },
+      { key: 'timer_mins', icon: 'timer', name: 'Put in 20 active minutes', target: 20, reward: { gems: 5, ess: 3 } },
     ],
     nutrition: [
-      { key: 'habit_meal', icon: '🥗', name: 'Eat 2 healthy meals', target: 2, reward: { gems: 5, ess: 3 } },
-      { key: 'meals_logged', icon: '📝', name: 'Log 3 foods in the tracker', target: 3, reward: { gems: 4, mana: 25 } },
-      { key: 'habit_cook', icon: '🍳', name: 'Cook something yourself', target: 1, reward: { gems: 5, ess: 2 } },
+      { key: 'habit_meal', icon: 'meal', name: 'Eat 2 healthy meals', target: 2, reward: { gems: 5, ess: 3 } },
+      { key: 'meals_logged', icon: 'scroll', name: 'Log 3 foods in the tracker', target: 3, reward: { gems: 4, mana: 25 } },
+      { key: 'habit_cook', icon: 'cook', name: 'Cook something yourself', target: 1, reward: { gems: 5, ess: 2 } },
     ],
     mind: [
-      { key: 'habit_wake', icon: '🌅', name: 'Do your morning check-in', target: 1, reward: { gems: 4, mana: 20 } },
-      { key: 'habit_water', icon: '💧', name: 'Drink 5 glasses of water', target: 5, reward: { gems: 5, mana: 30 } },
-      { key: 'any_habit', icon: '🌿', name: 'Complete 4 rituals today', target: 4, reward: { gems: 6, ess: 3 } },
+      { key: 'habit_wake', icon: 'sunrise', name: 'Do your morning check-in', target: 1, reward: { gems: 4, mana: 20 } },
+      { key: 'habit_water', icon: 'water', name: 'Drink 5 glasses of water', target: 5, reward: { gems: 5, mana: 30 } },
+      { key: 'any_habit', icon: 'paw', name: 'Complete 4 rituals today', target: 4, reward: { gems: 6, ess: 3 } },
     ],
     create: [
-      { key: 'habit_create', icon: '🎨', name: 'Finish a create session', target: 1, reward: { gems: 6, ess: 4 } },
-      { key: 'timer_mins', icon: '⏱️', name: 'Spend 25 minutes in deep work', target: 25, reward: { gems: 5, ess: 3 } },
-      { key: 'any_habit', icon: '⭐', name: 'Complete 3 rituals today', target: 3, reward: { gems: 4, mana: 25 } },
+      { key: 'habit_create', icon: 'palette', name: 'Finish a create session', target: 1, reward: { gems: 6, ess: 4 } },
+      { key: 'timer_mins', icon: 'timer', name: 'Spend 25 minutes in deep work', target: 25, reward: { gems: 5, ess: 3 } },
+      { key: 'any_habit', icon: 'star', name: 'Complete 3 rituals today', target: 3, reward: { gems: 4, mana: 25 } },
     ],
     battle: [
-      { key: 'kills', icon: '⚔️', name: 'Defeat 40 wild beasts', target: 40, reward: { gold: true, gems: 3 } },
-      { key: 'boss', icon: '☠️', name: 'Defeat a boss', target: 1, reward: { gems: 5, ess: 3 } },
-      { key: 'summon', icon: '🔮', name: 'Perform a summon', target: 1, reward: { gems: 4, mana: 15 } },
-      { key: 'levelup_beast', icon: '📈', name: 'Level up beasts 3 times', target: 3, reward: { gems: 4, ess: 2 } },
+      { key: 'kills', icon: 'sword', name: 'Defeat 40 wild beasts', target: 40, reward: { gold: true, gems: 3 } },
+      { key: 'boss', icon: 'skull', name: 'Defeat a boss', target: 1, reward: { gems: 5, ess: 3 } },
+      { key: 'summon', icon: 'mana', name: 'Perform a summon', target: 1, reward: { gems: 4, mana: 15 } },
+      { key: 'levelup_beast', icon: 'bolt', name: 'Level up beasts 3 times', target: 3, reward: { gems: 4, ess: 2 } },
     ],
   };
 
@@ -71,7 +71,7 @@ const Quests = (() => {
         q.progress = Math.min(q.target, q.progress + n);
         changed = true;
         if (q.progress >= q.target) {
-          toast(`🗺️ Quest ready to claim: ${q.name}`, 'good');
+          toast(`Quest ready to claim: ${q.name}`, 'good');
           UI.markQuestDot(true);
         }
       }
@@ -85,13 +85,13 @@ const Quests = (() => {
     q.claimed = true;
     const r = q.reward;
     const bits = [];
-    if (r.gems) { grantGems(r.gems); bits.push(`+${r.gems}💎`); }
-    if (r.mana) { grantMana(r.mana); bits.push(`+${r.mana}🔮`); }
-    if (r.ess) { grantEssence(r.ess); bits.push(`+${r.ess}✨`); }
-    if (r.gold) { const g = grantGold(60 * Math.pow(1.2, globalStage())); bits.push(`+${fmt(g)}🪙`); }
+    if (r.gems) { grantGems(r.gems); bits.push(`+${r.gems} gems`); }
+    if (r.mana) { grantMana(r.mana); bits.push(`+${r.mana} mana`); }
+    if (r.ess) { grantEssence(r.ess); bits.push(`+${r.ess} essence`); }
+    if (r.gold) { const g = grantGold(60 * Math.pow(1.2, globalStage())); bits.push(`+${fmt(g)} gold`); }
     Sound.quest();
     confetti(24);
-    if (btnEl) coinBurst(btnEl, 5, '💎');
+    if (btnEl) coinBurst(btnEl, 5);
     toast(`Quest complete! ${bits.join(' ')}`, 'gold');
     grantPlayerXp(25);
     save();

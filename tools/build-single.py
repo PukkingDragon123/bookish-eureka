@@ -91,14 +91,26 @@ def main():
     print(f'{len(assets)} assets, {total/1e6:.2f} MB binary')
 
     html = open(os.path.join(ROOT, 'index.html')).read()
-    css = open(os.path.join(ROOT, 'css', 'style.css')).read()
     scripts = re.findall(r'<script src="([^"]+)"></script>', html)
+    sheets = re.findall(r'<link rel="stylesheet" href="([^"]+)">', html)
+
+    # the icon sheet is referenced from icons.css and must travel inline too
+    ico_raw = open(os.path.join(ROOT, 'assets', 'ui', 'icons.png'), 'rb').read()
+    ico_uri = data_uri(ico_raw, 'image/png')
+    total_css = 0
+    css_parts = []
+    for href in sheets:
+        text = open(os.path.join(ROOT, href)).read()
+        text = text.replace('url(../assets/ui/icons.png)', f'url({ico_uri})')
+        total_css += len(text)
+        css_parts.append(text)
+    print(f'{len(sheets)} stylesheets inlined, icon sheet {len(ico_raw)/1000:.1f}KB')
 
     body = html.split('<body>', 1)[1].split('</body>', 1)[0]
     body = re.sub(r'\s*<script src="[^"]+"></script>', '', body)
 
     parts = ['<title>Ritual Beasts — habit-powered idle RPG</title>',
-             '<style>\n' + css + '\n</style>',
+             '<style>\n' + '\n'.join(css_parts) + '\n</style>',
              body.strip(),
              '<script>window.ASSETS = ' + repr(assets).replace("'", '"') + ';</script>']
     for s in scripts:

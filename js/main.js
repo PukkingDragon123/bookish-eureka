@@ -5,6 +5,8 @@
   const hadSave = load();
   Sound.setEnabled(S.settings.sound);
 
+  VFX.attach(document.getElementById('vfx'));
+
   /* ---- wire static buttons ---- */
   $$('#tabbar button').forEach(b => b.onclick = () => UI.switchTab(b.dataset.tab));
   $('#btn-settings').onclick = () => UI.showSettings();
@@ -41,6 +43,7 @@
   setInterval(() => Battle.tick(), Battle.TICK_MS);
 
   setInterval(() => {
+    UI.renderUltMeter(Battle.ultCharge);
     Habits.tickTimer();
     UI.updateTimerModal();
     UI.renderBoost();

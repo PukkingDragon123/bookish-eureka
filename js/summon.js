@@ -20,10 +20,10 @@ const Summon = (() => {
   function doSummon(useGems) {
     const cost = useGems ? GEM_COST : MANA_COST;
     if (useGems) {
-      if (S.player.gems < cost) { toast('Not enough gems 💎'); return; }
+      if (S.player.gems < cost) { toast('Not enough gems'); return; }
       S.player.gems -= cost;
     } else {
-      if (S.player.mana < cost) { toast('Not enough mana — do a ritual! 🌱'); return; }
+      if (S.player.mana < cost) { toast('Not enough mana — go do a ritual!'); return; }
       S.player.mana -= cost;
     }
     S.summons.total++;

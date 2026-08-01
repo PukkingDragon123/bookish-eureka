@@ -70,8 +70,8 @@ const TYPE_COLORS = {
   Ice: '#80deea', Earth: '#bc8a5f', Shadow: '#9575cd', Mystic: '#f48fb1', Metal: '#90a4ae',
 };
 const TYPE_ICONS = {
-  Fire: '🔥', Water: '💧', Nature: '🌿', Electric: '⚡',
-  Ice: '❄️', Earth: '🪨', Shadow: '🌑', Mystic: '✨', Metal: '⚙️',
+  Fire: 'streak', Water: 'water', Nature: 'leaf', Electric: 'bolt',
+  Ice: 'snow', Earth: 'rock', Shadow: 'skull', Mystic: 'essence', Metal: 'gear',
 };
 /* attacker type -> {defender type: multiplier} */
 const TYPE_CHART = {
@@ -98,6 +98,7 @@ function typeBadges(types) {
   return types.map(t =>
     `<span class="typebadge" style="background:${TYPE_COLORS[t] || '#888'}">${t}</span>`).join('');
 }
+function icon(key, cls) { return `<i class="ico ${cls || ''} ico-${key}"></i>`; }
 
 /* ---------- toasts ---------- */
 function toast(msg, kind) {
@@ -120,13 +121,13 @@ function floatText(txt, x, y, cls) {
 }
 
 /* ---------- coin fly to HUD ---------- */
-function coinBurst(fromEl, n, icon) {
+function coinBurst(fromEl, n, iconKey) {
   const tgt = $('#hud-gold');
   if (!fromEl || !tgt) return;
   const a = fromEl.getBoundingClientRect(), b = tgt.getBoundingClientRect();
   n = Math.min(n, 7);
   for (let i = 0; i < n; i++) {
-    const c = el('div', 'coin-p', icon || '🪙');
+    const c = el('div', 'coin-p', `<i class="ico ico-${iconKey || 'gold'}"></i>`);
     c.style.left = (a.left + a.width / 2 + rnd(-30, 30)) + 'px';
     c.style.top = (a.top + a.height / 2 + rnd(-20, 20)) + 'px';
     document.body.appendChild(c);

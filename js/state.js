@@ -1,7 +1,7 @@
 /* ============ Ritual Beasts — game state, save/load, economy ============ */
 'use strict';
 
-const SAVE_KEY = 'ritual-beasts-save-v1';
+const SAVE_KEY = 'ritual-beasts-save-v2';
 
 /* ---------- static lookups ---------- */
 const C_BY_ID = {};
@@ -30,10 +30,10 @@ const STAGES_PER_AREA = 10;
 const WAVES_PER_STAGE = 10; // wave 10 = boss
 
 const GOALS = {
-  fitness:   { name: 'Move More', icon: '🏃', desc: 'Exercise, walks, energy' },
-  nutrition: { name: 'Eat Better', icon: '🥗', desc: 'Meals, cooking, calories' },
-  mind:      { name: 'Clear Mind', icon: '🧘', desc: 'Mornings, water, rest' },
-  create:    { name: 'Create Daily', icon: '🎨', desc: 'Draw, write, practice' },
+  fitness:   { name: 'Move More', icon: 'muscle', desc: 'Exercise, walks, energy' },
+  nutrition: { name: 'Eat Better', icon: 'meal', desc: 'Meals, cooking, calories' },
+  mind:      { name: 'Clear Mind', icon: 'water', desc: 'Mornings, water, rest' },
+  create:    { name: 'Create Daily', icon: 'palette', desc: 'Draw, write, practice' },
 };
 
 /* starter choices per goal: [lineId creatures resolved at runtime] */
@@ -45,14 +45,14 @@ const STARTERS = {
 };
 
 const RELICS = [
-  { id: 'goldring',  icon: '💍', name: 'Gilded Ring',   stat: 'gold', per: 0.10, desc: '+10% gold' },
-  { id: 'tome',      icon: '📖', name: 'Worn Tome',     stat: 'xp', per: 0.10, desc: '+10% XP' },
-  { id: 'chalice',   icon: '🏆', name: 'Moon Chalice',  stat: 'mana', per: 0.10, desc: '+10% mana' },
-  { id: 'warhorn',   icon: '📯', name: 'Warhorn',       stat: 'dmg', per: 0.08, desc: '+8% damage' },
-  { id: 'hourglass', icon: '⏳', name: 'Sand of Hours', stat: 'idle', per: 0.15, desc: '+15% idle time' },
-  { id: 'talisman',  icon: '🧿', name: 'Ward Talisman', stat: 'hp', per: 0.12, desc: '+12% party HP' },
-  { id: 'feather',   icon: '🪶', name: 'Zephyr Quill',  stat: 'spd', per: 0.08, desc: '+8% attack speed' },
-  { id: 'prism',     icon: '🔷', name: 'Star Prism',    stat: 'ess', per: 0.20, desc: '+20% essence' },
+  { id: 'goldring',  icon: 'relic',   name: 'Gilded Ring',   stat: 'gold', per: 0.10, desc: '+10% gold' },
+  { id: 'tome',      icon: 'book',    name: 'Worn Tome',     stat: 'xp',   per: 0.10, desc: '+10% XP' },
+  { id: 'chalice',   icon: 'crown',   name: 'Moon Chalice',  stat: 'mana', per: 0.10, desc: '+10% mana' },
+  { id: 'warhorn',   icon: 'sword',   name: 'Warhorn',       stat: 'dmg',  per: 0.08, desc: '+8% damage' },
+  { id: 'hourglass', icon: 'timer',   name: 'Sand of Hours', stat: 'idle', per: 0.15, desc: '+15% idle time' },
+  { id: 'talisman',  icon: 'shield',  name: 'Ward Talisman', stat: 'hp',   per: 0.12, desc: '+12% party HP' },
+  { id: 'feather',   icon: 'walk',    name: 'Zephyr Quill',  stat: 'spd',  per: 0.08, desc: '+8% attack speed' },
+  { id: 'prism',     icon: 'essence', name: 'Star Prism',    stat: 'ess',  per: 0.20, desc: '+20% essence' },
 ];
 
 const MANA_MAX_BASE = 200;
@@ -106,9 +106,19 @@ function load() {
     S = Object.assign(defaultState(), data);
     S.player = Object.assign(defaultState().player, data.player);
     S.settings = Object.assign(defaultState().settings, data.settings);
+    sanitize();
     return S.onboarded;
   } catch (e) { return false; }
 }
+/* drop references to creatures that no longer exist (sprite set can change) */
+function sanitize() {
+  for (const cid of Object.keys(S.beasts)) if (!C_BY_ID[cid]) delete S.beasts[cid];
+  for (const cid of Object.keys(S.dex)) if (!C_BY_ID[cid]) delete S.dex[cid];
+  S.party = S.party.filter(cid => C_BY_ID[cid] && S.beasts[cid]);
+  if (!S.party.length && Object.keys(S.beasts).length) S.party = [Object.keys(S.beasts)[0]];
+  if (S.starterCid && !C_BY_ID[S.starterCid]) S.starterCid = null;
+}
+
 function hardReset() {
   localStorage.removeItem(SAVE_KEY);
   location.reload();
@@ -138,8 +148,8 @@ function beastStats(cid) {
   const g = 1 + 0.18 * (lvl - 1);
   return {
     lvl,
-    hp: Math.floor(c.base.hp * g * (1 + relicBonusStat('hp'))),
-    atk: Math.floor(c.base.atk * g),
+    hp: Math.floor(c.base.hp * g * (1 + relicBonusStat('hp') + Lore.passiveBonus('hp'))),
+    atk: Math.floor(c.base.atk * g * (1 + Lore.passiveBonus('atk'))),
     de: Math.floor(c.base.de * g),
     spd: Math.floor(c.base.spd * (1 + 0.02 * (lvl - 1))),
   };
@@ -166,31 +176,31 @@ function globalStage() {
        + S.stage.area * STAGES_PER_AREA + S.stage.num;
 }
 function stageLabel() {
-  const tierTag = S.stage.tier > 0 ? ` ✦${S.stage.tier + 1}` : '';
+  const tierTag = S.stage.tier > 0 ? ` +${S.stage.tier + 1}` : '';
   return `Stage ${S.stage.area + 1}-${S.stage.num}${tierTag}`;
 }
 
 /* ---------- resource grants ---------- */
 function grantGold(n, sourceEl) {
-  n = Math.floor(n * (1 + relicBonusStat('gold')) * (isBlessed() ? 1.15 : 1));
+  n = Math.floor(n * (1 + relicBonusStat('gold') + Lore.passiveBonus('gold')) * (isBlessed() ? 1.15 : 1));
   S.player.gold += n;
   if (sourceEl) coinBurst(sourceEl, 4);
   return n;
 }
 function grantMana(n) {
-  n = Math.floor(n * (1 + relicBonusStat('mana')));
+  n = Math.floor(n * (1 + relicBonusStat('mana') + Lore.passiveBonus('mana')));
   S.player.mana = Math.min(manaMax(), S.player.mana + n);
   return n;
 }
 function grantEssence(n) {
-  n = Math.floor(n * (1 + relicBonusStat('ess')));
+  n = Math.floor(n * (1 + relicBonusStat('ess') + Lore.passiveBonus('ess')));
   S.player.essence += n;
   return n;
 }
 function grantGems(n) { S.player.gems += n; return n; }
 
 function grantPlayerXp(n) {
-  n = Math.floor(n * (1 + relicBonusStat('xp')) * (isBlessed() ? 1.15 : 1));
+  n = Math.floor(n * (1 + relicBonusStat('xp') + Lore.passiveBonus('xp')) * (isBlessed() ? 1.15 : 1));
   S.player.xp += n;
   let leveled = false;
   while (S.player.xp >= xpForLevel(S.player.level)) {
@@ -211,7 +221,7 @@ function grantPlayerXp(n) {
 function showLevelUpFlash(lvl) {
   let f = $('#levelup-flash');
   if (!f) { f = el('div'); f.id = 'levelup-flash'; document.body.appendChild(f); }
-  f.innerHTML = `<div class="ring">⬆ LEVEL ${lvl} ⬆</div>`;
+  f.innerHTML = `<div class="ring">LEVEL ${lvl}!</div>`;
   setTimeout(() => { f.innerHTML = ''; }, 1700);
 }
 
