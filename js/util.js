@@ -4,6 +4,11 @@
 const $ = (sel, root) => (root || document).querySelector(sel);
 const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
 
+/* asset path resolver — single-file builds inject window.ASSETS with data URIs */
+function assetUrl(p) {
+  return (window.ASSETS && window.ASSETS[p]) || p;
+}
+
 function el(tag, cls, html) {
   const e = document.createElement(tag);
   if (cls) e.className = cls;

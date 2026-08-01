@@ -5,7 +5,7 @@ const UI = (() => {
   let activeTab = 'battle';
   let dexFilter = 'all';
 
-  function sprite(cid) { return 'assets/creatures/' + C_BY_ID[cid].file; }
+  function sprite(cid) { return assetUrl('assets/creatures/' + C_BY_ID[cid].file); }
 
   /* ================= HUD ================= */
   function renderHud() {
@@ -41,7 +41,7 @@ const UI = (() => {
 
   /* ================= battle scene ================= */
   function renderSceneBg() {
-    $('#scene-bg').style.backgroundImage = `url(${AREAS[S.stage.area].bg})`;
+    $('#scene-bg').style.backgroundImage = `url(${assetUrl(AREAS[S.stage.area].bg)})`;
   }
 
   function renderScene() {
@@ -216,7 +216,7 @@ const UI = (() => {
       d.dataset.rar = c.rarity;
       const lvl = owned ? `<span class="dlvl">Lv.${S.beasts[c.id].level}</span>` : '';
       const inParty = S.party.includes(c.id) ? '<span class="inparty">⚔️</span>' : '';
-      d.innerHTML = `${inParty}<img loading="lazy" src="assets/creatures/${c.file}" alt="">
+      d.innerHTML = `${inParty}<img loading="lazy" src="${assetUrl(`assets/creatures/${c.file}`)}" alt="">
         <span class="dname">${owned || seen ? c.name : '???'}</span>${lvl}`;
       if (owned || seen) d.onclick = () => showCreature(c.id);
       frag.appendChild(d);
@@ -236,7 +236,7 @@ const UI = (() => {
       evoHtml = '<div class="evoline">' + LINES[c.line].map((e, i) => {
         const known = S.dex[e.id] || S.beasts[e.id];
         return (i ? '<span class="arrow">➤</span>' : '') +
-          `<div class="evostep ${known ? '' : 'unknown'}"><img src="assets/creatures/${e.file}"><span>${known ? e.name : '???'}</span></div>`;
+          `<div class="evostep ${known ? '' : 'unknown'}"><img src="${assetUrl(`assets/creatures/${e.file}`)}"><span>${known ? e.name : '???'}</span></div>`;
       }).join('') + '</div>';
     }
 
@@ -244,7 +244,7 @@ const UI = (() => {
       <div class="crarity ${c.rarity}">${c.rarity}</div>
       <h3>${c.name}</h3>
       <div>${typeBadges(c.types)}</div>
-      <div class="cimg-wrap"><img class="main" src="assets/creatures/${c.file}" alt="${c.name}"></div>
+      <div class="cimg-wrap"><img class="main" src="${assetUrl(`assets/creatures/${c.file}`)}" alt="${c.name}"></div>
       ${owned ? `
       <div class="cstats">
         <div class="cstat"><span>Level</span><b>${st.lvl}</b></div>
@@ -326,7 +326,7 @@ const UI = (() => {
     const box = el('div', 'sreveal');
     box.innerHTML = `
       <div class="snew">✨ EVOLUTION ✨</div>
-      <div class="burst"><div class="rays"></div><img src="assets/creatures/${c.file}" style="filter:brightness(0)"></div>
+      <div class="burst"><div class="rays"></div><img src="${assetUrl(`assets/creatures/${c.file}`)}" style="filter:brightness(0)"></div>
       <h2>${C_BY_ID[cid].name} ➤ ???</h2>
       <div>${typeBadges(c.types)}</div>`;
     const back = openModal(box, { noClose: true });
@@ -369,7 +369,7 @@ const UI = (() => {
     const box = el('div', 'sreveal');
     box.innerHTML = `
       ${isNew ? '<div class="snew">★ NEW COMPANION ★</div>' : ''}
-      <div class="burst"><div class="rays"></div><img src="assets/creatures/${c.file}"></div>
+      <div class="burst"><div class="rays"></div><img src="${assetUrl(`assets/creatures/${c.file}`)}"></div>
       <div class="crarity ${c.rarity}">${c.rarity}</div>
       <h2>${c.name}</h2>
       <div>${typeBadges(c.types)}</div>
@@ -717,7 +717,7 @@ const UI = (() => {
       const c = C_BY_ID[cid];
       const card = el('div', 'startercard');
       const evo = c.line ? LINES[c.line].length : 1;
-      card.innerHTML = `<img src="assets/creatures/${c.file}"><div class="sname">${c.name}</div>
+      card.innerHTML = `<img src="${assetUrl(`assets/creatures/${c.file}`)}"><div class="sname">${c.name}</div>
         <div>${typeBadges(c.types)}</div>
         <div class="subtle" style="margin-top:4px">${evo}-stage evolution line</div>`;
       card.onclick = () => {
