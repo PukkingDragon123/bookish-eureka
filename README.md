@@ -2,7 +2,7 @@
 
 **A habit-powered idle RPG.** Your real life is the power source: drink water, eat well,
 cook, walk, exercise, and create — every real-world ritual becomes mana, XP and evolution
-essence for a world of 336 collectible pixel beasts, each with its own dex entry, skills,
+essence for a world of 297 collectible pixel beasts, each with its own dex entry, skills,
 passives and ultimate.
 
 No installs, no build step, no server. Open `index.html`, or grab the single-file build in
@@ -25,7 +25,7 @@ logging real meals — a photo earns a bonus seed), Genshin-style element banner
 and a wish animation, The Lab (lab-point gacha: mutations, serums, skill grafts), 7-day login
 rewards, a personalized challenge-of-the-day with real links (GeoGuessr, Scratch, Wordle…),
 a quest log on the battle screen, timed cache-digging encounters, a region map, and a defeat
-screen that tells you how to come back stronger. All 326 sprites re-audited and normalized
+screen that tells you how to come back stronger. Every sprite reviewed individually at full size across three audit passes and normalized
 to one pixel density (tools/pixelate.py).
 
 ## How real life powers the game
@@ -47,7 +47,7 @@ Habits are never punished — missing a day just pauses your streak bonus. The t
 
 ## Every beast has a kit
 
-Each of the 336 creatures gets its own deterministic loadout, derived from its id so it is
+Each of the 297 creatures gets its own deterministic loadout, derived from its id so it is
 identical every session:
 
 - **2 active skills** — a fast basic and a heavier hitter, each typed, on its own cooldown,
@@ -64,7 +64,7 @@ identical every session:
 - **Idle auto-battler** — your party of up to 4 beasts fights waves across 4 areas
   (Dewy Meadow, Sunwash Plains, Whisperfall Ruins, Frostpeak Pass), 10 stages each, looping
   into higher tiers. Wave 10 is a timed boss.
-- **336 creatures** with 9 elemental types, a type-effectiveness chart, party synergy,
+- **297 creatures** with 9 elemental types, a type-effectiveness chart, party synergy,
   rarities up to legendary, and **26 evolution lines** — evolving needs levels *and* essence,
   which only real-life rituals produce in volume.
 - **Summoning** — mana or gems fuel the circle, with pity protection and relic drops.
