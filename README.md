@@ -24,6 +24,13 @@ network at all.
 |---|---|---|---|
 | ![Pulls](docs/screenshots/pulls.png) | ![Quests](docs/screenshots/quests.png) | ![Map](docs/screenshots/map.png) | ![Creature](docs/screenshots/creature.png) |
 
+**v4.1 — the uploaded art is in.** Six tiered equipment sheets, ten crop
+sheets and thirty hobby icons were cut up by `tools/extract-new-art.py` and
+wired straight into the game: the fusion camp now shows real gear that visibly
+climbs from a wooden club to a winged legendary across its nine tiers, the
+garden grows drawn crops through four stages per element, and every dream card
+carries its own illustration.
+
 **v4 — Dreamkeep:** a six-question onboarding that builds your plan (dream → experience →
 minutes → days → why → a starter that shares your dream's element), a **Today** home screen
 with the day's focus task, a full-screen real-time session timer, a weekly rhythm strip and
@@ -107,8 +114,10 @@ Everything on screen is custom pixel art with no external dependencies:
   (`tools/make-ui-art.py`) — currency, stats, elements, crops, dream icons, UI marks. No
   emoji anywhere.
 - **A generated farm scene** (`tools/make-farm-art.py`) — seamless ploughed-earth tiles with
-  wandering furrows, a fence strip, watering can / scarecrow / butterfly / sun props, and
-  four growth stages for each of the nine element crops.
+  wandering furrows, a fence strip, and watering can / scarecrow / butterfly / sun props.
+- **Cut-up uploaded art** (`tools/extract-new-art.py`) — 54 gear sprites (6 types × 9 tiers),
+  36 plant sprites (9 elements × 4 growth stages), 9 harvested crops and 34 hobby icons,
+  all background-removed, re-hardened and quantized so the whole set costs ~145 KB.
 - **Canvas VFX 2.0** (`js/vfx.js`) drawn on a virtual pixel grid in two passes — a solid
   pass with particle trails, then an additive glow pass: fire columns, water bursts,
   lightning bolts, ice shards, shadow rings, metal slashes, expanding shockwaves, plus
@@ -126,7 +135,8 @@ The whole asset pipeline is in `tools/` and is re-runnable:
 | `tools/gen-creatures.py` | Rebuilds `js/creatures-data.js` — types from hue analysis, evolution chains, rarities, base stats. Ids are stable, so saves survive a regeneration |
 | `tools/make-font.py` | Compiles the bitmap font to TTF and writes `css/font.css` |
 | `tools/make-ui-art.py` | Draws the 51-icon sheet, the 9-slice frames and `css/icons.css` |
-| `tools/make-farm-art.py` | Draws the tilled soil tiles, fence, props and the 9×4 plant growth sheet, plus `css/farm-art.css` |
+| `tools/make-farm-art.py` | Draws the tilled soil tiles, fence and props |
+| `tools/extract-new-art.py` | Cuts the uploaded art sheets in `assets/source-sheets/` into `gear.png`, `plants.png`, `crops.png` and `hobby.png` — background flood-fill from the borders (plus enclosed holes, so a ring reads as a ring), edge-bleed removal, group-relative scaling for growth stages, and palette quantization |
 | `tools/pixelate.py` | Normalizes every sprite to one pixel density and gives it a uniform 1px outline |
 | `tools/build-single.py` | Bundles everything into one self-contained HTML file |
 
@@ -142,8 +152,9 @@ python3 -m http.server 8000     # then open http://localhost:8000
 Or open `dist/ritual-beasts.html` directly — one file, no server. Progress saves to
 `localStorage` per browser.
 
-Everything except the creature and background sprites is generated in-repo by the scripts in
-`tools/` — the font, every icon, the whole farm scene and all VFX. There are no third-party
+Everything except the supplied sprite sheets is generated in-repo by the scripts in
+`tools/` — the font, the UI icon sheet, the soil and fence tiles, and all VFX. Supplied art
+is processed by `tools/extract-new-art.py` and `tools/pixelate.py`. There are no third-party
 art downloads and no runtime dependencies.
 
 *Creature and background pixel art from the uploaded Pinterest compilations; for personal use.*

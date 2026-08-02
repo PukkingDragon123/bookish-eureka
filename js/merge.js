@@ -37,9 +37,13 @@ const Merge = (() => {
       if (S.merge.energy === ENERGY_MAX) S.merge.lastEnergy = Date.now();
       S.merge.energy--;
     }
-    const cats = Object.keys(MERGE_CATS);
-    const cat = pick(cats);
-    const variant = irnd(0, MERGE_CATS[cat].variants.length - 1);
+    // pick uniformly across the six gear types, not across the three
+    // categories — otherwise the single-variant charm shows up far too often
+    const flat = [];
+    for (const c of Object.keys(MERGE_CATS)) {
+      MERGE_CATS[c].variants.forEach((_, i) => flat.push([c, i]));
+    }
+    const [cat, variant] = pick(flat);
     // small chance the portal spits out tier 2
     const tier = Math.random() < 0.08 ? 2 : 1;
     S.merge.board[slot] = { cat, variant, tier };
@@ -85,7 +89,7 @@ const Merge = (() => {
   }
 
   function itemName(it) {
-    return `${MERGE_CATS[it.cat].variants[it.variant]} T${it.tier}`;
+    return `${mergeVariant(it).name} T${it.tier}`;
   }
 
   function totals() {

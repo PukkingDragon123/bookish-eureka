@@ -308,6 +308,8 @@ button.hud-chip:active { transform: translateY(2px); }
   text-shadow: 1px 1px 0 rgba(0,0,0,.5);
   font-style: italic;
 }
+.hero-dream .hob { flex: none; vertical-align: -6px;
+  filter: drop-shadow(2px 2px 0 rgba(0,0,0,.5)); }
 #hero-beast {
   position: absolute; right: 6px; bottom: 2px; z-index: 1;
   filter: drop-shadow(0 4px 0 rgba(0,0,0,.35));
@@ -696,6 +698,7 @@ button.hud-chip:active { transform: translateY(2px); }
 .mitem.t-weapon { background: #7d3b2a; }
 .mitem.t-armor  { background: #3d6079; }
 .mitem.t-charm  { background: #7d6a2a; }
+.mitem .gear { pointer-events: none; }
 .mitem .tier { position: absolute; right: 1px; bottom: 0; font-size: 8px; color: var(--gold); text-shadow: 1px 1px 0 var(--ink); }
 .mitem .var-dot { position: absolute; left: 2px; top: 2px; width: 5px; height: 5px; border: 1px solid var(--ink); }
 .mitem[data-v="0"] .var-dot { background: #f5c04f; }
@@ -718,7 +721,7 @@ button.hud-chip:active { transform: translateY(2px); }
    ============================================================ */
 #garden {
   position: relative;
-  height: 268px;
+  height: 292px;
   overflow: hidden;
   border-bottom: var(--px) solid var(--ink);
   box-shadow: 0 var(--px) 0 var(--line);
@@ -772,6 +775,8 @@ button.hud-chip:active { transform: translateY(2px); }
   position: relative;
   display: flex; align-items: flex-end; justify-content: center;
   cursor: pointer;
+  /* a faint bed outline so a plot's label reads as belonging to its plant */
+  box-shadow: inset 0 0 0 1px rgba(20,12,6,.28), inset 0 -2px 0 rgba(0,0,0,.25);
 }
 .plotcell:active { transform: translateY(2px); }
 .plotcell .plant { transform-origin: 50% 100%; animation: sway 3.4s steps(6, jump-none) infinite; }
@@ -779,7 +784,8 @@ button.hud-chip:active { transform: translateY(2px); }
 .plotcell:nth-child(3n) .plant { animation-delay: 1.1s; }
 @keyframes sway { 25% { transform: rotate(-2.5deg); } 75% { transform: rotate(2.5deg); } }
 .plotcell .plabel {
-  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  position: absolute; top: 1px; left: 50%; transform: translateX(-50%);
+  z-index: 2;
   font-size: 7.5px; white-space: nowrap;
   background: rgba(30,18,8,.82);
   border: 1px solid var(--ink);
@@ -793,11 +799,11 @@ button.hud-chip:active { transform: translateY(2px); }
 }
 .plotcell.empty-plot .plabel { color: var(--txt-dim); }
 .plotcell .emptymark {
-  opacity: .75; margin-bottom: 5px;
-  width: 30px; height: 10px;
-  background: radial-gradient(ellipse at 50% 30%, #241811 58%, transparent 60%);
-  box-shadow: 0 2px 0 rgba(255,255,255,.06);
-  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 12px; margin-bottom: 9px;
+  border-radius: 50%;
+  background: #241811;
+  border: 1px solid #402e1c;
+  box-shadow: inset 0 3px 5px rgba(0,0,0,.85), 0 1px 0 rgba(255,240,210,.08);
 }
 .plotcell.empty-plot:active .emptymark { transform: translateY(2px); }
 #garden-bugs { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
@@ -835,6 +841,7 @@ button.hud-chip:active { transform: translateY(2px); }
   padding: 4px 8px; font-size: 10px; cursor: pointer;
 }
 .food-chip b { color: var(--gold); }
+.food-chip .crop { margin: -4px 0; }
 .food-chip:active { transform: translateY(2px); }
 .pantry-empty { font-size: 9.5px; color: var(--txt-dim); padding: 0 12px; }
 
@@ -1218,6 +1225,7 @@ button.hud-chip:active { transform: translateY(2px); }
 }
 .dreamcard:active { transform: translateY(2px); }
 .dreamcard.on { outline-color: var(--gold); background: #5a4520; }
+.dreamcard .hob { margin-bottom: 1px; }
 .dreamcard .dname2 { font-size: 11px; margin-top: 3px; }
 .dreamcard .dblurb { font-size: 8px; color: var(--txt-dim); margin-top: 1px; line-height: 1.4; }
 .lvl-list { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
@@ -1228,6 +1236,7 @@ button.hud-chip:active { transform: translateY(2px); }
   padding: 9px; cursor: pointer; text-align: left;
 }
 .lvlcard.on { outline-color: var(--gold); background: #5a4520; }
+.lvlcard .hob { flex: none; }
 .lvlcard .lvname { font-size: 12px; }
 .lvlcard .lvdesc { font-size: 9px; color: var(--txt-dim); }
 .lvlcard .lvmin { margin-left: auto; font-size: 10px; color: var(--gold); white-space: nowrap; }

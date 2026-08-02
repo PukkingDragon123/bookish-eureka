@@ -136,6 +136,12 @@ function sanitize() {
     if (typeof S[k] !== 'object' || S[k] === null) S[k] = d[k];
   }
   if (!Array.isArray(S.merge.board) || S.merge.board.length !== 12) S.merge.board = Array(12).fill(null);
+  S.merge.board = S.merge.board.map(it => {
+    if (!it || !MERGE_CATS[it.cat]) return null;
+    const n = MERGE_CATS[it.cat].variants.length;
+    return { cat: it.cat, variant: clamp(it.variant | 0, 0, n - 1),
+             tier: clamp(it.tier | 0, 1, MERGE_MAX_TIER) };
+  });
   if (!Array.isArray(S.farm.plots)) S.farm.plots = [];
   while (S.farm.plots.length < 9) S.farm.plots.push({});
   S.farm.plots = S.farm.plots.slice(0, 9);
@@ -179,14 +185,23 @@ function upgradeBonus(key) {
 }
 
 /* ---------- merge board ---------- */
+/* Each variant maps to one of the six drawn gear sheets, so an item on the
+   board shows its actual tiered artwork rather than a generic glyph. */
 const MERGE_CATS = {
   weapon: { name: 'Weapon', icon: 'sword',  stat: 'dmg',  per: 2.0,
-            variants: ['Fang', 'Cleaver', 'Wand'] },
+            variants: [{ name: 'Blade', gear: 'sword' },
+                       { name: 'Cleaver', gear: 'axe' },
+                       { name: 'Stiletto', gear: 'dagger' }] },
   armor:  { name: 'Armor',  icon: 'shield', stat: 'hp',   per: 2.5,
-            variants: ['Hide', 'Plate', 'Ward'] },
+            variants: [{ name: 'Helm', gear: 'helm' },
+                       { name: 'Gauntlet', gear: 'gauntlet' }] },
   charm:  { name: 'Charm',  icon: 'relic',  stat: 'gold', per: 2.0,
-            variants: ['Coin', 'Fetish', 'Bell'] },
+            variants: [{ name: 'Signet', gear: 'ring' }] },
 };
+function mergeVariant(it) {
+  const vs = MERGE_CATS[it.cat].variants;
+  return vs[Math.min(it.variant, vs.length - 1)];
+}
 const MERGE_MAX_TIER = 9;
 function mergeBonus(stat) {
   let pts = 0;
@@ -202,12 +217,12 @@ const FOODS = {
   Fire:     { name: 'Ember Chili',   icon: 'chili',     mins: 4 },
   Water:    { name: 'Dew Berry',     icon: 'berry',     mins: 4 },
   Nature:   { name: 'Verdant Gourd', icon: 'gourd',     mins: 5 },
-  Electric: { name: 'Volt Bean',     icon: 'bean',      mins: 5 },
-  Ice:      { name: 'Frost Mint',    icon: 'mint',      mins: 5 },
+  Electric: { name: 'Storm Star',    icon: 'bean',      mins: 5 },
+  Ice:      { name: 'Frost Bloom',   icon: 'mint',      mins: 5 },
   Earth:    { name: 'Stone Root',    icon: 'rootv',     mins: 6 },
-  Shadow:   { name: 'Gloom Cap',     icon: 'gloomcap',  mins: 6 },
+  Shadow:   { name: 'Gloom Plum',    icon: 'gloomcap',  mins: 6 },
   Mystic:   { name: 'Star Fruit',    icon: 'starfruit', mins: 7 },
-  Metal:    { name: 'Iron Kernel',   icon: 'kernel',    mins: 7 },
+  Metal:    { name: 'Iron Nugget',   icon: 'kernel',    mins: 7 },
 };
 function beastXpNeed(lvl) { return 22 * Math.pow(1.3, lvl - 1); }
 function grantBeastXpTo(cid, amount) {

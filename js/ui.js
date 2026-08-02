@@ -78,7 +78,7 @@ const UI = (() => {
     const now = new Date();
     $('#hero-date').textContent =
       now.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
-    $('#hero-icon').className = 'ico big ico-' + d.icon;
+    $('#hero-icon').className = 'hob big h-' + d.art;
     $('#hero-dreamname').textContent = d.name;
 
     const r = Dream.rung();
@@ -261,7 +261,7 @@ const UI = (() => {
   function showSessionSetup() {
     const d = Dream.def();
     const box = el('div', 'timer-wrap');
-    box.innerHTML = `<h3>${icon(d.icon)} ${d.name}</h3>
+    box.innerHTML = `<h3><span class="hob h-${d.art}"></span> ${d.name}</h3>
       <p class="subtle" style="text-align:center">${Dream.todaysTask()}</p>
       <label style="margin-top:10px">How long?</label>
       <div class="preset-row"></div>
@@ -782,7 +782,7 @@ const UI = (() => {
     const ch = Quests.todaysChallenge();
     let html = '';
     if (!Dream.doneToday() && Dream.scheduledToday()) {
-      html += `<div class="qlog-row focus-row">${icon(Dream.def().icon)} <b>Today's focus:</b> ${Dream.todaysTask()}</div>`;
+      html += `<div class="qlog-row focus-row"><span class="hob h-${Dream.def().art}"></span> <b>Today's focus:</b> ${Dream.todaysTask()}</div>`;
     }
     if (!S.challenge.done) {
       html += `<div class="qlog-row">${icon('star')} <b>${ch.name}</b></div>`;
@@ -839,7 +839,9 @@ const UI = (() => {
       if (it) {
         const item = el('div', `mitem t-${it.cat}` + (it.tier >= 5 ? ' hi-tier' : ''));
         item.dataset.v = it.variant;
-        item.innerHTML = `<span class="var-dot"></span>${icon(MERGE_CATS[it.cat].icon)}<span class="tier">T${it.tier}</span>`;
+        item.innerHTML = `<span class="var-dot"></span>` +
+          `<span class="gear big g-${mergeVariant(it).gear} t${it.tier}"></span>` +
+          `<span class="tier">T${it.tier}</span>`;
         item.title = Merge.itemName(it);
         attachDrag(item, i);
         slot.appendChild(item);
@@ -1074,7 +1076,7 @@ const UI = (() => {
 
     const dreamEl = S.dream && S.dream.key ? Dream.def().element : null;
     const affinity = dreamEl && c.types.includes(dreamEl)
-      ? `<div class="mutline">${icon(Dream.def().icon)} Shares your ${Dream.def().name} affinity — gains
+      ? `<div class="mutline"><span class="hob h-${Dream.def().art}"></span> Shares your ${Dream.def().name} affinity — gains
          <b>80% more XP</b> from every practice session.</div>` : '';
 
     box.innerHTML = `
@@ -1172,7 +1174,8 @@ const UI = (() => {
       if (!have) continue;
       any = true;
       const opt = el('button', 'feed-opt' + (c.types.includes(elName) ? ' match' : ''));
-      opt.innerHTML = `${icon(food.icon, 'big')}<span>${food.name}</span><b>x${have}</b>`;
+      opt.innerHTML = `<span class="crop big c-${elName.toLowerCase()}"></span>` +
+        `<span>${food.name}</span><b>x${have}</b>`;
       opt.onclick = e => {
         if (Farm.feed(cid, elName, e.currentTarget)) {
           closeAllModals();
@@ -1253,8 +1256,7 @@ const UI = (() => {
       const st = plantStage(p);
       if (st < 0) {
         cell.classList.add('empty-plot');
-        cell.innerHTML = `<span class="emptymark">${icon('seed', 'big')}</span>
-          <span class="plabel">plant</span>`;
+        cell.innerHTML = `<span class="emptymark"></span><span class="plabel">plant</span>`;
         cell.onclick = () => showPlantModal(i);
       } else if (st === 3) {
         cell.classList.add('ready');
@@ -1297,7 +1299,8 @@ const UI = (() => {
       const n = S.farm.food[elName] || 0;
       if (!n) continue;
       total += n;
-      const chip = el('button', 'food-chip', `${icon(food.icon)} ${food.name} <b>x${n}</b>`);
+      const chip = el('button', 'food-chip',
+        `<span class="crop c-${elName.toLowerCase()}"></span> ${food.name} <b>x${n}</b>`);
       chip.onclick = () => showFeedTarget(elName);
       pan.appendChild(chip);
     }
@@ -1335,7 +1338,7 @@ const UI = (() => {
     const grid = box.querySelector('.feed-grid');
     for (const [elName, food] of Object.entries(FOODS)) {
       const opt = el('button', 'feed-opt' + (elName === dreamEl ? ' match' : ''));
-      opt.innerHTML = `<span class="plant p-${ELEM_CLASS[elName]} s3"></span>
+      opt.innerHTML = `<span class="plant big p-${ELEM_CLASS[elName]} s3"></span>
         <span>${food.name}</span><b>${food.mins}min</b>`;
       opt.onclick = () => { if (Farm.plant(plotI, elName)) closeAllModals(); };
       grid.appendChild(opt);
@@ -1954,7 +1957,7 @@ const UI = (() => {
       const grid = box.querySelector('.dream-grid');
       for (const [key, d] of Object.entries(Dream.DREAMS)) {
         const c = el('div', 'dreamcard' + (draft.key === key ? ' on' : ''));
-        c.innerHTML = `${icon(d.icon, 'big')}<div class="dname2">${d.name}</div>
+        c.innerHTML = `<span class="hob huge h-${d.art}"></span><div class="dname2">${d.name}</div>
           <div class="dblurb">${d.blurb}</div>`;
         c.onclick = () => {
           draft.key = key;
@@ -1978,7 +1981,7 @@ const UI = (() => {
       const list = box.querySelector('.lvl-list');
       Dream.LEVELS.forEach(l => {
         const c = el('div', 'lvlcard' + (draft.level === l.key ? ' on' : ''));
-        c.innerHTML = `${icon(d.icon, 'big')}
+        c.innerHTML = `<span class="hob big h-${d.art}"></span>
           <div><div class="lvname">${l.name}</div><div class="lvdesc">${l.desc}</div></div>
           <div class="lvmin">${l.mins} min/day</div>`;
         c.onclick = () => {
@@ -2193,7 +2196,7 @@ const UI = (() => {
     const grid = box.querySelector('.dream-grid');
     for (const [key, d] of Object.entries(Dream.DREAMS)) {
       const c = el('div', 'dreamcard' + (S.dream.key === key ? ' on' : ''));
-      c.innerHTML = `${icon(d.icon, 'big')}<div class="dname2">${d.name}</div>
+      c.innerHTML = `<span class="hob huge h-${d.art}"></span><div class="dname2">${d.name}</div>
         <div class="dblurb">${d.blurb}</div>`;
       c.onclick = () => {
         S.dream.key = key;

@@ -1,0 +1,293 @@
+#!/usr/bin/env python3
+"""Cut the uploaded art sheets into game-ready spritesheets.
+
+The uploads are big flat-background grids: tiered equipment (4x5), crops
+(5 columns of 5 growth/product rows) and hobby icons (5x2). Each cell is
+background-removed by flood-filling inward from the border — a global colour
+threshold would punch holes in sprites that legitimately contain the sheet's
+background hue — then trimmed, downscaled and re-hardened so the alpha stays
+crisp at pixel-art sizes.
+
+Outputs:
+  assets/ui/gear.png    6 categories x 9 tiers, 64px cells
+  assets/ui/plants.png  9 elements x 4 growth stages, 64px cells
+  assets/ui/crops.png   9 harvested crop items, 48px cells
+  assets/ui/hobby.png   30 hobby / activity icons, 64px cells
+  css/farm-art.css      background-position helpers for all of the above
+"""
+import os
+import numpy as np
+from PIL import Image
+from scipy import ndimage
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SRC = os.path.join(ROOT, 'assets', 'source-sheets')
+OUT = os.path.join(ROOT, 'assets', 'ui')
+
+# ---------------------------------------------------------------- sheet index
+GEAR_SHEETS = [                     # (file, key, label)
+    ('3D3298D4-84ED-4A7D-A6F9-C857CC1580F6.png', 'sword',    'Blade'),
+    ('4AFAB3FC-7146-4A13-9B9A-6DA6214812A0.png', 'axe',      'Axe'),
+    ('FEF36C78-817F-4142-99FE-5F49E196177C.png', 'dagger',   'Dagger'),
+    ('F7CA9EFD-A379-4782-A6F9-D0687B566690.png', 'helm',     'Helm'),
+    ('120BEBAE-55F3-4085-B148-DFBFE2143E1C.png', 'gauntlet', 'Gauntlet'),
+    ('91363756-BFF5-44E8-9B7E-F974552E46A5.png', 'ring',     'Ring'),
+]
+# 20 source tiers spread across the 9 the merge board uses, so tier 9 is
+# unmistakably the legendary one rather than "slightly shinier than tier 8"
+TIER_PICK = [0, 2, 4, 6, 9, 12, 15, 17, 19]
+
+CROP_A = '3250EA70-F001-499B-8BF5-1ED22A76055E.png'
+CROP_B = '803D7229-157C-41B5-AD04-C24C13CB6B7E.png'
+# element -> (sheet, column). Row 4 is the seed, 0-2 are growth, 3 is the fruit.
+CROP_COL = {
+    'Fire': (CROP_A, 0), 'Water': (CROP_A, 1), 'Nature': (CROP_A, 2),
+    'Electric': (CROP_A, 3), 'Shadow': (CROP_A, 4),
+    'Ice': (CROP_B, 0), 'Earth': (CROP_B, 1),
+    'Metal': (CROP_B, 3), 'Mystic': (CROP_B, 4),
+}
+ELEMENTS = ['Fire', 'Water', 'Nature', 'Electric', 'Ice',
+            'Earth', 'Shadow', 'Mystic', 'Metal']
+STAGE_ROWS = [4, 0, 1, 2]           # planted seed -> sprout -> young -> ripe
+
+HOBBY_SHEETS = [
+    ('E5DB9555-D516-4E31-BBFA-6E3449678D48.png',
+     ['book', 'palette', 'headphones', 'chefhat', 'fishing',
+      'runshoe', 'goggles', 'bikewheel', 'dumbbell', 'meditate']),
+    ('B0FBC194-0656-4DAF-BC0E-BB809B554356.png',
+     ['guitar', 'console', 'camera', 'sneaker', 'mic',
+      'penbook', 'chess', 'sewing', 'telescope', 'backpack']),
+    ('8BE17875-FC46-4DC8-ACAB-48F4C582B28D.png',
+     ['sketch', 'swords', 'camera2', 'potion', 'salad',
+      'trowel', 'chest', 'circle', 'wand', 'skull']),
+]
+CURRENCY = ('EBE80611-9F29-4362-82EB-E23F2667F0B8.png',
+            ['coin', 'crystal', 'runeegg', 'fireegg'])
+
+
+# ---------------------------------------------------------------- cutting out
+def cut_bg(cell, tol=58):
+    """Drop the flat sheet background and any hole it fills (a ring's centre is
+    background too, and it never touches the border). Then drop specks that
+    bled in from a neighbouring cell of the source grid."""
+    a = np.asarray(cell.convert('RGB')).astype(int)
+    h, w = a.shape[:2]
+    corners = np.array([a[1, 1], a[1, w - 2], a[h - 2, 1], a[h - 2, w - 2]])
+    bg = np.median(corners, axis=0)
+    near = np.abs(a - bg).sum(2) < tol * 3
+
+    lab, n = ndimage.label(near)
+    kill = np.zeros(near.shape, bool)
+    if n:
+        sizes = ndimage.sum(near, lab, range(1, n + 1))
+        border = set(lab[0].tolist()) | set(lab[-1].tolist()) | \
+            set(lab[:, 0].tolist()) | set(lab[:, -1].tolist())
+        border.discard(0)
+        # enclosed background pockets count too, once they are big enough to be
+        # a real hole rather than a dark pixel that happens to match
+        drop = [i + 1 for i in range(n)
+                if (i + 1) in border or sizes[i] > 0.004 * h * w]
+        if drop:
+            kill = np.isin(lab, drop)
+
+    keep = ~kill
+    lab2, n2 = ndimage.label(keep)
+    if n2 > 1:
+        sizes = ndimage.sum(keep, lab2, range(1, n2 + 1))
+        biggest = sizes.max()
+        m = max(2, int(min(h, w) * 0.05))
+        edge = np.zeros(keep.shape, bool)
+        edge[:m] = edge[-m:] = True
+        edge[:, :m] = edge[:, -m:] = True
+        for i in range(n2):
+            if sizes[i] < 0.02 * biggest and (lab2 == i + 1)[edge].any():
+                keep &= lab2 != i + 1
+
+    out = np.dstack([a, np.where(keep, 255, 0)]).astype(np.uint8)
+    return Image.fromarray(out, 'RGBA')
+
+
+def trim(im):
+    bb = im.split()[3].getbbox()
+    return im.crop(bb) if bb else im
+
+
+def harden(im, size, k=None, anchor='center'):
+    """Fit inside a size x size box, then re-crisp the alpha edge.
+
+    Pass k to scale by a shared factor instead of filling the box — growth
+    stages have to keep their relative sizes or a seed ends up as big as a
+    ripe plant."""
+    im = trim(im)
+    if im.width == 0 or im.height == 0:
+        return Image.new('RGBA', (size, size))
+    if k is None:
+        k = min((size - 2) / im.width, (size - 2) / im.height)
+    nw = max(1, min(size, round(im.width * k)))
+    nh = max(1, min(size, round(im.height * k)))
+    im = im.resize((nw, nh), Image.LANCZOS)
+
+    a = np.asarray(im).astype(int)
+    alpha = a[..., 3]
+    solid = alpha > 118
+    # colours bled toward the background during the downscale — pull each
+    # surviving pixel back toward its nearest fully-opaque neighbour's tone
+    rgb = a[..., :3]
+    keep = alpha > 200
+    if keep.any():
+        idx = ndimage.distance_transform_edt(~keep, return_distances=False,
+                                             return_indices=True)
+        rgb = rgb[idx[0], idx[1]]
+    out = np.dstack([rgb, np.where(solid, 255, 0)]).astype(np.uint8)
+    im = Image.fromarray(out, 'RGBA')
+
+    im = trim(im)
+    canvas = Image.new('RGBA', (size, size))
+    y = size - im.height if anchor == 'bottom' else (size - im.height) // 2
+    canvas.paste(im, ((size - im.width) // 2, max(0, y)))
+    return canvas
+
+
+def group_scale(cuts, size):
+    """One scale factor for a set of sprites, sized off the largest."""
+    boxes = [c.split()[3].getbbox() for c in cuts]
+    big = max(max(b[2] - b[0], b[3] - b[1]) for b in boxes if b)
+    return (size - 2) / big
+
+
+def grid(path, cols, rows, inset=0.045):
+    """Split into a uniform grid, shaving a little off every cell edge — the
+    source rows are not perfectly aligned and a neighbour's tip otherwise
+    bleeds in as a floating speck."""
+    im = Image.open(os.path.join(SRC, path)).convert('RGB')
+    cw, ch = im.width / cols, im.height / rows
+    ix, iy = cw * inset, ch * inset
+    return [[im.crop((round(c * cw + ix), round(r * ch + iy),
+                      round((c + 1) * cw - ix), round((r + 1) * ch - iy)))
+             for c in range(cols)] for r in range(rows)]
+
+
+# ---------------------------------------------------------------- sheet build
+def pack(cells, cols, size, path, colours=96):
+    """Pack and palette-quantize. These are pixel art with hard alpha, so a
+    small palette is visually lossless and keeps the inlined bundle sane."""
+    rows = (len(cells) + cols - 1) // cols
+    sheet = Image.new('RGBA', (cols * size, rows * size))
+    for i, c in enumerate(cells):
+        sheet.paste(c, ((i % cols) * size, (i // cols) * size))
+
+    alpha = sheet.split()[3]
+    flat = Image.new('RGB', sheet.size, (0, 0, 0))
+    flat.paste(sheet.convert('RGB'), mask=alpha)
+    q = flat.quantize(colors=colours - 1, method=Image.MEDIANCUT, dither=Image.NONE)
+    pal = q.getpalette()[:(colours - 1) * 3]
+    pal += [0] * ((colours * 3) - len(pal))          # pad, then a spare slot
+    q.putpalette(pal)
+    idx = np.asarray(q).copy()
+    idx[np.asarray(alpha) <= 128] = colours - 1      # last index = transparent
+    out = Image.fromarray(idx, 'P')
+    out.putpalette(pal)
+    out.save(os.path.join(OUT, path), optimize=False,
+             transparency=bytes([255] * (colours - 1) + [0]))
+    return out
+
+
+def main():
+    css = ['/* generated by tools/extract-new-art.py — do not hand-edit */']
+    P = 64          # packed cell size for gear / plants / hobby
+
+    # ---- gear: 6 categories x 9 tiers ----
+    gear = []
+    for path, key, _ in GEAR_SHEETS:
+        g = grid(path, 4, 5)
+        flat = [g[r][c] for r in range(5) for c in range(4)]
+        for t in TIER_PICK:
+            gear.append(harden(cut_bg(flat[t]), P))
+    pack(gear, 9, P, 'gear.png')
+    css.append(f'.gear{{width:32px;height:32px;background-image:url(../assets/ui/gear.png);'
+               f'background-size:{9 * 32}px auto;image-rendering:pixelated;'
+               f'display:inline-block;flex:none;}}')
+    for gi, (_, key, _) in enumerate(GEAR_SHEETS):
+        for t in range(9):
+            css.append(f'.gear.g-{key}.t{t + 1}{{background-position:-{t * 32}px -{gi * 32}px;}}')
+    css.append(f'.gear.big{{width:44px;height:44px;background-size:{9 * 44}px auto;}}')
+    for gi, (_, key, _) in enumerate(GEAR_SHEETS):
+        for t in range(9):
+            css.append(f'.gear.big.g-{key}.t{t + 1}{{background-position:-{t * 44}px -{gi * 44}px;}}')
+
+    # ---- plants: 9 elements x 4 stages, plus the harvested crop items ----
+    cache = {}
+    plants, crops = [], []
+    for e in ELEMENTS:
+        path, col = CROP_COL[e]
+        if path not in cache:
+            cache[path] = grid(path, 5, 5)
+        g = cache[path]
+        cuts = [cut_bg(g[r][col]) for r in STAGE_ROWS]
+        k = group_scale(cuts, P)
+        for c in cuts:
+            plants.append(harden(c, P, k=k, anchor='bottom'))
+        crops.append(harden(cut_bg(g[3][col]), 48))
+    pack(plants, 4, P, 'plants.png')
+    pack(crops, 9, 48, 'crops.png')
+
+    css.append(f'.plant{{width:32px;height:32px;background-image:url(../assets/ui/plants.png);'
+               f'background-size:{4 * 32}px auto;image-rendering:pixelated;display:inline-block;}}')
+    for ei, e in enumerate(ELEMENTS):
+        for s in range(4):
+            css.append(f'.plant.p-{e.lower()}.s{s}{{background-position:-{s * 32}px -{ei * 32}px;}}')
+    for scale, name in ((48, 'big'), (56, 'huge')):
+        css.append(f'.plant.{name}{{width:{scale}px;height:{scale}px;background-size:{4 * scale}px auto;}}')
+        for ei, e in enumerate(ELEMENTS):
+            for s in range(4):
+                css.append(f'.plant.{name}.p-{e.lower()}.s{s}'
+                           f'{{background-position:-{s * scale}px -{ei * scale}px;}}')
+
+    css.append(f'.crop{{width:24px;height:24px;background-image:url(../assets/ui/crops.png);'
+               f'background-size:{9 * 24}px auto;image-rendering:pixelated;display:inline-block;flex:none;}}')
+    for ei, e in enumerate(ELEMENTS):
+        css.append(f'.crop.c-{e.lower()}{{background-position:-{ei * 24}px 0;}}')
+    css.append(f'.crop.big{{width:40px;height:40px;background-size:{9 * 40}px auto;}}')
+    for ei, e in enumerate(ELEMENTS):
+        css.append(f'.crop.big.c-{e.lower()}{{background-position:-{ei * 40}px 0;}}')
+
+    # ---- hobby / activity icons ----
+    hob, names = [], []
+    for path, keys in HOBBY_SHEETS:
+        g = grid(path, 5, 2)
+        for r in range(2):
+            for c in range(5):
+                hob.append(harden(cut_bg(g[r][c]), P))
+                names.append(keys[r * 5 + c])
+    cpath, ckeys = CURRENCY
+    g = grid(cpath, 4, 1)
+    for c in range(4):
+        hob.append(harden(cut_bg(g[0][c]), P))
+        names.append(ckeys[c])
+    COLS = 8
+    pack(hob, COLS, P, 'hobby.png')
+    for scale, sel in ((24, '.hob'), (34, '.hob.big'), (48, '.hob.huge')):
+        if sel == '.hob':
+            css.append(f'.hob{{width:24px;height:24px;background-image:url(../assets/ui/hobby.png);'
+                       f'background-size:{COLS * 24}px auto;image-rendering:pixelated;'
+                       f'display:inline-block;flex:none;vertical-align:-5px;}}')
+        else:
+            css.append(f'{sel}{{width:{scale}px;height:{scale}px;background-size:{COLS * scale}px auto;}}')
+        for i, n in enumerate(names):
+            css.append(f'{sel}.h-{n}{{background-position:'
+                       f'-{(i % COLS) * scale}px -{(i // COLS) * scale}px;}}')
+
+    # keep the generated soil / fence / prop rules
+    old = os.path.join(ROOT, 'css', 'farm-art.css')
+    keep = []
+    if os.path.exists(old):
+        keep = [l for l in open(old).read().splitlines()
+                if l.startswith('.prop')]
+    with open(old, 'w') as fh:
+        fh.write('\n'.join(css + keep) + '\n')
+
+    print(f'gear {len(gear)} · plants {len(plants)} · crops {len(crops)} · icons {len(hob)}')
+
+
+if __name__ == '__main__':
+    main()

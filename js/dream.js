@@ -11,7 +11,7 @@ const Dream = (() => {
      focus tasks per experience level, and its own milestone names.          */
   const DREAMS = {
     music: {
-      name: 'Music', icon: 'guitar', element: 'Mystic', verb: 'practise', gerund: 'practising',
+      name: 'Music', icon: 'guitar', art: 'guitar', element: 'Mystic', verb: 'practise', gerund: 'practising',
       unit: 'practice', blurb: 'An instrument, your voice, production — anything you play.',
       tasks: {
         0: ['Learn where middle C / the 1st fret is', 'Play one note cleanly, 20 times',
@@ -30,7 +30,7 @@ const Dream = (() => {
                'Plays By Ear', 'Own Voice', 'Performer', 'Composer', 'Maestro'],
     },
     art: {
-      name: 'Drawing & Art', icon: 'palette', element: 'Nature', verb: 'draw', gerund: 'drawing',
+      name: 'Drawing & Art', icon: 'palette', art: 'palette', element: 'Nature', verb: 'draw', gerund: 'drawing',
       unit: 'drawing', blurb: 'Sketching, painting, pixel art, illustration.',
       tasks: {
         0: ['Fill one page with circles and lines', 'Draw the object nearest to you',
@@ -47,7 +47,7 @@ const Dream = (() => {
                'Own Style', 'Storyteller', 'Illustrator', 'Master Study', 'Artist'],
     },
     writing: {
-      name: 'Writing', icon: 'pen', element: 'Shadow', verb: 'write', gerund: 'writing',
+      name: 'Writing', icon: 'pen', art: 'penbook', element: 'Shadow', verb: 'write', gerund: 'writing',
       unit: 'writing', blurb: 'Fiction, essays, journalling, poetry, a book.',
       tasks: {
         0: ['Write 100 words about your day', 'Describe a room in 5 sentences',
@@ -66,7 +66,7 @@ const Dream = (() => {
                'Editor Eye', 'Chapter Done', 'Draft Complete', 'Revised', 'Author'],
     },
     fitness: {
-      name: 'Fitness & Movement', icon: 'muscle', element: 'Fire', verb: 'train', gerund: 'training',
+      name: 'Fitness & Movement', icon: 'muscle', art: 'runshoe', element: 'Fire', verb: 'train', gerund: 'training',
       unit: 'training', blurb: 'Strength, running, flexibility, sport, just moving more.',
       tasks: {
         0: ['Walk for 10 minutes', 'Learn one squat with good form', '5 push-ups, knees fine',
@@ -82,7 +82,7 @@ const Dream = (() => {
                'Athlete Habits', 'Personal Best', 'Strong', 'Conditioned', 'Machine'],
     },
     language: {
-      name: 'A New Language', icon: 'globe', element: 'Water', verb: 'study', gerund: 'studying',
+      name: 'A New Language', icon: 'globe', art: 'headphones', element: 'Water', verb: 'study', gerund: 'studying',
       unit: 'study', blurb: 'Speak, read and understand something new.',
       tasks: {
         0: ['Learn 5 words you would actually use', 'Learn to say hello and thank you',
@@ -101,7 +101,7 @@ const Dream = (() => {
                'Reads Alone', 'Watches Native', 'Thinks In It', 'Fluent Enough', 'Fluent'],
     },
     code: {
-      name: 'Building & Code', icon: 'code', element: 'Metal', verb: 'build', gerund: 'building',
+      name: 'Building & Code', icon: 'code', art: 'console', element: 'Metal', verb: 'build', gerund: 'building',
       unit: 'building', blurb: 'Programming, making things, side projects.',
       tasks: {
         0: ['Get one thing to print on screen', 'Follow a tutorial to the end',
@@ -120,7 +120,7 @@ const Dream = (() => {
                'Refactors', 'Tests It', 'Designs It', 'Ships Products', 'Engineer'],
     },
     cooking: {
-      name: 'Cooking', icon: 'cook', element: 'Earth', verb: 'cook', gerund: 'cooking',
+      name: 'Cooking', icon: 'cook', art: 'chefhat', element: 'Earth', verb: 'cook', gerund: 'cooking',
       unit: 'cooking', blurb: 'Feed yourself well and enjoy doing it.',
       tasks: {
         0: ['Cook one thing with 5 ingredients', 'Learn to hold a knife properly',
@@ -138,7 +138,7 @@ const Dream = (() => {
                'Makes Bread', 'Own Recipes', 'Hosts Dinner', 'Cooks Anything', 'Chef'],
     },
     mind: {
-      name: 'Calm & Focus', icon: 'lotus', element: 'Ice', verb: 'sit', gerund: 'sitting',
+      name: 'Calm & Focus', icon: 'lotus', art: 'meditate', element: 'Ice', verb: 'sit', gerund: 'sitting',
       unit: 'practice', blurb: 'Meditation, journalling, sleep, a quieter head.',
       tasks: {
         0: ['Sit and breathe for 3 minutes', 'Write down what is on your mind',
@@ -155,7 +155,7 @@ const Dream = (() => {
                'Sits Long', 'Rides Discomfort', 'Clear Head', 'Present', 'Still'],
     },
     craft: {
-      name: 'Making & Craft', icon: 'hammer', element: 'Earth', verb: 'make', gerund: 'making',
+      name: 'Making & Craft', icon: 'hammer', art: 'sewing', element: 'Earth', verb: 'make', gerund: 'making',
       unit: 'making', blurb: 'Woodwork, sewing, models, ceramics, repair.',
       tasks: {
         0: ['Tidy and lay out your tools', 'Make one very small thing badly',
@@ -171,7 +171,7 @@ const Dream = (() => {
                'New Materials', 'Precise', 'Makes Gifts', 'Own Designs', 'Craftsman'],
     },
     photo: {
-      name: 'Photography', icon: 'camera', element: 'Electric', verb: 'shoot', gerund: 'shooting',
+      name: 'Photography', icon: 'camera', art: 'camera', element: 'Electric', verb: 'shoot', gerund: 'shooting',
       unit: 'shooting', blurb: 'See better, and keep what you saw.',
       tasks: {
         0: ['Take 20 photos of one object', 'Shoot only in one direction of light',
@@ -189,7 +189,7 @@ const Dream = (() => {
                'Has a Series', 'Own Eye', 'Photo Essay', 'Published', 'Photographer'],
     },
     study: {
-      name: 'Learning a Subject', icon: 'book', element: 'Mystic', verb: 'study', gerund: 'studying',
+      name: 'Learning a Subject', icon: 'book', art: 'book', element: 'Mystic', verb: 'study', gerund: 'studying',
       unit: 'study', blurb: 'A degree, a certification, or pure curiosity.',
       tasks: {
         0: ['Read 5 pages and note one thing', 'Find out what you do not know yet',
@@ -206,7 +206,7 @@ const Dream = (() => {
                'Handles Exams', 'Teaches It', 'Applies It', 'Deep Knowledge', 'Expert'],
     },
     dance: {
-      name: 'Dance & Performance', icon: 'walk', element: 'Fire', verb: 'move', gerund: 'moving',
+      name: 'Dance & Performance', icon: 'walk', art: 'sneaker', element: 'Fire', verb: 'move', gerund: 'moving',
       unit: 'dance', blurb: 'Any style — just move like you mean it.',
       tasks: {
         0: ['Move to one song, alone, badly', 'Learn one 8-count', 'Find your natural bounce',
