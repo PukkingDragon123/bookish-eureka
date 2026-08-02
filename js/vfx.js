@@ -239,6 +239,45 @@ const VFX = (() => {
     }
   }
 
+  /* comet streak for the summon wish animation (canvas-space) */
+  function comet(x0, y0, x1, y1, key, n) {
+    const colors = PAL[key] || PAL.mystic;
+    n = n || 26;
+    for (let i = 0; i < n; i++) {
+      const t = i / n;
+      px(lerp(x0, x1, t) + rnd(-6, 6), lerp(y0, y1, t) + rnd(-6, 6),
+         (x1 - x0) / 90, (y1 - y0) / 90,
+         16 + t * 26, colors, GRID * (1 + (i % 2)), { grav: 0.01 });
+    }
+    start();
+  }
+
+  function hearts(x, y) {
+    for (let i = 0; i < 7; i++) {
+      px(x + rnd(-18, 18), y + rnd(-6, 6), rnd(-0.4, 0.4), -1.2 - Math.random(),
+         34 + Math.random() * 14, ['#ff9ab0', '#ff5d6c', '#c23b52'], GRID * 2, { grav: -0.015 });
+    }
+    start();
+  }
+
+  function fuse(x, y, tier) {
+    burst(x, y, tier >= 5 ? 'mystic' : 'electric', 12 + tier * 4, 2.6 + tier * 0.3);
+    ring(x, y, 'heal', 8 + tier * 2, 16 + tier * 3);
+    if (tier >= 4) kick(4, 180);
+    start();
+  }
+
+  function portalSwirl(x, y) {
+    for (let i = 0; i < 14; i++) {
+      const a = (i / 14) * Math.PI * 2;
+      px(x + Math.cos(a) * 16, y + Math.sin(a) * 12,
+         -Math.sin(a) * 1.4, Math.cos(a) * 0.9,
+         22 + Math.random() * 10, PAL.shadow, GRID * 2, { grav: 0 });
+    }
+    start();
+  }
+
   return { attach, resize, cast, hit, ultimate, burst, kick, screenFlash, ring,
+           comet, hearts, fuse, portalSwirl,
            get count() { return parts.length; } };
 })();

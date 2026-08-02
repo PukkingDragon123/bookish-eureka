@@ -9,13 +9,24 @@ No installs, no build step, no server. Open `index.html`, or grab the single-fil
 `dist/ritual-beasts.html` and open that anywhere — it has every asset inlined and needs no
 network at all.
 
-| Battle | Rituals | Beast page |
+| Battle + fusion camp | Farm | Gacha banners |
 |---|---|---|
-| ![Battle](docs/screenshots/battle.png) | ![Rituals](docs/screenshots/rituals.png) | ![Skills](docs/screenshots/skills.png) |
+| ![Battle](docs/screenshots/battle.png) | ![Farm](docs/screenshots/farm.png) | ![Banners](docs/screenshots/banners.png) |
 
-| Onboarding | Dex | Ultimate | Passives |
+| 10-pull | Quests + login | Region map | Beast page |
 |---|---|---|---|
-| ![Onboarding](docs/screenshots/onboarding.png) | ![Dex](docs/screenshots/dex.png) | ![Ultimate](docs/screenshots/ultimate.png) | ![Passives](docs/screenshots/creature.png) |
+| ![Pulls](docs/screenshots/pulls.png) | ![Quests](docs/screenshots/quests.png) | ![Map](docs/screenshots/map.png) | ![Creature](docs/screenshots/creature.png) |
+
+**v3:** warm wood/nature UI, packs of up to 3 enemies that walk in (attack dashes, death
+falls, party advances between waves), cookie-clicker battle upgrades, a merge board under
+the battle scene (portal-spawned weapons/armor/charms, drag to fuse tiers, board-wide party
+boosts), a real-time farm growing 9 element foods that level your beasts (seeds come from
+logging real meals — a photo earns a bonus seed), Genshin-style element banners with 10-pulls
+and a wish animation, The Lab (lab-point gacha: mutations, serums, skill grafts), 7-day login
+rewards, a personalized challenge-of-the-day with real links (GeoGuessr, Scratch, Wordle…),
+a quest log on the battle screen, timed cache-digging encounters, a region map, and a defeat
+screen that tells you how to come back stronger. All 326 sprites re-audited and normalized
+to one pixel density (tools/pixelate.py).
 
 ## How real life powers the game
 

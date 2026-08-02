@@ -88,6 +88,15 @@ function defaultState() {
     tutorial: {},
     lastSeen: Date.now(),
     starterCid: null,
+    /* --- v3 --- */
+    upgrades: { dmg: 0, spd: 0, crit: 0, gold: 0, hp: 0, ult: 0 },
+    merge: { board: Array(12).fill(null), energy: 6, lastEnergy: Date.now() },
+    farm: { plots: [{}, {}, {}, {}, {}, {}], seeds: 3, food: {} },
+    lab: { points: 5, serums: 0, rolls: 0 },
+    login: { cycle: 0, lastDay: null },
+    challenge: { day: null, idx: 0, done: false },
+    regionProgress: {},
+    losses: 0,
   };
 }
 
@@ -117,6 +126,13 @@ function sanitize() {
   S.party = S.party.filter(cid => C_BY_ID[cid] && S.beasts[cid]);
   if (!S.party.length && Object.keys(S.beasts).length) S.party = [Object.keys(S.beasts)[0]];
   if (S.starterCid && !C_BY_ID[S.starterCid]) S.starterCid = null;
+  const d = defaultState();
+  for (const k of ['upgrades', 'merge', 'farm', 'lab', 'login', 'challenge', 'regionProgress']) {
+    if (typeof S[k] !== 'object' || S[k] === null) S[k] = d[k];
+  }
+  if (!Array.isArray(S.merge.board) || S.merge.board.length !== 12) S.merge.board = Array(12).fill(null);
+  if (!Array.isArray(S.farm.plots) || S.farm.plots.length !== 6) S.farm.plots = [{}, {}, {}, {}, {}, {}];
+  if (typeof S.farm.food !== 'object') S.farm.food = {};
 }
 
 function hardReset() {
@@ -136,6 +152,70 @@ function relicBonusStat(stat) {
 
 function xpForLevel(lvl) { return Math.floor(90 * Math.pow(1.38, lvl - 1)); }
 
+/* ---------- cookie-clicker battle upgrades ---------- */
+const UPGRADE_DEFS = [
+  { key: 'dmg',  name: 'Whetstone',   icon: 'sword',  per: 5, unit: '% damage',   base: 30 },
+  { key: 'spd',  name: 'War Drums',   icon: 'timer',  per: 3, unit: '% atk speed', base: 45 },
+  { key: 'crit', name: 'Hawk Eye',    icon: 'bolt',   per: 1, unit: '% crit',      base: 60 },
+  { key: 'gold', name: 'Loot Sacks',  icon: 'gold',   per: 6, unit: '% gold',      base: 40 },
+  { key: 'hp',   name: 'Camp Feast',  icon: 'hp',     per: 6, unit: '% vitality',  base: 35 },
+  { key: 'ult',  name: 'War Banner',  icon: 'star',   per: 5, unit: '% ult rate',  base: 55 },
+];
+function upgradeCost(key) {
+  const def = UPGRADE_DEFS.find(u => u.key === key);
+  const lvl = S.upgrades[key] || 0;
+  return Math.floor(def.base * Math.pow(1.42, lvl) * Math.pow(1.13, globalStage() * 0.35));
+}
+function upgradeBonus(key) {
+  const def = UPGRADE_DEFS.find(u => u.key === key);
+  return (S.upgrades[key] || 0) * def.per / 100;
+}
+
+/* ---------- merge board ---------- */
+const MERGE_CATS = {
+  weapon: { name: 'Weapon', icon: 'sword',  stat: 'dmg',  per: 2.0,
+            variants: ['Fang', 'Cleaver', 'Wand'] },
+  armor:  { name: 'Armor',  icon: 'shield', stat: 'hp',   per: 2.5,
+            variants: ['Hide', 'Plate', 'Ward'] },
+  charm:  { name: 'Charm',  icon: 'relic',  stat: 'gold', per: 2.0,
+            variants: ['Coin', 'Fetish', 'Bell'] },
+};
+const MERGE_MAX_TIER = 9;
+function mergeBonus(stat) {
+  let pts = 0;
+  for (const it of S.merge.board) {
+    if (it && MERGE_CATS[it.cat].stat === stat) pts += Math.pow(2, it.tier - 1);
+  }
+  const per = stat === 'hp' ? 2.5 : 2.0;
+  return pts * per / 100;
+}
+
+/* ---------- farm foods ---------- */
+const FOODS = {
+  Fire:     { name: 'Ember Chili',   icon: 'chili',     mins: 4 },
+  Water:    { name: 'Dew Berry',     icon: 'berry',     mins: 4 },
+  Nature:   { name: 'Verdant Gourd', icon: 'gourd',     mins: 5 },
+  Electric: { name: 'Volt Bean',     icon: 'bean',      mins: 5 },
+  Ice:      { name: 'Frost Mint',    icon: 'mint',      mins: 5 },
+  Earth:    { name: 'Stone Root',    icon: 'rootv',     mins: 6 },
+  Shadow:   { name: 'Gloom Cap',     icon: 'gloomcap',  mins: 6 },
+  Mystic:   { name: 'Star Fruit',    icon: 'starfruit', mins: 7 },
+  Metal:    { name: 'Iron Kernel',   icon: 'kernel',    mins: 7 },
+};
+function beastXpNeed(lvl) { return 22 * Math.pow(1.3, lvl - 1); }
+function grantBeastXpTo(cid, amount) {
+  const inst = S.beasts[cid];
+  if (!inst) return false;
+  inst.xp += amount;
+  let leveled = false;
+  while (inst.xp >= beastXpNeed(inst.level)) {
+    inst.xp -= beastXpNeed(inst.level);
+    inst.level++;
+    leveled = true;
+  }
+  return leveled;
+}
+
 function partySlots() {
   const l = S.player.level;
   return l >= 12 ? 4 : l >= 6 ? 3 : l >= 3 ? 2 : 1;
@@ -146,12 +226,15 @@ function beastStats(cid) {
   const inst = S.beasts[cid];
   const lvl = inst ? inst.level : 1;
   const g = 1 + 0.18 * (lvl - 1);
+  const mut = (inst && inst.mut) || {};
   return {
     lvl,
-    hp: Math.floor(c.base.hp * g * (1 + relicBonusStat('hp') + Lore.passiveBonus('hp'))),
-    atk: Math.floor(c.base.atk * g * (1 + Lore.passiveBonus('atk'))),
+    hp: Math.floor(c.base.hp * g * (1 + relicBonusStat('hp') + Lore.passiveBonus('hp')
+        + upgradeBonus('hp') + mergeBonus('hp') + (mut.hp || 0) / 100)),
+    atk: Math.floor(c.base.atk * g * (1 + Lore.passiveBonus('atk')
+        + (mut.atk || 0) / 100 + (S.lab.serums || 0) * 0.01)),
     de: Math.floor(c.base.de * g),
-    spd: Math.floor(c.base.spd * (1 + 0.02 * (lvl - 1))),
+    spd: Math.floor(c.base.spd * (1 + 0.02 * (lvl - 1) + (mut.spd || 0) / 100)),
   };
 }
 
@@ -182,7 +265,7 @@ function stageLabel() {
 
 /* ---------- resource grants ---------- */
 function grantGold(n, sourceEl) {
-  n = Math.floor(n * (1 + relicBonusStat('gold') + Lore.passiveBonus('gold')) * (isBlessed() ? 1.15 : 1));
+  n = Math.floor(n * (1 + relicBonusStat('gold') + Lore.passiveBonus('gold') + upgradeBonus('gold') + mergeBonus('gold')) * (isBlessed() ? 1.15 : 1));
   S.player.gold += n;
   if (sourceEl) coinBurst(sourceEl, 4);
   return n;
@@ -198,6 +281,8 @@ function grantEssence(n) {
   return n;
 }
 function grantGems(n) { S.player.gems += n; return n; }
+function grantLabPoints(n) { S.lab.points += n; return n; }
+function grantSeeds(n) { S.farm.seeds += n; return n; }
 
 function grantPlayerXp(n) {
   n = Math.floor(n * (1 + relicBonusStat('xp') + Lore.passiveBonus('xp')) * (isBlessed() ? 1.15 : 1));

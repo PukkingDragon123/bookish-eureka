@@ -1,4 +1,4 @@
-/* ============ Ritual Beasts — real-life rituals (habits) ============ */
+/* ============ Ritual Beasts — real-life daily quests (habit engine) ============ */
 'use strict';
 
 const Habits = (() => {
@@ -94,10 +94,18 @@ const Habits = (() => {
     }
   }
 
-  function logMeal(name, kcal, healthy, btnEl) {
+  function logMeal(name, kcal, healthy, btnEl, photo) {
     resetMealsIfNewDay();
-    S.meals.push({ name: name || 'Meal', kcal: Math.max(0, kcal || 0), ts: Date.now() });
+    S.meals.push({ name: name || 'Meal', kcal: Math.max(0, kcal || 0), ts: Date.now(), photo: photo || null });
     Quests.progress('meals_logged', 1);
+    // detailed logging grows the farm: named+measured meal = seed, photo = bonus seed
+    let seeds = 0;
+    if (name && kcal > 0) seeds++;
+    if (photo) seeds++;
+    if (seeds) {
+      grantSeeds(seeds);
+      toast(`+${seeds} seed${seeds > 1 ? 's' : ''} for the farm!`, 'good');
+    }
     if (healthy) {
       const def = DEFS.find(d => d.id === 'meal');
       if (doneToday('meal') < def.perDay) {
@@ -129,7 +137,7 @@ const Habits = (() => {
 
   /* ---------- timers (exercise / walk / create) ---------- */
   function startTimer(hid, mins) {
-    if (S.exTimer) { toast('A ritual timer is already running'); return false; }
+    if (S.exTimer) { toast('A quest timer is already running'); return false; }
     S.exTimer = { hid, mins, startedAt: Date.now() };
     save();
     return true;
@@ -163,6 +171,7 @@ const Habits = (() => {
       S.boosts.exerciseUntil = Date.now() + t.mins * 2 * 60 * 1000;
       toast(`x3 idle rewards for ${t.mins * 2} minutes!`, 'gold');
     }
+    Farm.waterAll(Math.max(3, Math.round(t.mins / 2)));
     Sound.timerDone();
     confetti(40);
     toast(`${def.name} complete! +${mana} mana, +${xp} XP, +${ess} essence`, 'good');
@@ -179,7 +188,7 @@ const Habits = (() => {
   function addCustom(name, icon) {
     const id = 'custom_' + Date.now();
     S.custom.push({ id, name: name.slice(0, 28), icon: icon || 'star', kind: 'instant', perDay: 1,
-                    mana: 15, xp: 15, ess: 1, desc: 'Your own ritual.' });
+                    mana: 15, xp: 15, ess: 1, desc: 'Your own quest.' });
     save();
     UI.renderRituals();
   }

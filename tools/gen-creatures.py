@@ -91,10 +91,12 @@ def classify(path):
     for r, g, b in px:
         h, s, v = colorsys.rgb_to_hsv(r, g, b)
         H, V = h * 360, v * 255
+        if V < 60:
+            continue            # outline + deep shade: no type signal
         if s < 0.16:
             counts['Ice' if V > 205 else 'Metal' if V > 95 else 'Shadow'] += 1
             continue
-        if V < 55:
+        if V < 78:
             counts['Shadow'] += 1
         elif H < 15 or H >= 345:
             counts['Fire'] += 1
@@ -129,6 +131,8 @@ def hue_hist(path):
     hist = np.zeros(14)
     for r, g, b in px:
         h, s, v = colorsys.rgb_to_hsv(r, g, b)
+        if v < 0.24:
+            continue            # ignore the uniform outline
         hist[(12 if v > 0.55 else 13) if s < 0.16 else int(h * 12) % 12] += 1
     n = np.linalg.norm(hist)
     return hist / n if n else hist

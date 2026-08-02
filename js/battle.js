@@ -1,17 +1,22 @@
-/* ============ Ritual Beasts — idle battle engine ============ */
+/* ============ Ritual Beasts — battle engine v3 ============
+   Packs of 1-3 enemies walk in from the right; the party advances between
+   waves; skills and ultimates land as travelling attack tweens with typed
+   pixel VFX. Boss waves are timed. Wipes show a defeat screen with a way
+   forward instead of silently resetting.                                     */
 'use strict';
 
 const Battle = (() => {
   const TICK_MS = 300;
-  let enemy = null;
+  let enemies = [];            // [{cid,name,hp,hpMax,boss,defType,gold,xp,slot,dying}]
   let partyHp = 1;
   let resting = 0;
+  let advancing = 0;           // ticks of walk-between-waves
   let bossTimeLeft = 0;
-  let ultCharge = 0;          // 0..100, shared party meter
-  let ultReadyCid = null;     // whose ultimate is queued
-  const cds = {};             // cid_skillIdx -> seconds remaining
+  let ultCharge = 0;
+  const cds = {};
+  let sinceEncounter = 0;
 
-  /* ----- enemy generation ----- */
+  /* ----- pack generation ----- */
   function enemyPoolForArea(areaIdx) {
     const affinity = [
       ['Nature', 'Earth', 'Mystic'],
@@ -23,80 +28,86 @@ const Battle = (() => {
     return pool.length >= 12 ? pool : window.CREATURES;
   }
 
-  function spawnEnemy() {
+  function spawnWave() {
     const g = globalStage();
     const isBoss = S.stage.wave === WAVES_PER_STAGE && !S.stage.farm;
     const pool = enemyPoolForArea(S.stage.area);
-    let c;
-    if (isBoss) {
-      const bossPool = pool.filter(x => x.stage >= 2 || ['rare', 'epic', 'legendary'].includes(x.rarity));
-      c = pick(bossPool.length ? bossPool : pool);
-    } else {
-      c = pick(pool);
+    enemies = [];
+    const packSize = isBoss ? 1 : (S.stage.wave < 3 ? 1 : irnd(1, Math.min(3, 1 + Math.floor(S.stage.wave / 3))));
+    for (let i = 0; i < packSize; i++) {
+      let c;
+      if (isBoss) {
+        const bp = pool.filter(x => x.stage >= 2 || ['rare', 'epic', 'legendary'].includes(x.rarity));
+        c = pick(bp.length ? bp : pool);
+      } else c = pick(pool);
+      seeCreature(c.id);
+      const hpBase = 26 * Math.pow(1.31, g - 1) * (1 + 0.10 * (S.stage.wave - 1));
+      const hp = Math.floor(hpBase * (isBoss ? 7 : 1) / (packSize === 1 ? 1 : 1.6));
+      enemies.push({
+        cid: c.id,
+        name: isBoss ? c.name + ' the ' + pick(['Dread', 'Mighty', 'Ancient', 'Colossal', 'Feral']) : c.name,
+        hp, hpMax: hp, boss: isBoss, defType: c.types[0],
+        gold: Math.floor(5 * Math.pow(1.24, g - 1) * (isBoss ? 16 : 1) / (packSize === 1 ? 1 : 1.5)),
+        xp: Math.floor((2 + g * 0.55) * (isBoss ? 10 : 1) / (packSize === 1 ? 1 : 1.5)),
+        slot: i, dying: false,
+      });
     }
-    seeCreature(c.id);
-    const hpBase = 26 * Math.pow(1.31, g - 1) * (1 + 0.10 * (S.stage.wave - 1));
-    const hp = Math.floor(hpBase * (isBoss ? 7 : 1));
-    enemy = {
-      cid: c.id,
-      name: (isBoss ? c.name + ' the ' + pick(['Dread', 'Mighty', 'Ancient', 'Colossal', 'Feral']) : c.name),
-      hp, hpMax: hp,
-      boss: isBoss,
-      defType: c.types[0],
-      goldReward: Math.floor(5 * Math.pow(1.24, g - 1) * (isBoss ? 16 : 1)),
-      xpReward: Math.floor((2 + g * 0.55) * (isBoss ? 10 : 1)),
-    };
     if (isBoss) { bossTimeLeft = 30; Sound.boss(); }
-    UI.renderEnemy(enemy);
-    return enemy;
+    UI.renderEnemies(enemies, true);
   }
+
+  const alive = () => enemies.filter(e => !e.dying && e.hp > 0);
+  const front = () => alive()[0] || null;
 
   /* ----- damage model ----- */
   function partySynergy(types) {
-    const t = types[0];
     let n = 0;
-    for (const cid of S.party) if (C_BY_ID[cid].types[0] === t) n++;
+    for (const cid of S.party) if (C_BY_ID[cid].types[0] === types[0]) n++;
     return n >= 2 ? 1.1 : 1;
   }
-
-  function memberDps(cid) {
+  function memberDps(cid, target) {
     const st = beastStats(cid);
     const c = C_BY_ID[cid];
-    const mult = enemy ? typeMult(c.types, enemy.defType) : 1;
+    const mult = target ? typeMult(c.types, target.defType) : 1;
     return st.atk * (1 + st.spd / 40) * mult * partySynergy(c.types);
   }
-
   function partyDps() {
+    const t = front();
     let dps = 0;
-    for (const cid of S.party) dps += memberDps(cid);
-    return dps * (1 + relicBonusStat('dmg'))
-               * (1 + relicBonusStat('spd') + Lore.passiveBonus('spd'));
+    for (const cid of S.party) dps += memberDps(cid, t);
+    return dps * (1 + relicBonusStat('dmg') + upgradeBonus('dmg') + mergeBonus('dmg'))
+               * (1 + relicBonusStat('spd') + Lore.passiveBonus('spd') + upgradeBonus('spd'));
   }
-
   function enemyDps() {
     const g = globalStage();
-    return 3.2 * Math.pow(1.25, g - 1) * (enemy && enemy.boss ? 1.5 : 1);
+    const n = alive().length;
+    return 3.2 * Math.pow(1.25, g - 1) * (front() && front().boss ? 1.5 : 1) * (1 + (n - 1) * 0.45);
   }
   function partyHpMax() {
     let hp = 0;
     for (const cid of S.party) hp += beastStats(cid).hp;
     return Math.max(1, hp);
   }
-
-  function dealDamage(amount, opts) {
-    opts = opts || {};
-    if (!enemy) return;
-    enemy.hp -= amount;
-    const life = Lore.passiveBonus('lifest');
-    if (life > 0) partyHp = Math.min(1, partyHp + (amount * life) / partyHpMax());
-    if (!opts.silent) UI.showHit(amount, opts.crit, opts.vfx, opts.label);
-    if (!opts.noCharge) {
-      ultCharge = Math.min(100, ultCharge + (opts.charge || 2.1) * (1 + Lore.passiveBonus('ult')));
-      UI.renderUltMeter(ultCharge, ultReadyCid);
-    }
+  function critChance() {
+    return 0.06 + Lore.passiveBonus('crit') + upgradeBonus('crit');
   }
 
-  /* ----- skills ----- */
+  function hitEnemy(target, amount, opts) {
+    opts = opts || {};
+    if (!target || target.dying) return;
+    target.hp -= amount;
+    const life = Lore.passiveBonus('lifest');
+    if (life > 0) partyHp = Math.min(1, partyHp + (amount * life) / partyHpMax());
+    if (!opts.silent) UI.showHit(target, amount, opts.crit, opts.vfx, opts.label);
+    if (!opts.noCharge) {
+      ultCharge = Math.min(100, ultCharge +
+        (opts.charge || 2.1) * (1 + Lore.passiveBonus('ult') + upgradeBonus('ult')));
+    }
+    if (target.hp <= 0) killEnemy(target);
+    else UI.renderEnemyHp(target);
+  }
+
+  /* ----- skills / ultimate ----- */
   function tickCooldowns(dt) {
     for (const k of Object.keys(cds)) {
       cds[k] -= dt;
@@ -104,36 +115,55 @@ const Battle = (() => {
     }
   }
 
+  function skillListFor(cid) {
+    const kit = Lore.kit(cid);
+    const list = kit.skills.slice();
+    const inst = S.beasts[cid];
+    if (inst && inst.graft && C_BY_ID[inst.graft]) {
+      const g = Lore.kit(inst.graft).skills[1];
+      list.push(Object.assign({}, g, { cd: g.cd * 1.4, graft: true }));
+    }
+    return list;
+  }
+
   function trySkills() {
-    if (!enemy) return;
+    const t = front();
+    if (!t) return;
     for (const cid of S.party) {
-      const kit = Lore.kit(cid);
-      for (let i = 0; i < kit.skills.length; i++) {
-        const sk = kit.skills[i];
+      const skills = skillListFor(cid);
+      for (let i = 0; i < skills.length; i++) {
+        const sk = skills[i];
         const key = cid + '_' + i;
         if (cds[key]) continue;
         cds[key] = sk.cd;
-        const base = memberDps(cid) * sk.power;
-        const crit = Math.random() < (0.06 + Lore.passiveBonus('crit'));
-        const dmg = base * (crit ? 2.2 : 1) * rnd(0.92, 1.1);
-        dealDamage(dmg, { crit, vfx: sk.vfx, label: sk.name, charge: i === 0 ? 5 : 12 });
-        UI.lunge(cid);
+        const crit = Math.random() < critChance();
+        const dmg = memberDps(cid, t) * sk.power * (crit ? 2.2 : 1) * rnd(0.92, 1.1);
+        UI.attackTween(cid, t, () => {
+          hitEnemy(t, dmg, { crit, vfx: sk.vfx, label: sk.name, charge: i === 0 ? 5 : 12 });
+          // heavy skills splash the back rank
+          if (i >= 1) for (const o of alive()) {
+            if (o !== t) hitEnemy(o, dmg * 0.4, { silent: true, noCharge: true });
+          }
+        });
         Sound.hit();
-        return;               // one skill per tick keeps the scene readable
+        return;
       }
     }
   }
 
   function fireUltimate() {
-    if (!enemy || ultCharge < 100 || !S.party.length) return;
-    const cid = ultReadyCid && S.party.includes(ultReadyCid) ? ultReadyCid : S.party[0];
+    const t = front();
+    if (!t || ultCharge < 100 || !S.party.length) return;
+    const cid = pick(S.party);
     const kit = Lore.kit(cid);
-    const dmg = memberDps(cid) * kit.ult.power * rnd(0.95, 1.08);
     ultCharge = 0;
     UI.showUltimateCast(cid, kit.ult);
-    dealDamage(dmg, { crit: true, vfx: kit.ult.vfx, noCharge: true, ult: true });
+    const targets = alive();
+    for (const e of targets) {
+      const dmg = memberDps(cid, e) * kit.ult.power * rnd(0.95, 1.08);
+      hitEnemy(e, dmg, { crit: true, vfx: null, noCharge: true });
+    }
     Sound.evolve();
-    UI.renderUltMeter(ultCharge, ultReadyCid);
   }
 
   /* ----- main tick ----- */
@@ -145,75 +175,92 @@ const Battle = (() => {
       resting--;
       partyHp = Math.min(1, partyHp + 0.09);
       UI.renderPartyHp(partyHp);
-      if (resting === 0 && !enemy) spawnEnemy();
+      if (resting === 0) spawnWave();
       return;
     }
-    if (!enemy) { spawnEnemy(); return; }
+    if (advancing > 0) {
+      advancing--;
+      if (advancing === 0) spawnWave();
+      return;
+    }
+    if (!enemies.length) { spawnWave(); return; }
+    if (!alive().length) return;   // deaths animating out
 
     tickCooldowns(dt);
 
-    // steady auto-attack chip damage
+    const t = front();
     const chip = partyDps() * dt * 0.55 * rnd(0.86, 1.16);
-    dealDamage(chip, { silent: true, charge: 1.8 });
+    hitEnemy(t, chip, { silent: true, charge: 1.8 });
 
-    // discrete skill casts (with vfx) and ultimates
     trySkills();
-    if (ultCharge >= 100) {
-      ultReadyCid = S.party[Math.floor(Math.random() * S.party.length)];
-      fireUltimate();
-    }
+    if (ultCharge >= 100) fireUltimate();
+    UI.renderUltMeter(ultCharge);
 
-    // enemy strikes back; party regenerates a little while fighting
+    // enemies strike back (visual lunge from a random attacker)
     const edmg = enemyDps() * dt * rnd(0.8, 1.2);
     partyHp = clamp(partyHp - edmg / partyHpMax() + 0.004, 0, 1);
     UI.renderPartyHp(partyHp);
+    if (Math.random() < 0.16) UI.enemyLunge(pick(alive()));
 
-    if (enemy.boss) {
+    const f = front();
+    if (f && f.boss) {
       bossTimeLeft -= dt;
       UI.renderBossTimer(bossTimeLeft);
-      if (bossTimeLeft <= 0 && enemy.hp > 0) return bossFailed();
+      if (bossTimeLeft <= 0 && f.hp > 0) return bossFailed();
     }
-    if (enemy.hp <= 0) return killEnemy();
 
-    if (partyHp <= 0) {
-      toast('Your party retreats to rest…');
-      Sound.fail();
-      S.stage.wave = 1;
-      S.stage.farm = false;
-      resting = Math.floor(4000 / TICK_MS);
-      enemy = null;
-      UI.renderScene();
-      return;
-    }
-    UI.renderEnemyHp(enemy);
+    if (partyHp <= 0) return partyWiped();
   }
 
-  function killEnemy() {
-    const wasBoss = enemy.boss;
-    partyHp = Math.min(1, partyHp + 0.16);
+  function killEnemy(e) {
+    e.dying = true;
     const mult = rewardMult();
-    const gold = grantGold(enemy.goldReward * mult);
-    grantBeastXp(enemy.xpReward * mult);
-    grantPlayerXp(Math.max(1, Math.floor(enemy.xpReward * 0.35)) * mult);
+    const gold = grantGold(e.gold * mult);
+    grantBeastXp(e.xp * mult);
+    grantPlayerXp(Math.max(1, Math.floor(e.xp * 0.35)) * mult);
     S.kills++;
+    sinceEncounter++;
     Quests.progress('kills', 1);
-    UI.showKillRewards(gold, mult);
+    UI.showKillRewards(e, gold, mult);
     Sound.kill();
 
+    if (!alive().length) waveCleared(e.boss);
+  }
+
+  function waveCleared(wasBoss) {
     if (wasBoss) {
       S.bossKills++;
       Quests.progress('boss', 1);
       grantGems(irnd(2, 4));
       grantEssence(irnd(2, 5));
-      toast('Boss defeated! Gems and essence recovered.', 'gold');
+      grantLabPoints(irnd(1, 2));
+      toast('Boss defeated! Gems, essence and lab points recovered.', 'gold');
       confetti(30);
       advanceStage();
     } else if (!S.stage.farm) {
       S.stage.wave = Math.min(WAVES_PER_STAGE, S.stage.wave + 1);
     }
-    enemy = null;
+    // random roadside encounter minigame
+    if (sinceEncounter >= irnd(8, 14) && !wasBoss) {
+      sinceEncounter = 0;
+      setTimeout(() => UI.showEncounter(), 700);
+    }
+    enemies = [];
+    advancing = Math.floor(1400 / TICK_MS);   // walk to the next pack
+    UI.startAdvance();
     UI.renderScene();
     save();
+  }
+
+  function partyWiped() {
+    S.losses++;
+    Sound.fail();
+    S.stage.wave = 1;
+    S.stage.farm = false;
+    resting = Math.floor(5200 / TICK_MS);
+    enemies = [];
+    UI.showDefeat();
+    UI.renderScene();
   }
 
   function bossFailed() {
@@ -221,7 +268,8 @@ const Battle = (() => {
     Sound.fail();
     S.stage.farm = true;
     S.stage.wave = WAVES_PER_STAGE - 1;
-    enemy = null;
+    enemies = [];
+    advancing = Math.floor(900 / TICK_MS);
     UI.renderScene();
   }
 
@@ -229,7 +277,7 @@ const Battle = (() => {
     if (!S.stage.farm) return;
     S.stage.farm = false;
     S.stage.wave = WAVES_PER_STAGE;
-    enemy = null;
+    enemies = [];
     UI.renderScene();
   }
 
@@ -244,6 +292,27 @@ const Battle = (() => {
       toast(`Entering ${AREAS[S.stage.area].name}!`, 'gold');
       UI.renderSceneBg();
     }
+    S.regionProgress[S.stage.area] = Math.max(S.regionProgress[S.stage.area] || 1, S.stage.num);
+  }
+
+  /* travel to an unlocked region, resuming its saved progress */
+  function travel(areaIdx) {
+    if (areaIdx === S.stage.area) return;
+    S.regionProgress[S.stage.area] = Math.max(S.regionProgress[S.stage.area] || 1, S.stage.num);
+    S.stage.area = areaIdx;
+    S.stage.num = S.regionProgress[areaIdx] || 1;
+    S.stage.wave = 1;
+    S.stage.farm = false;
+    enemies = [];
+    UI.renderSceneBg();
+    UI.renderScene();
+    toast(`Traveling to ${AREAS[areaIdx].name}…`, 'gold');
+    save();
+  }
+  function regionUnlocked(areaIdx) {
+    if (areaIdx === 0 || S.stage.tier > 0) return true;
+    if (areaIdx <= S.stage.area) return true;
+    return !!S.regionProgress[areaIdx];
   }
 
   function currentDpsEstimate() {
@@ -264,8 +333,9 @@ const Battle = (() => {
   }
 
   return {
-    tick, spawnEnemy, challengeBoss, currentDpsEstimate, offlineGains, TICK_MS,
-    get enemy() { return enemy; },
+    tick, spawnWave, challengeBoss, currentDpsEstimate, offlineGains, travel,
+    regionUnlocked, TICK_MS,
+    get enemies() { return enemies; },
     get partyHp() { return partyHp; },
     get ultCharge() { return ultCharge; },
   };

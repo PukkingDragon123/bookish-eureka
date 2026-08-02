@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#171426">
+<meta name="theme-color" content="#2a1d12">
 <title>Ritual Beasts — habit-powered idle RPG</title>
 <link rel="icon" href="assets/creatures/s02_00.png">
 <link rel="stylesheet" href="css/font.css">
@@ -25,12 +25,13 @@
       <button id="btn-settings" class="hud-chip icon-btn" title="Settings"><i class="ico ico-gear"></i></button>
     </div>
     <div class="hud-row">
-      <div class="hud-chip mana-chip" title="Mana — earned by real-life rituals">
+      <div class="hud-chip mana-chip" title="Mana — earned by real-life daily quests">
         <i class="ico ico-mana"></i>
         <span class="pixbar mana"><i id="hud-mana-fill"></i></span>
         <b id="hud-mana">0</b>
       </div>
-      <div class="hud-chip ess-chip" title="Essence — evolution material"><i class="ico ico-essence"></i><b id="hud-ess">0</b></div>
+      <div class="hud-chip ess-chip" title="Essence"><i class="ico ico-essence"></i><b id="hud-ess">0</b></div>
+      <div class="hud-chip lab-chip" title="Lab points"><i class="ico ico-flask"></i><b id="hud-lab">0</b></div>
       <div class="hud-chip streak-chip" title="Daily streak"><i class="ico ico-streak"></i><b id="hud-streak">0</b></div>
     </div>
   </header>
@@ -48,31 +49,41 @@
           <span id="stage-area">Dewy Meadow</span>
           <span id="stage-num">Stage 1-1</span>
         </div>
+        <button id="btn-map" class="pixbtn tiny" title="Region map"><i class="ico ico-map"></i></button>
         <div id="wave-pips"></div>
         <div id="boost-badge" class="hidden"><i class="ico ico-bolt"></i> x3 REWARDS <b id="boost-time"></b></div>
-        <div id="enemy-holder">
-          <div id="enemy-plate" class="panel-box">
-            <span id="enemy-name"></span>
-            <div class="pixbar hp big"><i></i><b id="enemy-hp-txt"></b></div>
-          </div>
-          <img id="enemy-img" alt="">
-        </div>
+        <div id="enemy-row"></div>
         <div id="party-holder"></div>
         <div id="skill-flash"></div>
         <div id="fx-layer"></div>
         <button id="btn-boss" class="pixbtn danger hidden"><i class="ico ico-skull"></i> Challenge Boss</button>
+        <div id="defeat-overlay" class="hidden"></div>
+        <div id="encounter-overlay" class="hidden"></div>
       </div>
 
-      <div id="battle-bar">
-        <div id="ult-wrap" title="Ultimate charge — fills as your party deals damage">
-          <span class="ult-label"><i class="ico ico-star"></i> ULTIMATE</span>
+      <div id="battle-below">
+        <div id="quest-log" title="Today's quests"></div>
+
+        <div id="ult-wrap" title="Ultimate charge">
+          <span class="ult-label"><i class="ico ico-star"></i> ULT</span>
           <span class="pixbar ult"><i id="ult-fill"></i></span>
           <b id="ult-pct">0%</b>
+          <div class="bstat-inline"><span>DPS</span><b id="stat-dps">0</b></div>
+          <div class="bstat-inline"><span>Kills</span><b id="stat-kills">0</b></div>
         </div>
-        <div id="battle-stats">
-          <div class="bstat"><span>DPS</span><b id="stat-dps">0</b></div>
-          <div class="bstat"><span>Gold/kill</span><b id="stat-gpk">0</b></div>
-          <div class="bstat"><span>Kills</span><b id="stat-kills">0</b></div>
+
+        <div id="upgrade-strip"></div>
+
+        <div id="merge-panel" class="panel">
+          <div id="merge-head">
+            <span class="mtitle"><i class="ico ico-portal"></i> FUSION CAMP</span>
+            <span id="merge-bonuses"></span>
+          </div>
+          <div id="merge-board"></div>
+          <div id="merge-foot">
+            <button id="btn-portal" class="pixbtn primary sm"><i class="ico ico-portal"></i> Summon gear <b id="portal-energy"></b></button>
+            <button id="btn-portal-gold" class="pixbtn gold sm"><i class="ico ico-gold"></i> <b id="portal-gold-cost">25</b></button>
+          </div>
         </div>
       </div>
     </section>
@@ -86,33 +97,16 @@
       <div id="collection-grid"></div>
     </section>
 
-    <!-- ~~~~~~~~~ SUMMON ~~~~~~~~~ -->
-    <section id="tab-summon" class="tab">
-      <h2 class="tab-title"><i class="ico ico-mana"></i> Summoning Circle</h2>
-      <div id="altar">
-        <div id="altar-glow"></div>
-        <div id="altar-ring"></div>
-        <i class="ico huge ico-mana" id="altar-core"></i>
-      </div>
-      <p class="summon-hint">Mana flows from real-world rituals — water, meals, movement.<br>Channel it to call new companions.</p>
-      <div id="summon-btns">
-        <button id="btn-summon-mana" class="pixbtn primary">
-          <b>Wild Summon</b><span><i class="ico ico-mana"></i> <i id="cost-mana">40</i> mana</span>
-        </button>
-        <button id="btn-summon-gem" class="pixbtn gem">
-          <b>Radiant Summon</b><span><i class="ico ico-gem"></i> <i id="cost-gem">30</i> gems</span>
-        </button>
-      </div>
-      <div id="pity-note" class="subtle"></div>
-      <h2 class="tab-title"><i class="ico ico-relic"></i> Relics <span class="subtle">passive blessings</span></h2>
-      <div id="relic-shelf"></div>
-    </section>
-
-    <!-- ~~~~~~~~~ RITUALS ~~~~~~~~~ -->
-    <section id="tab-rituals" class="tab">
-      <h2 class="tab-title"><i class="ico ico-sunrise"></i> Daily Rituals <span class="subtle">real life → real power</span></h2>
-      <div id="ritual-list"></div>
-      <h2 class="tab-title"><i class="ico ico-meal"></i> Nourishment Log</h2>
+    <!-- ~~~~~~~~~ FARM ~~~~~~~~~ -->
+    <section id="tab-farm" class="tab">
+      <h2 class="tab-title"><i class="ico ico-seed"></i> The Farm
+        <span class="subtle">seeds: <b id="farm-seeds">0</b></span></h2>
+      <p class="hint-line">Log real meals to earn seeds. Crops feed your beasts — matching
+        element food gives double XP. Finishing quests waters the field.</p>
+      <div id="farm-plots"></div>
+      <h2 class="tab-title"><i class="ico ico-meal"></i> Pantry <span class="subtle" id="pantry-count"></span></h2>
+      <div id="pantry"></div>
+      <h2 class="tab-title"><i class="ico ico-scroll"></i> Nourishment Log</h2>
       <div id="food-panel">
         <div id="kcal-row" class="panel">
           <div id="kcal-ring">
@@ -122,19 +116,45 @@
           <div id="kcal-side">
             <button id="btn-log-meal" class="pixbtn good sm"><i class="ico ico-meal"></i> Log food</button>
             <button id="btn-kcal-target" class="pixbtn ghost sm">Set target</button>
+            <span class="subtle">name + kcal = 1 seed<br>photo = +1 seed</span>
           </div>
         </div>
         <div id="meal-list"></div>
       </div>
-      <h2 class="tab-title"><i class="ico ico-star"></i> Your Own Rituals</h2>
-      <div id="custom-list"></div>
-      <button id="btn-add-custom" class="pixbtn ghost wide"><i class="ico ico-plus"></i> Create a ritual</button>
+    </section>
+
+    <!-- ~~~~~~~~~ SUMMON ~~~~~~~~~ -->
+    <section id="tab-summon" class="tab">
+      <h2 class="tab-title"><i class="ico ico-mana"></i> Summoning Banners</h2>
+      <div id="banner-rail"></div>
+      <div id="pity-note" class="subtle"></div>
+      <h2 class="tab-title"><i class="ico ico-flask"></i> The Lab
+        <span class="subtle">points: <b id="lab-points">0</b></span></h2>
+      <div id="lab-panel" class="panel">
+        <p class="hint-line">Spend lab points on experiments: permanent mutations, party serums,
+          grafted skills, jackpots. Points come from quests, challenges and big fusions.</p>
+        <button id="btn-lab-roll" class="pixbtn primary wide"><i class="ico ico-flask"></i> Run experiment
+          <span><b id="lab-cost">10</b> lab points</span></button>
+      </div>
+      <h2 class="tab-title"><i class="ico ico-relic"></i> Relics <span class="subtle">passive blessings</span></h2>
+      <div id="relic-shelf"></div>
     </section>
 
     <!-- ~~~~~~~~~ QUESTS ~~~~~~~~~ -->
     <section id="tab-quests" class="tab">
-      <h2 class="tab-title"><i class="ico ico-scroll"></i> Today's Path <span class="subtle" id="quest-day"></span></h2>
+      <div id="login-row-wrap" class="panel">
+        <div class="mtitle"><i class="ico ico-chest"></i> LOGIN REWARDS</div>
+        <div id="login-row"></div>
+      </div>
+      <h2 class="tab-title"><i class="ico ico-star"></i> Challenge of the Day</h2>
+      <div id="challenge-card"></div>
+      <h2 class="tab-title"><i class="ico ico-sunrise"></i> Daily Quests <span class="subtle">real life → real power</span></h2>
+      <div id="ritual-list"></div>
+      <h2 class="tab-title"><i class="ico ico-scroll"></i> Today's Hunt <span class="subtle" id="quest-day"></span></h2>
       <div id="quest-list"></div>
+      <h2 class="tab-title"><i class="ico ico-plus"></i> Your Own Quests</h2>
+      <div id="custom-list"></div>
+      <button id="btn-add-custom" class="pixbtn ghost wide"><i class="ico ico-plus"></i> Create a quest</button>
       <h2 class="tab-title"><i class="ico ico-crown"></i> Journey</h2>
       <div id="journey-panel"></div>
     </section>
@@ -144,12 +164,13 @@
   <nav id="tabbar">
     <button data-tab="battle" class="active"><i class="ico ico-sword"></i>Battle</button>
     <button data-tab="beasts"><i class="ico ico-paw"></i>Beasts</button>
+    <button data-tab="farm"><i class="ico ico-seed"></i>Farm</button>
     <button data-tab="summon"><i class="ico ico-mana"></i>Summon</button>
-    <button data-tab="rituals"><i class="ico ico-sunrise"></i>Rituals</button>
     <button data-tab="quests"><i class="ico ico-scroll"></i>Quests</button>
   </nav>
 </div>
 
+<div id="wish-overlay" class="hidden"></div>
 <div id="modal-root"></div>
 <div id="toast-root"></div>
 
@@ -159,6 +180,9 @@
 <script src="js/lore.js"></script>
 <script src="js/state.js"></script>
 <script src="js/vfx.js"></script>
+<script src="js/merge.js"></script>
+<script src="js/farm.js"></script>
+<script src="js/lab.js"></script>
 <script src="js/battle.js"></script>
 <script src="js/habits.js"></script>
 <script src="js/quests.js"></script>
