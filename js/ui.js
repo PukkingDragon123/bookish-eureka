@@ -1,8 +1,11 @@
-/* ============ Ritual Beasts — UI v3 ============ */
+/* ============ Dreamkeep — UI v4 ============
+   Today is the home screen: your dream, one concrete task, a real timer.
+   Everything else (battle, garden, beasts) is the reward layer that the
+   real practice feeds.                                                     */
 'use strict';
 
 const UI = (() => {
-  let activeTab = 'battle';
+  let activeTab = 'today';
   let dexFilter = 'all';
 
   function sprite(cid) { return assetUrl('assets/creatures/' + C_BY_ID[cid].file); }
@@ -16,6 +19,10 @@ const UI = (() => {
     img.style.height = 'auto';
   }
 
+  function heroBeastId() {
+    return S.party[0] || S.starterCid || Object.keys(S.beasts)[0] || null;
+  }
+
   /* ================= HUD ================= */
   function renderHud() {
     $('#hud-lvl-num').textContent = S.player.level;
@@ -26,6 +33,7 @@ const UI = (() => {
     $('#hud-mana-fill').style.width = (100 * S.player.mana / manaMax()) + '%';
     $('#hud-ess').textContent = fmt(S.player.essence);
     $('#hud-lab').textContent = fmt(S.lab.points);
+    $('#hud-seeds').textContent = fmt(S.farm.seeds);
     $('#hud-streak').textContent = S.streak.count;
   }
 
@@ -34,12 +42,14 @@ const UI = (() => {
     activeTab = name;
     $$('#tabbar button').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
     $$('.tab').forEach(t => t.classList.toggle('active', t.id === 'tab-' + name));
+    $('#view').scrollTop = 0;
     Sound.click();
+    if (name === 'today') renderToday();
     if (name === 'beasts') renderBeasts();
     if (name === 'summon') renderSummon();
     if (name === 'farm') renderFarm();
     if (name === 'quests') { renderQuests(); markQuestDot(false); }
-    if (name === 'battle') { renderQuestLog(); renderUpgrades(); renderMerge(); }
+    if (name === 'battle') { renderQuestLog(); renderUpgrades(); renderMerge(); renderCooldowns(); }
   }
   function currentTab() { return activeTab; }
 
@@ -50,7 +60,375 @@ const UI = (() => {
     if (!on && dot) dot.remove();
   }
 
-  /* ================= battle scene ================= */
+  /* ============================================================
+     TODAY — the whole point of the app
+     ============================================================ */
+  function renderToday() {
+    if (!S.dream || !S.dream.key) return;
+    renderHero();
+    renderFocus();
+    renderRhythm();
+    renderTodayQuests();
+    renderChallengeInto($('#today-challenge'));
+    renderJournal();
+  }
+
+  function renderHero() {
+    const d = Dream.def();
+    const now = new Date();
+    $('#hero-date').textContent =
+      now.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+    $('#hero-icon').className = 'ico big ico-' + d.icon;
+    $('#hero-dreamname').textContent = d.name;
+
+    const r = Dream.rung();
+    $('#hero-rank').textContent = r === 0
+      ? 'Rank — · your first session starts the climb'
+      : `Rank ${r}/10 · ${Dream.rungName()}`;
+
+    const nx = Dream.nextRung();
+    const fill = $('#hero-ladder-fill');
+    if (nx) {
+      fill.style.width = (nx.frac * 100) + '%';
+      $('#hero-ladder-txt').textContent =
+        `${Dream.hoursLogged().toFixed(1)}h / ${nx.hours}h → ${nx.name}`;
+    } else {
+      fill.style.width = '100%';
+      $('#hero-ladder-txt').textContent = `${Dream.hoursLogged().toFixed(0)}h — ladder complete`;
+    }
+
+    const why = $('#hero-why');
+    why.textContent = S.dream.why ? '“' + S.dream.why + '”' : '';
+    why.classList.toggle('hidden', !S.dream.why);
+
+    const cid = heroBeastId();
+    const hb = $('#hero-beast');
+    if (cid) {
+      hb.src = sprite(cid);
+      hb.classList.remove('hidden');
+      fitSprite(hb, cid, 104);
+    } else hb.classList.add('hidden');
+  }
+
+  function renderFocus() {
+    const wrap = $('#focus-card');
+    wrap.innerHTML = '';
+    const d = Dream.def();
+    const scheduled = Dream.scheduledToday();
+    const mins = Dream.minutesToday();
+    const done = mins > 0;
+    const card = el('div', 'focus' + (done ? ' done-focus' : ''));
+
+    if (S.session) {
+      card.innerHTML = `
+        <div class="f-label">Session in progress</div>
+        <div class="f-task">${Dream.todaysTask()}</div>
+        <div class="f-meta">${icon('timer')} ${fmtTime(sessionRemaining() / 1000)} left</div>
+        <div class="f-actions"></div>`;
+      const back = el('button', 'pixbtn huge primary', '<b>Back to session</b>');
+      back.onclick = () => openSessionOverlay();
+      card.querySelector('.f-actions').appendChild(back);
+      wrap.appendChild(card);
+      return;
+    }
+
+    if (!scheduled && !done) {
+      card.innerHTML = `
+        <div class="f-label">Rest day</div>
+        <div class="f-task">Today is not a ${d.name.toLowerCase()} day.</div>
+        <div class="f-rest">Rest is part of the plan — your streak is safe.
+          But if you feel like it, nothing is stopping you.</div>
+        <div class="f-actions"></div>`;
+      const go = el('button', 'pixbtn huge ghost', `<b>Practise anyway</b><span>${S.dream.mins} min</span>`);
+      go.onclick = () => showSessionSetup();
+      card.querySelector('.f-actions').appendChild(go);
+      wrap.appendChild(card);
+      return;
+    }
+
+    if (done) {
+      card.innerHTML = `
+        <div class="f-label">Today · complete</div>
+        <div class="f-done">${icon('check', 'big')} ${mins} minutes of ${d.unit} logged</div>
+        <div class="f-rest">That is the whole job. Anything more today is a bonus —
+          and your beasts will take every minute of it.</div>
+        <div class="f-actions"></div>`;
+      const more = el('button', 'pixbtn huge good', '<b>One more session</b>');
+      more.onclick = () => showSessionSetup();
+      card.querySelector('.f-actions').appendChild(more);
+      wrap.appendChild(card);
+      return;
+    }
+
+    card.innerHTML = `
+      <div class="f-label">Today's focus</div>
+      <div class="f-task">${Dream.todaysTask()}</div>
+      <div class="f-meta">
+        <span>${icon('timer')} ${S.dream.mins} min</span>
+        <span>${icon('mana')} ~${Math.round(S.dream.mins * 2.2)} mana</span>
+        <span>${icon('star')} ~${Math.round(S.dream.mins * 3.5)} XP</span>
+      </div>
+      <div class="f-actions"></div>`;
+    const acts = card.querySelector('.f-actions');
+    const go = el('button', 'pixbtn huge primary', `<b>Start ${d.gerund}</b>`);
+    go.onclick = () => showSessionSetup();
+    acts.appendChild(go);
+    const swap = el('button', 'pixbtn ghost sm', icon('scroll'));
+    swap.title = 'Different task';
+    swap.onclick = () => { Dream.rerollTask(); Sound.click(); renderFocus(); };
+    acts.appendChild(swap);
+    wrap.appendChild(card);
+  }
+
+  function renderRhythm() {
+    const wrap = $('#rhythm-days');
+    wrap.innerHTML = '';
+    const week = Dream.weekMinutes();
+    const todayDow = new Date().getDay();
+    Dream.DAY_NAMES.forEach((n, i) => {
+      const on = (S.dream.days || []).includes(i);
+      const hit = week[i] > 0;
+      const d = el('div', 'rday' + (on ? ' on' : '') + (i === todayDow ? ' today' : '') + (hit ? ' hit' : ''));
+      d.innerHTML = `${n}<span class="rdot">${hit ? '●' : on ? '○' : '·'}</span>`;
+      d.title = hit ? `${week[i]} min` : on ? 'scheduled' : 'rest day';
+      wrap.appendChild(d);
+    });
+    const stats = $('#rhythm-stats');
+    stats.innerHTML = '';
+    const wk = week.reduce((a, b) => a + b, 0);
+    [[S.streak.count, 'day streak'],
+     [Dream.hoursLogged().toFixed(1) + 'h', 'total'],
+     [wk + 'm', 'this week'],
+     [S.dream.sessions || 0, 'sessions']].forEach(([v, k]) => {
+      stats.appendChild(el('div', 'rstat', `<b>${v}</b><span>${k}</span>`));
+    });
+  }
+
+  function renderTodayQuests() {
+    Quests.generateToday();
+    const list = $('#today-quest-list');
+    list.innerHTML = '';
+    const open = (S.quests.list || []).filter(q => !q.claimed);
+    const show = (open.length ? open : S.quests.list || []).slice(0, 4);
+    if (!show.length) { list.appendChild(el('div', 'jempty', 'No quests today.')); return; }
+    for (const q of show) {
+      const ready = q.progress >= q.target;
+      const row = el('div', 'tq' + (ready || q.claimed ? ' tq-done' : ''));
+      row.innerHTML = `${icon(q.icon)}<span style="flex:1">${q.name}</span>
+        <span class="pixbar good"><i style="width:${100 * Math.min(1, q.progress / q.target)}%"></i></span>
+        <b>${q.claimed ? '✓' : q.progress + '/' + q.target}</b>`;
+      if (ready && !q.claimed) {
+        const b = el('button', 'pixbtn gold tiny', 'Claim');
+        b.onclick = e => { e.stopPropagation(); Quests.claim(q.qid, e.currentTarget); renderToday(); };
+        row.appendChild(b);
+      } else {
+        row.onclick = () => switchTab('quests');
+      }
+      list.appendChild(row);
+    }
+  }
+
+  function renderJournal() {
+    const list = $('#journal-list');
+    list.innerHTML = '';
+    const log = S.dream.log || [];
+    if (!log.length) {
+      list.appendChild(el('div', 'jempty',
+        'Nothing yet. Finish one session and it lands here — proof you turned up.'));
+      return;
+    }
+    for (const e of log.slice(0, 12)) {
+      const row = el('div', 'jrow');
+      row.innerHTML = `<span class="jd">${e.d.slice(5)}</span><span class="jm">${e.m}m</span>
+        <span class="jn">${e.n ? e.n : '<i style="opacity:.5">practised</i>'}</span>`;
+      list.appendChild(row);
+    }
+  }
+
+  /* ============================================================
+     SESSION — the real timer
+     ============================================================ */
+  function sessionElapsed() {
+    if (!S.session) return 0;
+    const s = S.session;
+    return (s.elapsedBefore || 0) + (s.paused ? 0 : Date.now() - s.startedAt);
+  }
+  function sessionRemaining() {
+    if (!S.session) return 0;
+    return Math.max(0, S.session.mins * 60000 - sessionElapsed());
+  }
+
+  function showSessionSetup() {
+    const d = Dream.def();
+    const box = el('div', 'timer-wrap');
+    box.innerHTML = `<h3>${icon(d.icon)} ${d.name}</h3>
+      <p class="subtle" style="text-align:center">${Dream.todaysTask()}</p>
+      <label style="margin-top:10px">How long?</label>
+      <div class="preset-row"></div>
+      <div class="mrow"></div>`;
+    const row = box.querySelector('.preset-row');
+    const opts = [...new Set([5, 10, 15, S.dream.mins, 30, 45, 60])].sort((a, b) => a - b);
+    let sel = S.dream.mins;
+    for (const m of opts) {
+      const p = el('button', 'preset' + (m === sel ? ' on' : ''), m + 'm');
+      p.onclick = () => { sel = m; $$('.preset', row).forEach(x => x.classList.remove('on')); p.classList.add('on'); };
+      row.appendChild(p);
+    }
+    const start = el('button', 'pixbtn primary', `<b>Begin</b>`);
+    start.onclick = () => { closeAllModals(); startSession(sel); };
+    box.querySelector('.mrow').appendChild(start);
+    openModal(box);
+  }
+
+  function startSession(mins) {
+    S.session = { mins, startedAt: Date.now(), paused: false, elapsedBefore: 0 };
+    save();
+    Sound.quest();
+    openSessionOverlay();
+    renderFocus();
+  }
+
+  function openSessionOverlay() {
+    if (!S.session) return;
+    const o = $('#session-overlay');
+    const d = Dream.def();
+    const cid = heroBeastId();
+    o.classList.remove('hidden');
+    o.innerHTML = `
+      <div class="s-dream">${d.name} · ${S.session.mins} minutes</div>
+      <div class="s-task">${Dream.todaysTask()}</div>
+      <div class="sring">
+        <svg viewBox="0 0 214 214">
+          <circle class="glow" cx="107" cy="107" r="95"/>
+          <circle class="track" cx="107" cy="107" r="95"/>
+          <circle class="fill" cx="107" cy="107" r="95"/>
+        </svg>
+        <div class="sring-mid"><b id="s-left">--:--</b><span id="s-state">REMAINING</span></div>
+        ${cid ? `<img class="sring-beast" src="${sprite(cid)}">` : ''}
+      </div>
+      <div class="s-hint">The clock keeps running if you close this — it is real time,
+        not screen time. Put the phone down and go do the thing.</div>
+      <div class="s-btns"></div>`;
+    if (cid) fitSprite(o.querySelector('.sring-beast'), cid, 56);
+    const btns = o.querySelector('.s-btns');
+
+    const pause = el('button', 'pixbtn ghost sm', S.session.paused ? 'Resume' : 'Pause');
+    pause.onclick = () => {
+      const s = S.session;
+      if (s.paused) { s.startedAt = Date.now(); s.paused = false; }
+      else { s.elapsedBefore = sessionElapsed(); s.paused = true; }
+      save();
+      pause.textContent = s.paused ? 'Resume' : 'Pause';
+      tickSession();
+    };
+    btns.appendChild(pause);
+
+    const hide = el('button', 'pixbtn ghost sm', 'Hide');
+    hide.onclick = () => { o.classList.add('hidden'); renderFocus(); };
+    btns.appendChild(hide);
+
+    const fin = el('button', 'pixbtn good sm', 'Finish now');
+    fin.onclick = () => finishSession(true);
+    btns.appendChild(fin);
+
+    const give = el('button', 'pixbtn ghost sm', 'Cancel');
+    give.onclick = () => {
+      S.session = null; save();
+      o.classList.add('hidden');
+      toast('No guilt. Start again whenever you are ready.');
+      renderFocus();
+    };
+    btns.appendChild(give);
+
+    tickSession();
+  }
+
+  /* called once a second from main */
+  function tickSession() {
+    const o = $('#session-overlay');
+    if (!S.session) { o.classList.add('hidden'); return; }
+    const left = sessionRemaining();
+    if (left <= 0) { finishSession(false); return; }
+    if (o.classList.contains('hidden')) return;
+    const b = $('#s-left');
+    if (b) b.textContent = fmtTime(left / 1000);
+    const st = $('#s-state');
+    if (st) st.textContent = S.session.paused ? 'PAUSED' : 'REMAINING';
+    const fill = o.querySelector('.sring .fill');
+    if (fill) fill.style.strokeDashoffset = 597 * (left / (S.session.mins * 60000));
+  }
+
+  function finishSession(early) {
+    if (!S.session) return;
+    const mins = Math.max(1, Math.round(sessionElapsed() / 60000));
+    const planned = S.session.mins;
+    S.session = null;
+    save();
+    $('#session-overlay').classList.add('hidden');
+    if (early && mins < 2) {
+      toast('Too short to count — but turning up still matters.');
+      renderFocus();
+      return;
+    }
+    Sound.levelup();
+    confetti(46);
+    VFX.screenFlash && VFX.screenFlash();
+    showSessionDone(mins, planned, early);
+  }
+
+  function showSessionDone(mins, planned, early) {
+    const d = Dream.def();
+    const box = el('div', 'sreveal');
+    box.innerHTML = `
+      <div class="snew">${early && mins < planned ? 'SESSION LOGGED' : 'SESSION COMPLETE'}</div>
+      <h2>${mins} minutes of ${d.unit}</h2>
+      <p class="subtle" style="margin-top:2px">Write one line about it — future you likes reading these.</p>
+      <input type="text" id="s-note" maxlength="110" placeholder="e.g. finally got the chord change clean">
+      <div class="s-rewards" id="s-rewards"></div>
+      <div class="mrow"></div>`;
+    const ok = el('button', 'pixbtn gold', '<b>Collect</b>');
+    ok.onclick = e => {
+      const note = box.querySelector('#s-note').value.trim();
+      const r = Dream.completeSession(mins, note);
+      coinBurst(e.currentTarget, 8);
+      closeAllModals();
+      showSessionRewards(r);
+    };
+    box.querySelector('.mrow').appendChild(ok);
+    const pre = box.querySelector('#s-rewards');
+    pre.innerHTML = `${icon('mana')} mana &nbsp; ${icon('star')} XP &nbsp; ${icon('essence')} essence
+      &nbsp; ${icon('seed')} seeds &nbsp; ${icon('flask')} lab pts`;
+    openModal(box, { noClose: true });
+    setTimeout(() => { const i = box.querySelector('#s-note'); if (i) i.focus(); }, 80);
+  }
+
+  function showSessionRewards(r) {
+    const box = el('div', 'sreveal');
+    const cid = heroBeastId();
+    box.innerHTML = `
+      <div class="snew">${r.rungUp ? 'NEW RANK' : 'WELL EARNED'}</div>
+      ${r.rungUp ? `<h2>${r.rungUp}</h2><p class="subtle">Rank ${Dream.rung()}/10 on the ${Dream.def().name} ladder.</p>` : ''}
+      ${cid ? `<div class="burst"><div class="rays"></div><img src="${sprite(cid)}"></div>` : ''}
+      <div class="cstats" style="margin-top:8px">
+        <div class="cstat"><span>${icon('mana')} Mana</span><b>+${fmt(r.mana)}</b></div>
+        <div class="cstat"><span>${icon('star')} XP</span><b>+${fmt(r.xp)}</b></div>
+        <div class="cstat"><span>${icon('essence')} Essence</span><b>+${fmt(r.ess)}</b></div>
+        <div class="cstat"><span>${icon('seed')} Seeds</span><b>+${fmt(r.seeds)}</b></div>
+      </div>
+      <p class="subtle" style="margin-top:8px">Your party fed on those ${r.mins} minutes.
+        The garden drank too.</p>
+      <div class="mrow"></div>`;
+    if (cid) fitSprite(box.querySelector('.burst img'), cid, 120);
+    const ok = el('button', 'pixbtn primary', '<b>Nice</b>');
+    ok.onclick = () => { closeAllModals(); renderAll(); };
+    box.querySelector('.mrow').appendChild(ok);
+    openModal(box, { noClose: true });
+    if (r.rungUp) { confetti(60); Sound.evolve(); }
+  }
+
+  /* ============================================================
+     BATTLE
+     ============================================================ */
   function renderSceneBg() {
     $('#scene-bg').style.backgroundImage = `url(${assetUrl(AREAS[S.stage.area].bg)})`;
   }
@@ -70,7 +448,6 @@ const UI = (() => {
     renderBoost();
   }
 
-  /* ----- enemies (packs of 1-3) ----- */
   const FOE_POS = [           // slot -> position inside #enemy-row (percent)
     [{ l: 14, b: 8 }],
     [{ l: 2, b: 4 }, { l: 44, b: 24 }],
@@ -135,17 +512,36 @@ const UI = (() => {
     }
     if (vfx) VFX.cast(vfx, p.x, p.y, crit ? 1.5 : 1);
     else VFX.hit(p.x, p.y, 'metal', crit);
+    if (crit) VFX.kick(3, 130);
     if (label) skillFlash(label, false);
   }
 
-  /* fighter dashes toward the target, damage lands mid-dash */
+  /* real approach: the fighter travels to the enemy, strikes, and walks back */
   function attackTween(cid, target, onImpact) {
     const i = S.party.indexOf(cid);
     const f = $$('#party-holder .fighter')[i < 0 ? 0 : i];
-    if (f) {
-      f.classList.remove('attack'); void f.offsetWidth; f.classList.add('attack');
+    if (!f) { setTimeout(onImpact, 120); return; }
+    const tp = foePoint(target);
+    const scene = $('#scene');
+    let dx = 62, dy = -8;
+    if (tp && scene) {
+      const fr = f.getBoundingClientRect(), sr = scene.getBoundingClientRect();
+      const fx = fr.left - sr.left + fr.width / 2;
+      const fy = fr.top - sr.top + fr.height * 0.7;
+      dx = clamp(tp.x - fx - 34, 10, 190);
+      dy = clamp(tp.y - fy, -60, 24);
     }
-    setTimeout(onImpact, 160);
+    f.style.setProperty('--dashx', Math.round(dx) + 'px');
+    f.style.setProperty('--dashy', Math.round(dy) + 'px');
+    f.classList.remove('striking');
+    f.classList.add('charging');
+    setTimeout(() => {
+      f.classList.remove('charging');
+      f.classList.add('striking');
+      onImpact();
+      VFX.kick(2, 90);
+      setTimeout(() => f.classList.remove('striking'), 230);
+    }, 210);
   }
 
   function enemyLunge(e) {
@@ -185,6 +581,7 @@ const UI = (() => {
       fitSprite(f.querySelector('img'), cid, S.party.length > 2 ? 54 : 64);
       holder.appendChild(f);
     }
+    renderCooldowns();
   }
 
   function renderPartyHp(frac) {
@@ -194,6 +591,52 @@ const UI = (() => {
       i.style.width = pct + '%';
       i.style.background = col;
     });
+  }
+
+  /* per-fighter skill cooldown bars under the scene */
+  let cdCards = [];
+  function renderCooldowns() {
+    const strip = $('#cooldown-strip');
+    if (!strip) return;
+    strip.innerHTML = '';
+    cdCards = [];
+    for (const p of Battle.cooldownState()) {
+      const c = C_BY_ID[p.cid];
+      if (!c) continue;
+      const card = el('div', 'cdcard');
+      const img = el('img');
+      img.src = sprite(p.cid);
+      card.appendChild(img);
+      const bars = el('div', 'cdbars');
+      const meters = [];
+      p.skills.forEach(sk => {
+        const row = el('div', 'cdrow');
+        row.innerHTML = `<span class="cdname">${sk.name}</span>
+          <span class="cdmeter"><i></i></span>`;
+        bars.appendChild(row);
+        meters.push(row.querySelector('.cdmeter'));
+      });
+      card.appendChild(bars);
+      strip.appendChild(card);
+      cdCards.push({ cid: p.cid, meters });
+    }
+    tickCooldowns();
+  }
+
+  /* cheap per-second refresh — only touches widths, never rebuilds */
+  function tickCooldowns() {
+    if (!cdCards.length || activeTab !== 'battle') return;
+    const state = Battle.cooldownState();
+    for (const card of cdCards) {
+      const p = state.find(x => x.cid === card.cid);
+      if (!p) continue;
+      card.meters.forEach((m, i) => {
+        const sk = p.skills[i];
+        if (!sk) return;
+        m.firstChild.style.width = (sk.frac * 100) + '%';
+        m.classList.toggle('rdy', sk.frac >= 1);
+      });
+    }
   }
 
   function renderBoost() {
@@ -233,10 +676,18 @@ const UI = (() => {
     skillFlash(ult.name, true);
     const i = S.party.indexOf(cid);
     const f = $$('#party-holder .fighter')[i < 0 ? 0 : i];
-    if (f) { f.classList.remove('attack'); void f.offsetWidth; f.classList.add('attack'); }
+    if (f) {
+      f.style.setProperty('--dashx', '80px');
+      f.style.setProperty('--dashy', '-16px');
+      f.classList.add('charging');
+      setTimeout(() => { f.classList.remove('charging'); f.classList.add('striking'); }, 220);
+      setTimeout(() => f.classList.remove('striking'), 480);
+    }
     const first = Battle.enemies.filter(e => !e.dying)[0];
     const p = first ? foePoint(first) : null;
     if (p) VFX.ultimate(p.x, p.y, ult.vfx);
+    VFX.kick(7, 320);
+    VFX.stop(90);
   }
 
   /* ----- defeat overlay ----- */
@@ -258,6 +709,7 @@ const UI = (() => {
     mk('Buy upgrades', 'sword', () => { hideDefeat(); $('#upgrade-strip').scrollIntoView({ behavior: 'smooth' }); });
     mk('Feed beasts', 'meal', () => { hideDefeat(); switchTab('farm'); });
     mk('Fuse gear', 'portal', () => { hideDefeat(); $('#merge-panel').scrollIntoView({ behavior: 'smooth' }); });
+    mk('Practise', 'star', () => { hideDefeat(); switchTab('today'); });
     setTimeout(hideDefeat, 5000);
   }
   function hideDefeat() { $('#defeat-overlay').classList.add('hidden'); }
@@ -329,16 +781,19 @@ const UI = (() => {
     const open = (S.quests.list || []).filter(q => !q.claimed).slice(0, 2);
     const ch = Quests.todaysChallenge();
     let html = '';
+    if (!Dream.doneToday() && Dream.scheduledToday()) {
+      html += `<div class="qlog-row focus-row">${icon(Dream.def().icon)} <b>Today's focus:</b> ${Dream.todaysTask()}</div>`;
+    }
     if (!S.challenge.done) {
       html += `<div class="qlog-row">${icon('star')} <b>${ch.name}</b></div>`;
     }
     for (const q of open) {
       const done = q.progress >= q.target;
       html += `<div class="qlog-row ${done ? 'done-row' : ''}">${icon(q.icon)} ${q.name}
-        <span class="pixbar good"><i style="width:${100 * q.progress / q.target}%"></i></span>
+        <span class="pixbar good"><i style="width:${100 * Math.min(1, q.progress / q.target)}%"></i></span>
         <b>${q.progress}/${q.target}</b></div>`;
     }
-    if (!html) html = `<div class="qlog-row">${icon('check')} All of today's quests are done. Legend.</div>`;
+    if (!html) html = `<div class="qlog-row">${icon('check')} Everything today is done. Legend.</div>`;
     w.innerHTML = html;
   }
 
@@ -419,8 +874,7 @@ const UI = (() => {
       ev.preventDefault();
       dragFrom = from;
       item.classList.add('dragging');
-      ghost = el('div', 'merge-ghost ' + item.className.replace('mitem', 'mitem'));
-      ghost.className = 'merge-ghost mitem t-' + S.merge.board[from].cat;
+      ghost = el('div', 'merge-ghost mitem t-' + S.merge.board[from].cat);
       ghost.innerHTML = item.innerHTML;
       document.body.appendChild(ghost);
       moveGhost(ev);
@@ -456,13 +910,11 @@ const UI = (() => {
   }
   function mergeSpawnFx(i) {
     const p = slotPoint(i);
-    if (p) {
-      // portal swirl in fixed coords -> reuse confetti-ish float
-      const f = el('div', 'dmg-float mana-f', '+');
-      f.style.position = 'fixed'; f.style.left = p.x + 'px'; f.style.top = p.y + 'px'; f.style.zIndex = 300;
-      document.body.appendChild(f);
-      setTimeout(() => f.remove(), 800);
-    }
+    if (!p) return;
+    const f = el('div', 'dmg-float mana-f', '+');
+    f.style.position = 'fixed'; f.style.left = p.x + 'px'; f.style.top = p.y + 'px'; f.style.zIndex = 300;
+    document.body.appendChild(f);
+    setTimeout(() => f.remove(), 800);
   }
   function mergeFuseFx(i, tier) {
     const p = slotPoint(i);
@@ -620,12 +1072,18 @@ const UI = (() => {
     const mutBits = Object.entries(mut).map(([k, v]) =>
       `+${v}% ${({ atk: 'attack', hp: 'vitality', spd: 'speed' })[k]}`).join(' · ');
 
+    const dreamEl = S.dream && S.dream.key ? Dream.def().element : null;
+    const affinity = dreamEl && c.types.includes(dreamEl)
+      ? `<div class="mutline">${icon(Dream.def().icon)} Shares your ${Dream.def().name} affinity — gains
+         <b>80% more XP</b> from every practice session.</div>` : '';
+
     box.innerHTML = `
       <div class="crarity ${c.rarity}">${c.rarity}</div>
       <h3>${c.name}</h3>
       <div>${typeBadges(c.types)}</div>
       <div class="cimg-wrap"><img class="main" src="${assetUrl('assets/creatures/' + c.file)}" alt="${c.name}"></div>
       <div class="dexbox"><span class="dexlabel">DEX ENTRY No.${c.id}</span>${kit.dex}</div>
+      ${affinity}
       ${owned ? `
       <div class="cstats">
         <div class="cstat"><span>Level</span><b>${st.lvl}</b></div>
@@ -634,7 +1092,7 @@ const UI = (() => {
         <div class="cstat"><span>Speed</span><b>${st.spd}</b></div>
       </div>
       ${mutBits ? `<div class="mutline">${icon('flask')} Lab mutations: ${mutBits}</div>` : ''}
-      <div class="pixbar xp" style="margin-top:6px" title="XP from feeding & battles">
+      <div class="pixbar xp" style="margin-top:6px" title="XP from practice, feeding & battles">
         <i style="width:${Math.min(100, 100 * inst.xp / beastXpNeed(lvl))}%"></i></div>`
       : '<p class="subtle" style="margin-top:6px">Not yet bonded — summon or evolve to recruit.</p>'}
       <div class="sectitle">${icon('sword')} Skills</div>${skills}${graftHtml}
@@ -650,14 +1108,12 @@ const UI = (() => {
     const actions = box.querySelector('#cd-actions');
     if (!owned) return;
 
-    // feed
     const feedB = el('button', 'pixbtn good sm');
     feedB.innerHTML = `<b>Feed</b><span>${icon('meal')} ${Farm.totalFood()} food</span>`;
     feedB.disabled = Farm.totalFood() <= 0;
     feedB.onclick = () => showFeedPicker(cid, () => { closeModal(back); showCreature(cid); });
     actions.appendChild(feedB);
 
-    // gold level-up
     const cost = levelUpCost(cid);
     const lu = el('button', 'pixbtn gold sm');
     lu.innerHTML = `<b>Level Up</b><span>${icon('gold')} ${fmt(cost)}</span>`;
@@ -719,7 +1175,6 @@ const UI = (() => {
       opt.innerHTML = `${icon(food.icon, 'big')}<span>${food.name}</span><b>x${have}</b>`;
       opt.onclick = e => {
         if (Farm.feed(cid, elName, e.currentTarget)) {
-          VFX.hearts && null;
           closeAllModals();
           if (after) after();
           renderHud();
@@ -727,7 +1182,7 @@ const UI = (() => {
       };
       grid.appendChild(opt);
     }
-    if (!any) box.appendChild(el('p', 'pantry-empty', 'The pantry is empty — grow crops at the Farm.'));
+    if (!any) box.appendChild(el('p', 'pantry-empty', 'The pantry is empty — grow crops in the Garden.'));
     openModal(box);
   }
 
@@ -769,28 +1224,71 @@ const UI = (() => {
     save();
   }
 
-  /* ================= farm tab ================= */
+  /* ============================================================
+     GARDEN
+     ============================================================ */
+  const ELEM_CLASS = {
+    Fire: 'fire', Water: 'water', Nature: 'nature', Electric: 'electric', Ice: 'ice',
+    Earth: 'earth', Shadow: 'shadow', Mystic: 'mystic', Metal: 'metal',
+  };
+
+  function plantStage(p) {
+    if (!p.el) return -1;
+    if (Farm.ready(p)) return 3;
+    const total = Farm.growMs(p.el);
+    const frac = clamp(1 - Farm.remaining(p) / total, 0, 1);
+    return frac < 0.34 ? 0 : frac < 0.7 ? 1 : 2;
+  }
+
   function renderFarm() {
     $('#farm-seeds').textContent = S.farm.seeds;
-    const wrap = $('#farm-plots');
-    wrap.innerHTML = '';
+
+    const beds = $('#garden-beds');
+    beds.innerHTML = '';
+    // the field looks watered when anything has been sped up recently
+    beds.classList.toggle('watered', S.farm.plots.some(p => p.el && (p.boost || 0) > 0));
+
     S.farm.plots.forEach((p, i) => {
-      const d = el('div', 'plot' + (Farm.ready(p) ? ' ready' : '') + (p.el ? '' : ' empty-plot'));
-      if (!p.el) {
-        d.innerHTML = `<span class="stagec">${icon('seed', 'big')}</span><span class="ptime">plant a seed</span>`;
-        d.onclick = () => showPlantModal(i);
-      } else if (Farm.ready(p)) {
-        d.innerHTML = `<span class="stagec sprout">${icon(FOODS[p.el].icon, 'huge')}</span><span class="ptime">HARVEST!</span>`;
-        d.onclick = e => Farm.harvest(i, e.currentTarget);
+      const cell = el('div', 'plotcell');
+      const st = plantStage(p);
+      if (st < 0) {
+        cell.classList.add('empty-plot');
+        cell.innerHTML = `<span class="emptymark">${icon('seed', 'big')}</span>
+          <span class="plabel">plant</span>`;
+        cell.onclick = () => showPlantModal(i);
+      } else if (st === 3) {
+        cell.classList.add('ready');
+        cell.innerHTML = `<span class="plant big p-${ELEM_CLASS[p.el]} s3"></span>
+          <span class="plabel">HARVEST</span>`;
+        cell.onclick = e => {
+          const r = e.currentTarget.getBoundingClientRect();
+          Farm.harvest(i, e.currentTarget);
+          VFX.harvest && VFX.harvest(r.left + r.width / 2, r.top + r.height / 2);
+        };
       } else {
         const rem = Farm.remaining(p);
-        const frac = 1 - rem / (Farm.growMs(p.el));
-        const stageIcon = frac < 0.5 ? icon('seed', 'big') : icon('leaf', 'big');
-        d.innerHTML = `<span class="stagec sprout">${stageIcon}</span><span class="ptime">${FOODS[p.el].name} · ${fmtTime(rem / 1000)}</span>`;
-        d.onclick = () => toast(`${FOODS[p.el].name} needs ${fmtTime(Farm.remaining(p) / 1000)} — quests water the field!`);
+        cell.innerHTML = `<span class="plant big p-${ELEM_CLASS[p.el]} s${st}"></span>
+          <span class="plabel">${fmtTime(rem / 1000)}</span>`;
+        cell.onclick = () => toast(
+          `${FOODS[p.el].name} — ${fmtTime(Farm.remaining(p) / 1000)} to go. Practice sessions water the field!`);
       }
-      wrap.appendChild(d);
+      beds.appendChild(cell);
     });
+
+    // butterflies drifting over the crops, and a scarecrow standing in the bed
+    const bugs = $('#garden-bugs');
+    if (!bugs.childElementCount) {
+      [[8, 128, 0], [48, 186, -3.5], [66, 148, -6.5]].forEach(([l, t, d]) => {
+        const b = el('div', 'bug');
+        b.style.left = l + '%'; b.style.top = t + 'px'; b.style.animationDelay = d + 's';
+        b.innerHTML = '<span class="prop prop-butterfly"></span>';
+        bugs.appendChild(b);
+      });
+      const sc = el('div', 'scarecrow');
+      sc.innerHTML = '<span class="prop prop-scarecrow"></span>';
+      bugs.appendChild(sc);
+    }
+
     // pantry
     const pan = $('#pantry');
     pan.innerHTML = '';
@@ -803,27 +1301,43 @@ const UI = (() => {
       chip.onclick = () => showFeedTarget(elName);
       pan.appendChild(chip);
     }
-    $('#pantry-count').textContent = total ? `${total} food — tap to feed` : '';
-    if (!total) pan.appendChild(el('p', 'pantry-empty', 'Nothing harvested yet. Crops grow in real time — even while you are away.'));
+    $('#pantry-count').textContent = total;
+    if (!total) pan.appendChild(el('p', 'pantry-empty',
+      'Nothing harvested yet. Crops grow in real time — even while you are away.'));
     renderFood();
+  }
+
+  function waterGarden() {
+    const growing = S.farm.plots.filter(p => p.el && !Farm.ready(p)).length;
+    if (!growing) { toast('Nothing planted to water yet.'); return; }
+    if (S.player.mana < 20) { toast('Needs 20 mana — practise to earn some.', 'mana'); return; }
+    S.player.mana -= 20;
+    Farm.waterAll(5);
+    Sound.habit();
+    const beds = $('#garden-beds');
+    beds.classList.add('watered');
+    const r = beds.getBoundingClientRect();
+    VFX.harvest && VFX.harvest(r.left + r.width / 2, r.top + r.height / 3);
+    renderFarm();
+    renderHud();
   }
 
   function showPlantModal(plotI) {
     if (S.farm.seeds <= 0) {
-      toast('No seeds! Log a real meal (name + calories) to earn seeds.', 'mana');
+      toast('No seeds! Finish a session or log a real meal to earn seeds.', 'mana');
       return;
     }
+    const dreamEl = S.dream && S.dream.key ? Dream.def().element : null;
     const box = el('div');
     box.innerHTML = `<h3>${icon('seed')} Plant a crop</h3>
       <p class="subtle" style="text-align:center">Seeds: ${S.farm.seeds} — each crop feeds one element.</p>
       <div class="feed-grid"></div>`;
     const grid = box.querySelector('.feed-grid');
     for (const [elName, food] of Object.entries(FOODS)) {
-      const opt = el('button', 'feed-opt');
-      opt.innerHTML = `${icon(food.icon, 'big')}<span>${food.name}</span><b>${food.mins}min</b>`;
-      opt.onclick = () => {
-        if (Farm.plant(plotI, elName)) closeAllModals();
-      };
+      const opt = el('button', 'feed-opt' + (elName === dreamEl ? ' match' : ''));
+      opt.innerHTML = `<span class="plant p-${ELEM_CLASS[elName]} s3"></span>
+        <span>${food.name}</span><b>${food.mins}min</b>`;
+      opt.onclick = () => { if (Farm.plant(plotI, elName)) closeAllModals(); };
       grid.appendChild(opt);
     }
     openModal(box);
@@ -858,7 +1372,7 @@ const UI = (() => {
       <input type="text" id="meal-name" maxlength="40" placeholder="e.g. Chicken salad">
       <label>Calories</label>
       <input type="number" id="meal-kcal" min="0" max="5000" placeholder="e.g. 450">
-      <label class="photo-label" id="photo-lab">${icon('palette')} <span id="photo-txt">Add a photo (+1 seed)</span>
+      <label class="photo-label" id="photo-lab">${icon('camera')} <span id="photo-txt">Add a photo (+1 seed)</span>
         <input type="file" id="meal-photo" accept="image/*" capture="environment" style="display:none"></label>
       <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--txt)">
         <input type="checkbox" id="meal-healthy" ${healthyDefault ? 'checked' : ''} style="width:18px;height:18px"> This was a healthy choice
@@ -935,7 +1449,7 @@ const UI = (() => {
   /* ================= summon tab ================= */
   const BANNER_ART = {
     wild: { cid: '02_00', from: '#3a5a2a', to: '#243a17' },
-    element: null,   // resolved per element below
+    element: null,
     radiant: { cid: '13_08', from: '#7a5a1e', to: '#4a3010' },
   };
   const ELEM_BANNER_ART = {
@@ -979,7 +1493,6 @@ const UI = (() => {
     $('#pity-note').textContent = `Guaranteed rare+ within ${left} pull${left > 1 ? 's' : ''} · x10 always contains a rare+ · ${S.summons.total} total pulls`;
     $('#lab-points').textContent = S.lab.points;
     $('#lab-cost').textContent = Lab.COST;
-    // relics
     const shelf = $('#relic-shelf');
     shelf.innerHTML = '';
     for (const r of RELICS) {
@@ -1056,7 +1569,7 @@ const UI = (() => {
         cell.innerHTML = `${icon(r.relic.icon, 'big')}<span>${r.relic.name}</span>`;
       } else {
         cell.innerHTML = `<img src="${assetUrl('assets/creatures/' + r.c.file)}">
-          <span>${r.c.name}</span>${r.isNew ? '<span class="pnew">NEW!</span>' : `<span class="subtle">+${r.dup ? r.dup.ess : 0}${' '}ess</span>`}`;
+          <span>${r.c.name}</span>${r.isNew ? '<span class="pnew">NEW!</span>' : `<span class="subtle">+${r.dup ? r.dup.ess : 0}${' '}ess</span>`}`;
       }
       cell.style.animationDelay = (i * 60) + 'ms';
       grid.appendChild(cell);
@@ -1125,7 +1638,7 @@ const UI = (() => {
   function renderQuests() {
     Quests.generateToday();
     renderLoginRow();
-    renderChallenge();
+    renderChallengeInto($('#challenge-card'));
     renderRituals();
     $('#quest-day').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
     const wrap = $('#quest-list');
@@ -1143,7 +1656,7 @@ const UI = (() => {
         <div class="qic">${icon(q.icon)}</div>
         <div class="qmain">
           <div class="qname">${q.name}</div>
-          <span class="pixbar good"><i style="width:${100 * q.progress / q.target}%"></i></span>
+          <span class="pixbar good"><i style="width:${100 * Math.min(1, q.progress / q.target)}%"></i></span>
           <div class="qprog-txt">${q.progress}/${q.target} ${rw.join(' ')}</div>
         </div>`;
       const btn = el('button', 'qclaim pixbtn gold tiny', q.claimed ? 'Claimed' : 'Claim');
@@ -1152,10 +1665,11 @@ const UI = (() => {
       card.appendChild(btn);
       wrap.appendChild(card);
     }
-    // journey
     const j = $('#journey-panel');
     j.innerHTML = '';
     const stats = [
+      ['star', 'Hours practised', Dream.hoursLogged().toFixed(1) + 'h'],
+      ['crown', 'Dream rank', `${Dream.rung()}/10 — ${Dream.rungName()}`],
       ['streak', 'Current streak', S.streak.count + ' day' + (S.streak.count === 1 ? '' : 's')],
       ['sword', 'Beasts defeated', fmt(S.kills)],
       ['skull', 'Bosses slain', fmt(S.bossKills)],
@@ -1172,7 +1686,6 @@ const UI = (() => {
     const claimIdx = Quests.loginClaimable();
     const cur = S.login.cycle % 7;
     Quests.LOGIN.forEach((r, i) => {
-      const claimed = i < cur || (claimIdx < 0 && i === cur - 1 && cur > 0);
       const isToday = i === claimIdx;
       const d = el('div', 'login-day' + (i < cur ? ' claimed' : '') + (isToday ? ' today' : ''));
       d.innerHTML = `<span class="dnum">D${i + 1}</span>${icon(r.icon, 'big')}<span>${r.text}</span>`;
@@ -1184,8 +1697,8 @@ const UI = (() => {
     });
   }
 
-  function renderChallenge() {
-    const wrap = $('#challenge-card');
+  function renderChallengeInto(wrap) {
+    if (!wrap) return;
     const ch = Quests.todaysChallenge();
     const done = S.challenge.done;
     wrap.innerHTML = '';
@@ -1195,14 +1708,14 @@ const UI = (() => {
       <div style="flex:1;min-width:0">
         <div class="cname">${done ? 'DONE: ' : ''}${ch.name}</div>
         <div class="cdesc">${ch.desc}</div>
-        <div class="crew">${icon('flask')} +${Quests.CHALLENGE_REWARD.lp} lab pts ${icon('gem')} +${Quests.CHALLENGE_REWARD.gems} gems · waters the farm</div>
+        <div class="crew">${icon('flask')} +${Quests.CHALLENGE_REWARD.lp} lab pts ${icon('gem')} +${Quests.CHALLENGE_REWARD.gems} gems · waters the garden</div>
         <div class="cbtns"></div>
       </div>`;
     const btns = card.querySelector('.cbtns');
     if (ch.link) {
       const a = el('a', 'pixbtn gem tiny');
       a.href = ch.link; a.target = '_blank'; a.rel = 'noopener';
-      a.innerHTML = `${icon('map')} Open`;
+      a.innerHTML = `${icon('globe')} Open`;
       btns.appendChild(a);
     }
     if (!done) {
@@ -1213,7 +1726,7 @@ const UI = (() => {
     wrap.appendChild(card);
   }
 
-  /* daily quest (habit) cards — engine unchanged, framing is quests now */
+  /* supporting habit cards */
   function renderRituals() {
     const wrap = $('#ritual-list');
     if (!wrap) return;
@@ -1267,7 +1780,7 @@ const UI = (() => {
     if (isCustom) {
       const del = el('button', 'mclose', '✕');
       del.style.position = 'static';
-      del.onclick = () => { if (confirm('Remove this quest?')) Habits.removeCustom(def.id); };
+      del.onclick = () => { if (confirm('Remove this habit?')) Habits.removeCustom(def.id); };
       card.appendChild(del);
     }
     return card;
@@ -1276,7 +1789,7 @@ const UI = (() => {
   function showTimerStart(def) {
     const box = el('div', 'timer-wrap');
     box.innerHTML = `<h3>${icon(def.icon)} ${def.name}</h3>
-      <p class="subtle">Pick a duration — the timer runs in real time.<br>${def.boost ? 'Completing it grants <b style="color:var(--gold)">x3 idle rewards</b> for twice the duration!' : 'Minutes become mana & essence, and water the farm.'}</p>
+      <p class="subtle">Pick a duration — the timer runs in real time.<br>${def.boost ? 'Completing it grants <b style="color:var(--gold)">x3 idle rewards</b> for twice the duration!' : 'Minutes become mana & essence, and water the garden.'}</p>
       <div class="preset-row"></div>
       <div class="mrow"></div>`;
     const row = box.querySelector('.preset-row');
@@ -1329,7 +1842,7 @@ const UI = (() => {
   function showAddCustomModal() {
     const box = el('div');
     const icons = ['star', 'book', 'scroll', 'water', 'sunrise', 'palette', 'crown', 'paw', 'relic', 'check'];
-    box.innerHTML = `<h3>${icon('plus')} Create a Quest</h3>
+    box.innerHTML = `<h3>${icon('plus')} Create a habit</h3>
       <label>Name it</label>
       <input type="text" id="cr-name" maxlength="28" placeholder="e.g. Read 10 pages">
       <label>Pick an icon</label>
@@ -1342,13 +1855,13 @@ const UI = (() => {
       b.onclick = () => { sel = ic; $$('.preset', irow).forEach(x => x.classList.remove('on')); b.classList.add('on'); };
       irow.appendChild(b);
     });
-    const ok = el('button', 'pixbtn good', '<b>Add quest</b>');
+    const ok = el('button', 'pixbtn good', '<b>Add habit</b>');
     ok.onclick = () => {
       const name = box.querySelector('#cr-name').value.trim();
       if (!name) { toast('Give it a name!'); return; }
       Habits.addCustom(name, sel);
       closeAllModals();
-      toast('Quest added', 'good');
+      toast('Habit added', 'good');
     };
     box.querySelector('.mrow').appendChild(ok);
     openModal(box);
@@ -1356,6 +1869,7 @@ const UI = (() => {
 
   /* ================= login modal on new day ================= */
   function maybeShowLogin() {
+    if (!S.onboarded) return;
     const idx = Quests.loginClaimable();
     if (idx < 0) return;
     const r = Quests.LOGIN[idx];
@@ -1377,7 +1891,222 @@ const UI = (() => {
     openModal(box, { noClose: true });
   }
 
-  /* ================= settings / onboarding / welcome ================= */
+  /* ============================================================
+     ONBOARDING — five questions that build your plan
+     ============================================================ */
+  function showOnboarding() {
+    const draft = { key: null, level: 1, mins: 20, days: [1, 2, 3, 4, 5], why: '', starter: null };
+    const box = el('div', 'onboard');
+    const back = openModal(box, { noClose: true });
+    let step = 0;
+    const TOTAL = 6;
+
+    function steps() {
+      return `<div class="ob-steps">${Array.from({ length: TOTAL },
+        (_, i) => `<i class="${i <= step ? 'on' : ''}"></i>`).join('')}</div>`;
+    }
+    function nav(label, ok, onNext) {
+      const row = el('div', 'mrow');
+      if (step > 0) {
+        const b = el('button', 'pixbtn ghost sm', 'Back');
+        b.onclick = () => { step--; draw(); };
+        row.appendChild(b);
+      }
+      const n = el('button', 'pixbtn primary', `<b>${label}</b>`);
+      n.disabled = !ok;
+      n.onclick = onNext;
+      row.appendChild(n);
+      box.appendChild(row);
+      return n;
+    }
+
+    function draw() {
+      box.innerHTML = '';
+      box.scrollTop = 0;
+      if (step === 0) drawIntro();
+      else if (step === 1) drawDream();
+      else if (step === 2) drawLevel();
+      else if (step === 3) drawRhythm();
+      else if (step === 4) drawWhy();
+      else drawStarter();
+    }
+
+    /* 0 — what this is */
+    function drawIntro() {
+      box.innerHTML = steps() + `
+        <h2>Dreamkeep</h2>
+        <p>There is something you have always meant to get good at.<br>
+        This is the app that actually makes you do it.</p>
+        <p style="margin-top:10px">You will pick one dream. Every day it gives you
+        <b>one concrete task</b> and a real timer. The minutes you actually put in
+        are the only currency in the game — they hatch beasts, grow your garden
+        and win your battles.</p>
+        <p style="margin-top:10px;color:var(--gold)">Six quick questions.</p>`;
+      nav('Let\'s go', true, () => { step = 1; draw(); });
+    }
+
+    /* 1 — the dream */
+    function drawDream() {
+      box.innerHTML = steps() + `
+        <h2>What do you want to get good at?</h2>
+        <p>Pick the one that makes you feel something.</p>
+        <div class="dream-grid"></div>`;
+      const grid = box.querySelector('.dream-grid');
+      for (const [key, d] of Object.entries(Dream.DREAMS)) {
+        const c = el('div', 'dreamcard' + (draft.key === key ? ' on' : ''));
+        c.innerHTML = `${icon(d.icon, 'big')}<div class="dname2">${d.name}</div>
+          <div class="dblurb">${d.blurb}</div>`;
+        c.onclick = () => {
+          draft.key = key;
+          $$('.dreamcard', grid).forEach(x => x.classList.remove('on'));
+          c.classList.add('on');
+          next.disabled = false;
+          Sound.click();
+        };
+        grid.appendChild(c);
+      }
+      const next = nav('Next', !!draft.key, () => { step = 2; draw(); });
+    }
+
+    /* 2 — experience */
+    function drawLevel() {
+      const d = Dream.DREAMS[draft.key];
+      box.innerHTML = steps() + `
+        <h2>How far in are you?</h2>
+        <p>Be honest — it only changes which tasks you get.</p>
+        <div class="lvl-list"></div>`;
+      const list = box.querySelector('.lvl-list');
+      Dream.LEVELS.forEach(l => {
+        const c = el('div', 'lvlcard' + (draft.level === l.key ? ' on' : ''));
+        c.innerHTML = `${icon(d.icon, 'big')}
+          <div><div class="lvname">${l.name}</div><div class="lvdesc">${l.desc}</div></div>
+          <div class="lvmin">${l.mins} min/day</div>`;
+        c.onclick = () => {
+          draft.level = l.key;
+          draft.mins = l.mins;
+          $$('.lvlcard', list).forEach(x => x.classList.remove('on'));
+          c.classList.add('on');
+          next.disabled = false;
+          Sound.click();
+        };
+        list.appendChild(c);
+      });
+      const next = nav('Next', draft.level !== null, () => { step = 3; draw(); });
+    }
+
+    /* 3 — rhythm */
+    function drawRhythm() {
+      box.innerHTML = steps() + `
+        <h2>Build the rhythm</h2>
+        <p>Small and repeatable beats big and abandoned.</p>
+        <label style="text-align:left;margin-top:10px">Minutes per session</label>
+        <div class="preset-row" id="ob-mins"></div>
+        <label style="text-align:left;margin-top:10px">Which days?</label>
+        <div class="daypick"></div>
+        <p class="subtle" id="ob-sum" style="margin-top:9px"></p>`;
+      const mrow = box.querySelector('#ob-mins');
+      [5, 10, 15, 20, 30, 45, 60].forEach(m => {
+        const p = el('button', 'preset' + (m === draft.mins ? ' on' : ''), m + 'm');
+        p.onclick = () => {
+          draft.mins = m;
+          $$('.preset', mrow).forEach(x => x.classList.remove('on'));
+          p.classList.add('on');
+          sum();
+        };
+        mrow.appendChild(p);
+      });
+      const dp = box.querySelector('.daypick');
+      Dream.DAY_NAMES.forEach((n, i) => {
+        const b = el('button', draft.days.includes(i) ? 'on' : '', n[0]);
+        b.onclick = () => {
+          if (draft.days.includes(i)) draft.days = draft.days.filter(x => x !== i);
+          else draft.days.push(i);
+          b.classList.toggle('on');
+          sum();
+        };
+        dp.appendChild(b);
+      });
+      function sum() {
+        const n = draft.days.length;
+        const wk = n * draft.mins;
+        box.querySelector('#ob-sum').innerHTML = n
+          ? `${n} day${n > 1 ? 's' : ''} a week · <b style="color:var(--gold)">${wk} min</b> weekly
+             · about <b style="color:var(--gold)">${(wk * 52 / 60).toFixed(0)} hours</b> in a year`
+          : 'Pick at least one day.';
+        if (next) next.disabled = n === 0;
+      }
+      const next = nav('Next', draft.days.length > 0, () => { step = 4; draw(); });
+      sum();
+    }
+
+    /* 4 — why */
+    function drawWhy() {
+      const d = Dream.DREAMS[draft.key];
+      box.innerHTML = steps() + `
+        <h2>Why this one?</h2>
+        <p>One line. On the days you do not feel like it,<br>this is what you will read.</p>
+        <input type="text" id="ob-why" maxlength="150" placeholder="e.g. so I can play at my sister's wedding">
+        <p class="subtle" style="margin-top:8px">Optional — skip it if you like.</p>`;
+      const inp = box.querySelector('#ob-why');
+      inp.value = draft.why;
+      nav('Next', true, () => { draft.why = inp.value.trim(); step = 5; draw(); });
+      setTimeout(() => inp.focus(), 80);
+    }
+
+    /* 5 — starter matched to the dream's element */
+    function drawStarter() {
+      S.dream.key = draft.key;               // so Dream.def() resolves
+      const d = Dream.DREAMS[draft.key];
+      const options = Dream.starterOptions();
+      box.innerHTML = steps() + `
+        <h2>Pick your companion</h2>
+        <p>These three share the <b>${d.element}</b> affinity of ${d.name}.<br>
+        A matching beast gains <b>80% more XP</b> from every session you finish.</p>
+        <div class="starter-row"></div>`;
+      const row = box.querySelector('.starter-row');
+      for (const cid of options) {
+        const c = C_BY_ID[cid];
+        const card = el('div', 'startercard' + (draft.starter === cid ? ' on' : ''));
+        const evo = c.line ? LINES[c.line].length : 1;
+        card.innerHTML = `<img src="${sprite(cid)}"><div class="sname">${c.name}</div>
+          <div>${typeBadges(c.types)}</div>
+          <div class="subtle" style="margin-top:4px">${evo}-stage line</div>`;
+        fitSprite(card.querySelector('img'), cid, 82);
+        card.onclick = () => {
+          draft.starter = cid;
+          $$('.startercard', row).forEach(x => x.classList.remove('on'));
+          card.classList.add('on');
+          next.disabled = false;
+          Sound.click();
+        };
+        row.appendChild(card);
+      }
+      const next = nav('Begin', !!draft.starter, finish);
+    }
+
+    function finish() {
+      Dream.setup(draft.key, draft.level, draft.mins, draft.days, draft.why);
+      S.starterCid = draft.starter;
+      ownBeast(draft.starter);
+      S.beasts[draft.starter].level = 3;
+      S.onboarded = true;
+      Quests.generateToday();
+      save();
+      closeModal(back);
+      confetti(60);
+      Sound.levelup();
+      switchTab('today');
+      renderAll();
+      const d = Dream.DREAMS[draft.key];
+      toast(`${C_BY_ID[draft.starter].name} joins you. ${d.name} starts today.`, 'gold');
+      setTimeout(maybeShowLogin, 1000);
+      setTimeout(() => toast('Tap "Start" on the focus card when you are ready', 'mana'), 3600);
+    }
+
+    draw();
+  }
+
+  /* ================= settings / welcome ================= */
   function showSettings() {
     const box = el('div');
     box.innerHTML = `<h3>Settings</h3><div class="mrow" style="flex-direction:column;align-items:stretch"></div>`;
@@ -1390,97 +2119,93 @@ const UI = (() => {
       save();
     };
     row.appendChild(snd);
+    const plan = el('button', 'pixbtn ghost sm', 'Change my plan');
+    plan.onclick = () => { closeAllModals(); showPlanEditor(); };
+    row.appendChild(plan);
     const reset = el('button', 'pixbtn ghost sm', 'Reset all progress');
     reset.onclick = () => { if (confirm('Really erase your entire journey? This cannot be undone.')) hardReset(); };
     row.appendChild(reset);
     const about = el('p', 'subtle');
     about.style.textAlign = 'center';
     about.style.marginTop = '10px';
-    about.innerHTML = 'Ritual Beasts — your real-life habits power an idle world.<br>Be kind to yourself. Missing a day is part of the journey.';
+    about.innerHTML = 'Dreamkeep — the hours you really put in power a whole world.<br>' +
+      'Be kind to yourself. Missing a day is part of the journey.';
     box.appendChild(about);
     openModal(box);
   }
 
-  function showOnboarding() {
+  /* edit the plan without wiping progress */
+  function showPlanEditor() {
     const box = el('div', 'onboard');
     box.innerHTML = `
-      <h2>Ritual Beasts</h2>
-      <p>A world of beasts, powered by <b>your real life</b>.<br>
-      Drink water, cook, move, create — every real quest<br>becomes mana, seeds and evolution essence.</p>
-      <p style="margin-top:10px"><b>What do you want to grow?</b> <span class="subtle">(pick 1–2)</span></p>
-      <div class="goal-grid"></div>
+      <h2>Your plan</h2>
+      <p>${Dream.def().name} · ${Dream.levelDef().name}</p>
+      <label style="text-align:left;margin-top:10px">Minutes per session</label>
+      <div class="preset-row" id="pe-mins"></div>
+      <label style="text-align:left;margin-top:10px">Which days?</label>
+      <div class="daypick"></div>
+      <label style="text-align:left;margin-top:10px">Why you are doing it</label>
+      <input type="text" id="pe-why" maxlength="150" value="${(S.dream.why || '').replace(/"/g, '&quot;')}">
       <div class="mrow"></div>`;
-    const grid = box.querySelector('.goal-grid');
-    const chosen = new Set();
-    for (const [key, g] of Object.entries(GOALS)) {
-      const c = el('div', 'goalcard');
-      c.innerHTML = `${icon(g.icon, 'big')}<div class="gname">${g.name}</div><div class="gdesc">${g.desc}</div>`;
+    let mins = S.dream.mins, days = (S.dream.days || []).slice();
+    const mrow = box.querySelector('#pe-mins');
+    [5, 10, 15, 20, 30, 45, 60].forEach(m => {
+      const p = el('button', 'preset' + (m === mins ? ' on' : ''), m + 'm');
+      p.onclick = () => { mins = m; $$('.preset', mrow).forEach(x => x.classList.remove('on')); p.classList.add('on'); };
+      mrow.appendChild(p);
+    });
+    const dp = box.querySelector('.daypick');
+    Dream.DAY_NAMES.forEach((n, i) => {
+      const b = el('button', days.includes(i) ? 'on' : '', n[0]);
+      b.onclick = () => {
+        if (days.includes(i)) days = days.filter(x => x !== i); else days.push(i);
+        b.classList.toggle('on');
+      };
+      dp.appendChild(b);
+    });
+    const ok = el('button', 'pixbtn primary', '<b>Save plan</b>');
+    ok.onclick = () => {
+      if (!days.length) { toast('Pick at least one day'); return; }
+      S.dream.mins = mins;
+      S.dream.days = days;
+      S.dream.why = box.querySelector('#pe-why').value.trim().slice(0, 160);
+      save();
+      closeAllModals();
+      toast('Plan updated', 'good');
+      renderToday();
+    };
+    box.querySelector('.mrow').appendChild(ok);
+    const swap = el('button', 'pixbtn ghost sm', 'Chase a different dream');
+    swap.onclick = () => {
+      if (!confirm('Switch dreams? Your hours and rank on this one are kept, but the ladder restarts.')) return;
+      closeAllModals();
+      showDreamSwap();
+    };
+    box.querySelector('.mrow').appendChild(swap);
+    openModal(box);
+  }
+
+  function showDreamSwap() {
+    const box = el('div', 'onboard');
+    box.innerHTML = `<h2>Pick a new dream</h2>
+      <p>Your beasts, gold and garden all come with you.</p>
+      <div class="dream-grid"></div>`;
+    const grid = box.querySelector('.dream-grid');
+    for (const [key, d] of Object.entries(Dream.DREAMS)) {
+      const c = el('div', 'dreamcard' + (S.dream.key === key ? ' on' : ''));
+      c.innerHTML = `${icon(d.icon, 'big')}<div class="dname2">${d.name}</div>
+        <div class="dblurb">${d.blurb}</div>`;
       c.onclick = () => {
-        if (chosen.has(key)) { chosen.delete(key); c.classList.remove('on'); }
-        else if (chosen.size < 2) { chosen.add(key); c.classList.add('on'); }
-        next.disabled = chosen.size === 0;
-        Sound.click();
+        S.dream.key = key;
+        S.dream.taskSkips = 0;
+        save();
+        closeAllModals();
+        toast(`Now chasing ${d.name}.`, 'gold');
+        renderAll();
       };
       grid.appendChild(c);
     }
-    const next = el('button', 'pixbtn primary', '<b>Choose my companion</b>');
-    next.disabled = true;
-    next.onclick = () => {
-      S.goals = [...chosen];
-      closeModal(back);
-      showStarterPick();
-    };
-    box.querySelector('.mrow').appendChild(next);
-    const back = openModal(box, { noClose: true });
-  }
-
-  function showStarterPick() {
-    const goal = S.goals[0] || 'mind';
-    const options = STARTERS[goal];
-    const box = el('div', 'onboard');
-    box.innerHTML = `
-      <h2>Choose your starter</h2>
-      <p>Matched to your <b>${GOALS[goal].name}</b> path.<br>It will grow and evolve as <b>you</b> do.</p>
-      <div class="starter-row"></div>
-      <div class="mrow"></div>`;
-    const row = box.querySelector('.starter-row');
-    let sel = null;
-    for (const cid of options) {
-      const c = C_BY_ID[cid];
-      const card = el('div', 'startercard');
-      const evo = c.line ? LINES[c.line].length : 1;
-      card.innerHTML = `<img src="${sprite(cid)}"><div class="sname">${c.name}</div>
-        <div>${typeBadges(c.types)}</div>
-        <div class="subtle" style="margin-top:4px">${evo}-stage line</div>`;
-      fitSprite(card.querySelector('img'), cid, 92);
-      card.onclick = () => {
-        sel = cid;
-        $$('.startercard', row).forEach(x => x.classList.remove('on'));
-        card.classList.add('on');
-        go.disabled = false;
-        Sound.click();
-      };
-      row.appendChild(card);
-    }
-    const go = el('button', 'pixbtn good', '<b>Begin the journey!</b>');
-    go.disabled = true;
-    go.onclick = () => {
-      S.starterCid = sel;
-      ownBeast(sel);
-      S.beasts[sel].level = 3;
-      S.onboarded = true;
-      Quests.generateToday();
-      save();
-      closeModal(back);
-      confetti(50);
-      Sound.levelup();
-      toast(`${C_BY_ID[sel].name} joins you! Your journey begins.`, 'gold');
-      renderAll();
-      setTimeout(maybeShowLogin, 900);
-      setTimeout(() => toast('Log a real meal at the Farm to earn seeds', 'mana'), 3200);
-    };
-    box.querySelector('.mrow').appendChild(go);
-    const back = openModal(box, { noClose: true });
+    openModal(box);
   }
 
   function showWelcomeBack(seconds, gains) {
@@ -1516,6 +2241,7 @@ const UI = (() => {
     renderQuestLog();
     renderUpgrades();
     renderMerge();
+    if (S.dream && S.dream.key) renderToday();
     if (activeTab === 'beasts') renderBeasts();
     if (activeTab === 'summon') renderSummon();
     if (activeTab === 'farm') renderFarm();
@@ -1524,16 +2250,19 @@ const UI = (() => {
 
   return {
     switchTab, currentTab, renderAll, renderHud, renderScene, renderSceneBg,
+    renderToday, renderFocus, renderRhythm, renderJournal,
+    startSession, openSessionOverlay, tickSession, showSessionSetup,
     renderEnemies, renderEnemyHp, renderBossTimer, renderPartyHp, renderParty,
     renderBattleStats, renderBoost, showHit, showKillRewards, attackTween,
     enemyLunge, startAdvance, renderUltMeter, showUltimateCast, skillFlash,
     showDefeat, hideDefeat, showEncounter, renderQuestLog, renderUpgrades,
+    renderCooldowns, tickCooldowns,
     renderMerge, mergeSpawnFx, mergeFuseFx, showMap,
     renderBeasts, renderCollection, showCreature, showFeedPicker,
-    renderFarm, showMealModal, showKcalTargetModal, renderFood,
+    renderFarm, waterGarden, showMealModal, showKcalTargetModal, renderFood,
     renderSummon, playWish, showSummonReveal, showRelicReveal, runLab,
     renderQuests, renderRituals, markQuestDot, maybeShowLogin,
     showTimerModal, updateTimerModal, showAddCustomModal,
-    showSettings, showOnboarding, showWelcomeBack,
+    showSettings, showPlanEditor, showOnboarding, showWelcomeBack,
   };
 })();

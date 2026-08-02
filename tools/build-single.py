@@ -94,22 +94,35 @@ def main():
     scripts = re.findall(r'<script src="([^"]+)"></script>', html)
     sheets = re.findall(r'<link rel="stylesheet" href="([^"]+)">', html)
 
-    # the icon sheet is referenced from icons.css and must travel inline too
-    ico_raw = open(os.path.join(ROOT, 'assets', 'ui', 'icons.png'), 'rb').read()
-    ico_uri = data_uri(ico_raw, 'image/png')
+    # every sheet the CSS points at (icons, soil, fence, plants, props, frames)
+    # has to travel inline too — the published page may not fetch anything.
+    ui_cache = {}
+
+    def inline_css_url(m):
+        rel = m.group(1)
+        path = os.path.normpath(os.path.join(ROOT, 'css', rel))
+        if path not in ui_cache:
+            with open(path, 'rb') as fh:
+                ui_cache[path] = data_uri(fh.read(), 'image/png')
+        return 'url(' + ui_cache[path] + ')'
+
     total_css = 0
     css_parts = []
     for href in sheets:
         text = open(os.path.join(ROOT, href)).read()
-        text = text.replace('url(../assets/ui/icons.png)', f'url({ico_uri})')
+        text = re.sub(r'url\((\.\./assets/[^)]+\.png)\)', inline_css_url, text)
         total_css += len(text)
         css_parts.append(text)
-    print(f'{len(sheets)} stylesheets inlined, icon sheet {len(ico_raw)/1000:.1f}KB')
+    inlined_bytes = sum(len(v) for v in ui_cache.values())
+    print(f'{len(sheets)} stylesheets inlined, {len(ui_cache)} css images '
+          f'({inlined_bytes/1000:.1f}KB base64)')
+    left = re.findall(r'url\(\.\./assets[^)]*\)', '\n'.join(css_parts))
+    assert not left, f'un-inlined css asset refs: {left}' 
 
     body = html.split('<body>', 1)[1].split('</body>', 1)[0]
     body = re.sub(r'\s*<script src="[^"]+"></script>', '', body)
 
-    parts = ['<title>Ritual Beasts — habit-powered idle RPG</title>',
+    parts = ['<title>Dreamkeep — chase the thing you actually want</title>',
              '<style>\n' + '\n'.join(css_parts) + '\n</style>',
              body.strip(),
              '<script>window.ASSETS = ' + repr(assets).replace("'", '"') + ';</script>']

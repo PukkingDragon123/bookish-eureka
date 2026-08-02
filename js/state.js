@@ -1,7 +1,7 @@
 /* ============ Ritual Beasts — game state, save/load, economy ============ */
 'use strict';
 
-const SAVE_KEY = 'ritual-beasts-save-v2';
+const SAVE_KEY = 'dreamkeep-save-v4';
 
 /* ---------- static lookups ---------- */
 const C_BY_ID = {};
@@ -91,12 +91,17 @@ function defaultState() {
     /* --- v3 --- */
     upgrades: { dmg: 0, spd: 0, crit: 0, gold: 0, hp: 0, ult: 0 },
     merge: { board: Array(12).fill(null), energy: 6, lastEnergy: Date.now() },
-    farm: { plots: [{}, {}, {}, {}, {}, {}], seeds: 3, food: {} },
+    farm: { plots: [{}, {}, {}, {}, {}, {}, {}, {}, {}], seeds: 3, food: {} },
     lab: { points: 5, serums: 0, rolls: 0 },
     login: { cycle: 0, lastDay: null },
     challenge: { day: null, idx: 0, done: false },
     regionProgress: {},
     losses: 0,
+    /* --- v4: the dream you are pursuing --- */
+    dream: { key: null, level: 0, mins: 20, days: [1, 2, 3, 4, 5], why: '',
+             minutes: 0, sessions: 0, todayMinutes: 0, lastDone: null,
+             taskSkips: 0, log: [], _lastRung: 0, started: Date.now() },
+    session: null,   // {mins, startedAt, paused, pausedAt, elapsedBefore}
   };
 }
 
@@ -127,11 +132,13 @@ function sanitize() {
   if (!S.party.length && Object.keys(S.beasts).length) S.party = [Object.keys(S.beasts)[0]];
   if (S.starterCid && !C_BY_ID[S.starterCid]) S.starterCid = null;
   const d = defaultState();
-  for (const k of ['upgrades', 'merge', 'farm', 'lab', 'login', 'challenge', 'regionProgress']) {
+  for (const k of ['upgrades', 'merge', 'farm', 'lab', 'login', 'challenge', 'regionProgress', 'dream']) {
     if (typeof S[k] !== 'object' || S[k] === null) S[k] = d[k];
   }
   if (!Array.isArray(S.merge.board) || S.merge.board.length !== 12) S.merge.board = Array(12).fill(null);
-  if (!Array.isArray(S.farm.plots) || S.farm.plots.length !== 6) S.farm.plots = [{}, {}, {}, {}, {}, {}];
+  if (!Array.isArray(S.farm.plots)) S.farm.plots = [];
+  while (S.farm.plots.length < 9) S.farm.plots.push({});
+  S.farm.plots = S.farm.plots.slice(0, 9);
   if (typeof S.farm.food !== 'object') S.farm.food = {};
 }
 

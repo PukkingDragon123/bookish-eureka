@@ -32,6 +32,8 @@ const Quests = (() => {
       { key: 'boss', icon: 'skull', name: 'Defeat a boss', target: 1, reward: { gems: 5, lp: 3 } },
       { key: 'summon', icon: 'mana', name: 'Perform a summon', target: 1, reward: { gems: 4, lp: 2 } },
       { key: 'merge', icon: 'relic', name: 'Fuse 4 items on the board', target: 4, reward: { gems: 4, lp: 2 } },
+      { key: 'session', icon: 'star', name: 'Complete a practice session', target: 1, reward: { gems: 8, lp: 5 } },
+      { key: 'session_mins', icon: 'timer', name: 'Practise for 25 real minutes', target: 25, reward: { gems: 6, lp: 4 } },
       { key: 'feed', icon: 'meal', name: 'Feed your beasts 3 times', target: 3, reward: { gems: 4, seeds: 1 } },
       { key: 'harvest', icon: 'seed', name: 'Harvest 4 crops', target: 4, reward: { gems: 4, lp: 2 } },
     ],
@@ -69,6 +71,18 @@ const Quests = (() => {
     { icon: 'chest',   text: 'Grand chest',     grant: () => { grantGems(30); grantLabPoints(10); grantSeeds(4); } },
   ];
 
+  /* which quest pools and challenge tags suit the chosen dream */
+  const DREAM_TAGS = {
+    music: ['create', 'mind'], art: ['create'], writing: ['create', 'mind'],
+    fitness: ['fitness'], language: ['mind'], code: ['create', 'mind'],
+    cooking: ['nutrition'], mind: ['mind'], craft: ['create'],
+    photo: ['create', 'fitness'], study: ['mind'], dance: ['fitness', 'create'],
+  };
+  function activeTags() {
+    const t = DREAM_TAGS[S.dream && S.dream.key];
+    return t && t.length ? t : ['mind'];
+  }
+
   function seededShuffle(arr, seed) {
     const rng = (() => { let s = seed; return () => (s = (s * 9301 + 49297) % 233280) / 233280; })();
     const a = arr.slice();
@@ -83,13 +97,13 @@ const Quests = (() => {
     const day = todayStr();
     if (S.quests.day === day) return;
     const seed = parseInt(day.replace(/-/g, ''), 10);
-    const goals = S.goals.length ? S.goals : ['mind'];
+    const goals = activeTags();
     const goalPool = [];
     goals.forEach((g, i) => {
       goalPool.push(...seededShuffle(TEMPLATES[g] || [], seed + i).slice(0, 2));
     });
     const battle = seededShuffle(TEMPLATES.battle, seed + 7).slice(0, 3);
-    const list = [...goalPool.slice(0, 3), ...battle].map((t, i) => ({
+    const list = [...goalPool.slice(0, 2), ...battle].map((t, i) => ({
       qid: day + '_' + i,
       key: t.key, icon: t.icon, name: t.name, target: t.target,
       progress: 0, claimed: false, reward: t.reward,

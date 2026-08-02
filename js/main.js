@@ -1,4 +1,4 @@
-/* ============ Ritual Beasts — bootstrap & main loop ============ */
+/* ============ Dreamkeep — bootstrap & main loop ============ */
 'use strict';
 
 (function main() {
@@ -18,16 +18,20 @@
   $('#btn-portal').onclick = () => Merge.spawn(false);
   $('#btn-portal-gold').onclick = () => Merge.spawn(true);
   $('#btn-lab-roll').onclick = () => UI.runLab();
+  $('#btn-water').onclick = () => UI.waterGarden();
+  $('#btn-all-quests').onclick = () => UI.switchTab('quests');
   $('#quest-log').onclick = () => UI.switchTab('quests');
+  $('#hero-edit').onclick = () => UI.showPlanEditor();
 
   /* ---- first-run vs returning ---- */
-  if (!hadSave) {
+  if (!hadSave || !S.dream || !S.dream.key) {
     UI.renderSceneBg();
     UI.showOnboarding();
   } else {
     Quests.generateToday();
     Habits.resetMealsIfNewDay();
     if (S.exTimer && Habits.timerRemaining() <= 0) Habits.finishTimer();
+    if (S.session) UI.openSessionOverlay();
     const away = (Date.now() - S.lastSeen) / 1000;
     if (away > 90 && S.party.length > 0) {
       const idleCap = 12 * 3600 * (1 + relicBonusStat('idle'));
@@ -48,17 +52,21 @@
   let slowTick = 0;
   setInterval(() => {
     UI.renderUltMeter(Battle.ultCharge);
+    UI.tickCooldowns();
     Habits.tickTimer();
     UI.updateTimerModal();
+    UI.tickSession();
     UI.renderBoost();
     UI.renderBattleStats();
     UI.renderHud();
     Merge.regen();
     const pe = $('#portal-energy');
     if (pe) pe.textContent = `${S.merge.energy}/${Merge.ENERGY_MAX}`;
-    if (UI.currentTab() === 'rituals' || (UI.currentTab() === 'quests' && S.exTimer)) UI.renderRituals();
-    // farm countdowns tick once per 3s while visible
+    if (UI.currentTab() === 'quests' && S.exTimer) UI.renderRituals();
+    // garden countdowns tick once per 3s while visible
     if (++slowTick % 3 === 0 && UI.currentTab() === 'farm') UI.renderFarm();
+    // the focus card shows a live session countdown
+    if (S.session && slowTick % 3 === 0 && UI.currentTab() === 'today') UI.renderFocus();
   }, 1000);
 
   setInterval(save, 5000);
@@ -68,6 +76,7 @@
       Quests.generateToday();
       Habits.resetMealsIfNewDay();
       if (S.exTimer && Habits.timerRemaining() <= 0) Habits.finishTimer();
+      UI.tickSession();
       UI.renderAll();
       UI.maybeShowLogin();
     }

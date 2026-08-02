@@ -332,9 +332,21 @@ const Battle = (() => {
     };
   }
 
+  /* what the cooldown strip needs: every party member's skills and how far
+     through their cooldown each one is (0 = just fired, 1 = ready to swing) */
+  function cooldownState() {
+    return S.party.map(cid => ({
+      cid,
+      skills: skillListFor(cid).map((sk, i) => {
+        const left = cds[cid + '_' + i] || 0;
+        return { name: sk.name, cd: sk.cd, left, frac: clamp(1 - left / sk.cd, 0, 1) };
+      }),
+    }));
+  }
+
   return {
     tick, spawnWave, challengeBoss, currentDpsEstimate, offlineGains, travel,
-    regionUnlocked, TICK_MS,
+    regionUnlocked, skillListFor, cooldownState, TICK_MS,
     get enemies() { return enemies; },
     get partyHp() { return partyHp; },
     get ultCharge() { return ultCharge; },

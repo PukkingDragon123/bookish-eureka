@@ -268,6 +268,36 @@ ICONS = {
   '..kmMMkkkkMMmk..','..kmMkmmmmkMmk..','..kmMkmwwmkMmk..','..kmMkmwwmkMmk..',
   '..kmMkmmmmkMmk..','..kmMMkkkkMMmk..','...kmmMMMMmmk...','....kkmmmmkk....',
   '......kkkk......','................','................','................'],
+ 'guitar': [
+  '................','.............kk.','............kwk.','...........kwk..',
+  '..........kwk...','.........kwk....','........kwk.....','..kkk..kwk......',
+  '.kevvekkwk......','kevvvvek........','kevkkvek........','kevvvvek........',
+  '.kevvvek........','..kkkk..........','................','................'],
+ 'pen': [
+  '................','.............kk.','............kyyk','...........kyyk.',
+  '..........ksyk..','.........kssk...','........kssk....','.......kssk.....',
+  '......kssk......','.....kssk.......','....kssk........','...kwsk.........',
+  '..kwwk..........','..kkk...........','................','................'],
+ 'globe': [
+  '................','.....kkkkkk.....','...kkbbbbbbkk...','..kbbnnbbbnbk...',
+  '.kbnnnbbbnnnbk..','.kbbnbbkbbnbbk..','kbbbbbkbkbbbbbk.','kbkkbbkbkbbkkbk.',
+  'kbbbbbkbkbbbbbk.','.kbbnbbkbbnbbk..','.kbnnnbbbnnnbk..','..kbbnnbbbnbk...',
+  '...kkbbbbbbkk...','.....kkkkkk.....','................','................'],
+ 'code': [
+  '................','................','....k.......k...','...ksk.....ksk..',
+  '..ksk..kkk..ksk.','.ksk..kyyyk..ksk','ksk...kyyyk...ks','.ksk..kyyyk..ksk',
+  '..ksk..kkk..ksk.','...ksk.....ksk..','....k.......k...','................',
+  '................','................','................','................'],
+ 'camera': [
+  '................','......kkkk......','.....kssssk.....','..kkkkkkkkkkkk..',
+  '.kssssssssssssk.','.ksskkkkkkksssk.','.kskbbbbbbksssk.','.kskbwwwwbkssyk.',
+  '.kskbwwwwbksssk.','.kskbbbbbbkssssk','.ksskkkkkkkssssk','.kssssssssssssk.',
+  '..kkkkkkkkkkkk..','................','................','................'],
+ 'lotus': [
+  '................','.......kk.......','......kppk......','.....kpwwpk.....',
+  '..kk.kpwwwpk.kk.','.kppkkpwwpkkppk.','kpwwpkkppkkpwwpk','kpwwwpkkkkpwwwpk',
+  'kppwwppppppwwppk','.kppppppppppppk.','..kkkkkkkkkkkk..','....kbbbbbbk....',
+  '.....kkkkkk.....','................','................','................'],
  'skull': [
   '................','.....kkkkkk.....','...kkwwwwwwkk...','..kwwwwwwwwwwk..',
   '..kwwkkwwkkwwk..','..kwkddwwddkwk..','..kwkddwwddkwk..','..kwwkkwwkkwwk..',

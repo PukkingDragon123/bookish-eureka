@@ -180,9 +180,18 @@ function openModal(contentEl, opts) {
   back.appendChild(modal);
   if (!opts.noClose) back.addEventListener('click', e => { if (e.target === back) closeModal(back); });
   root.appendChild(back);
+  document.getElementById('app').classList.add('modal-open');
   return back;
+}
+function syncModalOpen() {
+  document.getElementById('app').classList.toggle('modal-open',
+    !!document.querySelector('#modal-root .modal-back'));
 }
 function closeModal(back) {
   if (back && back.parentNode) back.remove();
+  syncModalOpen();
 }
-function closeAllModals() { $$('#modal-root .modal-back').forEach(b => b.remove()); }
+function closeAllModals() {
+  $$('#modal-root .modal-back').forEach(b => b.remove());
+  syncModalOpen();
+}
