@@ -88,6 +88,16 @@ def main():
         total += len(raw)
         assets[f'assets/bg/{name}'] = data_uri(raw, mime)
 
+    # sheets fetched from JS via assetUrl() (the VFX atlas) must be in the map too
+    ui_dir = os.path.join(ROOT, 'assets', 'ui')
+    for name in ['vfx.png']:
+        p = os.path.join(ui_dir, name)
+        if os.path.exists(p):
+            with open(p, 'rb') as fh:
+                raw = fh.read()
+            total += len(raw)
+            assets[f'assets/ui/{name}'] = data_uri(raw, 'image/png')
+
     print(f'{len(assets)} assets, {total/1e6:.2f} MB binary')
 
     html = open(os.path.join(ROOT, 'index.html')).read()

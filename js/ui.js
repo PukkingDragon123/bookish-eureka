@@ -49,7 +49,10 @@ const UI = (() => {
     if (name === 'summon') renderSummon();
     if (name === 'farm') renderFarm();
     if (name === 'quests') { renderQuests(); markQuestDot(false); }
-    if (name === 'battle') { renderQuestLog(); renderUpgrades(); renderMerge(); renderCooldowns(); }
+    if (name === 'battle') {
+      VFX.resize();                    // canvas measures 0 while the tab is hidden
+      renderQuestLog(); renderUpgrades(); renderMerge(); renderCooldowns();
+    }
   }
   function currentTab() { return activeTab; }
 
@@ -1277,7 +1280,7 @@ const UI = (() => {
       beds.appendChild(cell);
     });
 
-    // butterflies drifting over the crops, and a scarecrow standing in the bed
+    // butterflies drifting over the crops
     const bugs = $('#garden-bugs');
     if (!bugs.childElementCount) {
       [[8, 128, 0], [48, 186, -3.5], [66, 148, -6.5]].forEach(([l, t, d]) => {
@@ -1286,9 +1289,6 @@ const UI = (() => {
         b.innerHTML = '<span class="prop prop-butterfly"></span>';
         bugs.appendChild(b);
       });
-      const sc = el('div', 'scarecrow');
-      sc.innerHTML = '<span class="prop prop-scarecrow"></span>';
-      bugs.appendChild(sc);
     }
 
     // pantry
@@ -1456,7 +1456,7 @@ const UI = (() => {
     radiant: { cid: '13_08', from: '#7a5a1e', to: '#4a3010' },
   };
   const ELEM_BANNER_ART = {
-    Fire: { cid: '13_05', from: '#8a3a1e', to: '#4a1a0c' },
+    Fire: { cid: '17_03', from: '#8a3a1e', to: '#4a1a0c' },
     Water: { cid: '02_08', from: '#1e4a8a', to: '#0c2a4a' },
     Nature: { cid: '13_02', from: '#3a6a2a', to: '#1c3a14' },
     Electric: { cid: '07_10', from: '#8a7a1e', to: '#4a3e0c' },

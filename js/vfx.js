@@ -29,9 +29,93 @@ const VFX = (() => {
     gold:     ['#fffbe0', '#ffe490', '#ffce4f', '#d99a1e', '#8a5d0c'],
   };
 
+  /* ---------- real hand-drawn effect frames ----------
+     assets/ui/vfx.png is the CC0 Superpowers "RPG Battle System" FX pack by
+     Pixel-boy / Sparklin Labs, cut into an atlas by tools/build-vfx.py. These
+     play as actual frame animations; the particle system below is now only an
+     accent under them rather than the effect itself.                        */
+  let atlasImg = null, atlasReady = false;
+  let sprites = [];
+
+  /* which drawn effect stands in for each element / event */
+  const FOR_KIND = {
+    fire: 'fireball', water: 'swirl', ice: 'swirl', electric: 'bolt',
+    earth: 'rubble', metal: 'claw', shadow: 'crescent', mystic: 'holy',
+    nature: 'scratch', heal: 'heal', gold: 'sparkring',
+  };
+
+  function loadAtlas() {
+    if (atlasImg || typeof window.VFX_ATLAS === 'undefined') return;
+    atlasImg = new Image();
+    atlasImg.onload = () => { atlasReady = true; };
+    atlasImg.src = assetUrl('assets/ui/vfx.png');
+  }
+
+  /* play one drawn effect centred on x,y */
+  function anim(effect, x, y, opts) {
+    opts = opts || {};
+    const A = window.VFX_ATLAS;
+    if (!A) return;
+    const e = A.effects[effect];
+    if (!e) return;
+    sprites.push({
+      row: e.row, frames: e.frames, x, y,
+      t: 0,
+      fps: opts.fps || 18,
+      scale: opts.scale || 1,
+      alpha: opts.alpha == null ? 1 : opts.alpha,
+      spin: opts.spin || 0,
+      flip: opts.flip ? -1 : 1,
+      glow: opts.glow == null ? 0.55 : opts.glow,
+      dy: opts.dy || 0,
+    });
+    start();
+  }
+
+  function drawSprites(dt) {
+    if (!atlasReady || !sprites.length) return;
+    const A = window.VFX_ATLAS, C = A.cell;
+    const glow = [];
+    for (let i = sprites.length - 1; i >= 0; i--) {
+      const s = sprites[i];
+      s.t += dt * (s.fps / 60);
+      const f = Math.floor(s.t);
+      if (f >= s.frames) { sprites.splice(i, 1); continue; }
+      s.y += s.dy * dt;
+      const d = C * s.scale;
+      ctx.save();
+      ctx.translate(Math.round(s.x), Math.round(s.y));
+      if (s.spin) ctx.rotate(s.spin);
+      ctx.scale(s.flip, 1);
+      ctx.globalAlpha = s.alpha;
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(atlasImg, f * C, s.row * C, C, C, -d / 2, -d / 2, d, d);
+      ctx.restore();
+      if (s.glow > 0) glow.push([s, f, d]);
+    }
+    // additive pass so the drawn frames bloom into the scene
+    if (glow.length) {
+      ctx.globalCompositeOperation = 'lighter';
+      for (const [s, f, d] of glow) {
+        ctx.save();
+        ctx.translate(Math.round(s.x), Math.round(s.y));
+        if (s.spin) ctx.rotate(s.spin);
+        ctx.scale(s.flip, 1);
+        ctx.globalAlpha = s.alpha * s.glow * 0.5;
+        ctx.imageSmoothingEnabled = false;
+        const g = d * 1.14;
+        ctx.drawImage(atlasImg, f * C, s.row * C, C, C, -g / 2, -g / 2, g, g);
+        ctx.restore();
+      }
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalAlpha = 1;
+    }
+  }
+
   function attach(el) {
     cv = el;
     ctx = cv.getContext('2d', { alpha: true });
+    loadAtlas();
     resize();
     window.addEventListener('resize', resize);
   }
@@ -150,6 +234,15 @@ const VFX = (() => {
   /* ---------- composed effects ---------- */
   function cast(kind, x, y, power) {
     power = power || 1;
+    // the drawn frames are the effect now — particles below just add grit
+    const drawn = FOR_KIND[kind];
+    if (drawn) {
+      anim(drawn, x, y, { scale: 1.05 + 0.5 * (power - 1), fps: 17,
+                          flip: Math.random() < 0.5 });
+      if (kind === 'fire') anim('flame', x, y + 6, { scale: 0.9, fps: 14, alpha: 0.85 });
+      if (kind === 'earth') anim('dust', x, y + 14, { scale: 1.0, fps: 15, alpha: 0.8 });
+    }
+    power *= 0.45;                     // particles step back behind the art
     switch (kind) {
       case 'fire':
         column(x, y, 'fire', 76 * power, 24); burst(x, y, 'fire', 14 * power, 3.2);
@@ -186,9 +279,11 @@ const VFX = (() => {
   }
 
   function hit(x, y, key, crit) {
-    slash(x, y, key || 'metal', Math.random() < .5 ? 1 : -1);
-    shockwave(x, y, key || 'metal', crit ? 46 : 28, crit ? 1.4 : 0.8);
-    if (crit) { burst(x, y, key || 'metal', 16, 4.2); kick(5, 190); stop(70); }
+    const flip = Math.random() < 0.5;
+    anim(crit ? 'cross' : 'arc', x, y, { scale: crit ? 1.5 : 1.1, fps: crit ? 16 : 20, flip });
+    if (crit) anim('sparkring', x, y, { scale: 1.3, fps: 20, alpha: 0.9 });
+    shockwave(x, y, key || 'metal', crit ? 42 : 22, crit ? 1.3 : 0.7);
+    if (crit) { burst(x, y, key || 'metal', 10, 4.2); kick(5, 190); stop(70); }
     start();
   }
 
@@ -196,6 +291,9 @@ const VFX = (() => {
     screenFlash(PAL[kind] ? PAL[kind][0] : '#fff', 300);
     kick(12, 560);
     stop(140);
+    anim('holy', x, y, { scale: 2.6, fps: 12, glow: 0.8 });
+    anim('sparkring', x, y, { scale: 2.0, fps: 15 });
+    setTimeout(() => anim('ground', x, y + 26, { scale: 1.8, fps: 14, alpha: 0.9 }), 160);
     cast(kind, x, y, 2.4);
     ring(x, y, kind, 24, 58, 1.6);
     column(x, y, kind, 140, 34);
@@ -240,9 +338,9 @@ const VFX = (() => {
   }
 
   function harvest(x, y, key) {
-    burst(x, y, key || 'nature', 14, 2.6, { grav: 0.1 });
-    sparkle(x, y, 'gold', 6);
-    shockwave(x, y, 'nature', 30);
+    anim('heal', x, y, { scale: 1.2, fps: 16 });
+    anim('sparkring', x, y, { scale: 1.0, fps: 20, alpha: 0.8 });
+    burst(x, y, key || 'nature', 8, 2.6, { grav: 0.1 });
     start();
   }
 
@@ -263,6 +361,7 @@ const VFX = (() => {
   /* ---------- loop ---------- */
   let last = 0;
   function start() {
+    if (cv && (w <= 1 || h <= 1)) resize();   // tab may have just become visible
     if (running) return;
     running = true;
     last = performance.now();
@@ -276,6 +375,7 @@ const VFX = (() => {
     const dt = (hitstop > 0 ? 0.15 : 1) * raw / 16.667;
     if (!ctx) { running = false; return; }
     ctx.clearRect(0, 0, w, h);
+    drawSprites(dt);
 
     if (shake > 0) {
       shake -= raw;
@@ -375,7 +475,7 @@ const VFX = (() => {
       }
     }
 
-    if (parts.length || rings.length || flash || shake > 0 || hitstop > 0) {
+    if (sprites.length || parts.length || rings.length || flash || shake > 0 || hitstop > 0) {
       requestAnimationFrame(step);
     } else {
       running = false;
@@ -384,7 +484,7 @@ const VFX = (() => {
     }
   }
 
-  return { attach, resize, cast, hit, ultimate, burst, kick, screenFlash, ring,
+  return { attach, resize, anim, cast, hit, ultimate, burst, kick, screenFlash, ring,
            comet, hearts, fuse, harvest, portalSwirl, shockwave, sparkle, stop, isStopped,
            get count() { return parts.length; } };
 })();

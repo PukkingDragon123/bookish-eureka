@@ -38,7 +38,7 @@ const GOALS = {
 
 /* starter choices per goal: [lineId creatures resolved at runtime] */
 const STARTERS = {
-  fitness:   ['02_03', '13_03'],   // Emberlash line, Amphire line
+  fitness:   ['17_02', '08_12'],   // Kindlekit line, Brimfang line
   nutrition: ['02_00', '13_00'],   // Mossbud line, Bloomoo line
   mind:      ['02_06', '13_06'],   // Dewfin line, Duover line
   create:    ['17_02', '17_06'],   // Kindlekit line, Duskit line
@@ -214,15 +214,15 @@ function mergeBonus(stat) {
 
 /* ---------- farm foods ---------- */
 const FOODS = {
-  Fire:     { name: 'Ember Chili',   icon: 'chili',     mins: 4 },
-  Water:    { name: 'Dew Berry',     icon: 'berry',     mins: 4 },
-  Nature:   { name: 'Verdant Gourd', icon: 'gourd',     mins: 5 },
-  Electric: { name: 'Storm Star',    icon: 'bean',      mins: 5 },
-  Ice:      { name: 'Frost Bloom',   icon: 'mint',      mins: 5 },
-  Earth:    { name: 'Stone Root',    icon: 'rootv',     mins: 6 },
-  Shadow:   { name: 'Gloom Plum',    icon: 'gloomcap',  mins: 6 },
-  Mystic:   { name: 'Star Fruit',    icon: 'starfruit', mins: 7 },
-  Metal:    { name: 'Iron Nugget',   icon: 'kernel',    mins: 7 },
+  Fire:     { name: 'Ember Chili',   icon: 'chili',     mins: 40 },
+  Water:    { name: 'Dew Berry',     icon: 'berry',     mins: 40 },
+  Nature:   { name: 'Verdant Gourd', icon: 'gourd',     mins: 50 },
+  Electric: { name: 'Storm Star',    icon: 'bean',      mins: 50 },
+  Ice:      { name: 'Frost Bloom',   icon: 'mint',      mins: 50 },
+  Earth:    { name: 'Stone Root',    icon: 'rootv',     mins: 60 },
+  Shadow:   { name: 'Gloom Plum',    icon: 'gloomcap',  mins: 60 },
+  Mystic:   { name: 'Star Fruit',    icon: 'starfruit', mins: 70 },
+  Metal:    { name: 'Iron Nugget',   icon: 'kernel',    mins: 70 },
 };
 function beastXpNeed(lvl) { return 22 * Math.pow(1.3, lvl - 1); }
 function grantBeastXpTo(cid, amount) {

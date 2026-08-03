@@ -807,13 +807,6 @@ button.hud-chip:active { transform: translateY(2px); }
 }
 .plotcell.empty-plot:active .emptymark { transform: translateY(2px); }
 #garden-bugs { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
-.scarecrow {
-  position: absolute; left: 3px; top: 132px;
-  transform: scale(2); transform-origin: bottom left;
-  filter: drop-shadow(0 2px 0 rgba(0,0,0,.35));
-  animation: scarecrowsway 5s steps(4, jump-none) infinite;
-}
-@keyframes scarecrowsway { 50% { transform: scale(2) rotate(2deg); } }
 .bug { position: absolute; animation: flit 9s linear infinite; }
 @keyframes flit {
   0%   { transform: translate(0, 0); }
