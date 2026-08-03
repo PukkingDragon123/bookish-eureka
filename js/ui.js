@@ -284,7 +284,8 @@ const UI = (() => {
   }
 
   function startSession(mins) {
-    S.session = { mins, startedAt: Date.now(), paused: false, elapsedBefore: 0 };
+    S.session = { mins, startedAt: Date.now(), paused: false, elapsedBefore: 0,
+                  kills0: S.kills, gold0: S.player.gold };
     save();
     Sound.quest();
     openSessionOverlay();
@@ -308,6 +309,18 @@ const UI = (() => {
         </svg>
         <div class="sring-mid"><b id="s-left">--:--</b><span id="s-state">REMAINING</span></div>
         ${cid ? `<img class="sring-beast" src="${sprite(cid)}">` : ''}
+      </div>
+      <div class="s-battle">
+        <div class="sb-label">Your party is fighting while you work</div>
+        <div class="sb-scene">
+          <div class="sb-bg"></div>
+          <div class="sb-party"></div>
+          <div class="sb-foe"></div>
+        </div>
+        <div class="sb-stats">
+          <span><i class="ico ico-sword"></i> defeated <b id="sb-kills">0</b></span>
+          <span><i class="ico ico-gold"></i> earned <b id="sb-gold">0</b></span>
+        </div>
       </div>
       <div class="s-hint">The clock keeps running if you close this — it is real time,
         not screen time. Put the phone down and go do the thing.</div>
@@ -346,6 +359,48 @@ const UI = (() => {
     tickSession();
   }
 
+  /* the little live battle inside the session overlay */
+  let sbFoe = null;
+  function renderSessionBattle() {
+    const wrap = $('#session-overlay .sb-scene');
+    if (!wrap) return;
+    const bg = wrap.querySelector('.sb-bg');
+    if (bg && !bg.dataset.area) {
+      bg.style.backgroundImage = `url(${assetUrl(AREAS[S.stage.area].bg)})`;
+      bg.dataset.area = S.stage.area;
+    }
+    const pw = wrap.querySelector('.sb-party');
+    if (pw && pw.dataset.n !== String(S.party.length)) {
+      pw.innerHTML = '';
+      for (const cid of S.party) {
+        const img = el('img');
+        img.src = sprite(cid);
+        fitSprite(img, cid, 38);
+        pw.appendChild(img);
+      }
+      pw.dataset.n = String(S.party.length);
+    }
+    const foe = Battle.enemies.filter(e => !e.dying)[0] || null;
+    const fw = wrap.querySelector('.sb-foe');
+    if (fw && foe && sbFoe !== foe.cid) {
+      sbFoe = foe.cid;
+      fw.innerHTML = `<img src="${sprite(foe.cid)}"><span class="sb-hp"><i></i></span>`;
+      fitSprite(fw.querySelector('img'), foe.cid, 44);
+    } else if (fw && !foe) {
+      fw.innerHTML = ''; sbFoe = null;
+    }
+    if (fw && foe) {
+      const i = fw.querySelector('.sb-hp > i');
+      if (i) i.style.width = Math.max(0, 100 * foe.hp / foe.hpMax) + '%';
+    }
+    const s = S.session;
+    if (s) {
+      const k = $('#sb-kills'), g = $('#sb-gold');
+      if (k) k.textContent = fmt(Math.max(0, S.kills - (s.kills0 || 0)));
+      if (g) g.textContent = fmt(Math.max(0, S.player.gold - (s.gold0 || 0)));
+    }
+  }
+
   /* called once a second from main */
   function tickSession() {
     const o = $('#session-overlay');
@@ -359,6 +414,7 @@ const UI = (() => {
     if (st) st.textContent = S.session.paused ? 'PAUSED' : 'REMAINING';
     const fill = o.querySelector('.sring .fill');
     if (fill) fill.style.strokeDashoffset = 597 * (left / (S.session.mins * 60000));
+    renderSessionBattle();
   }
 
   function finishSession(early) {
@@ -545,6 +601,22 @@ const UI = (() => {
       VFX.kick(2, 90);
       setTimeout(() => f.classList.remove('striking'), 230);
     }, 210);
+  }
+
+  /* an enemy swing landing on the party — a number you can actually see */
+  function showPartyHit(dmg, from) {
+    const holder = $('#party-holder'), scene = $('#scene');
+    if (!holder || !scene) return;
+    const r = holder.getBoundingClientRect(), sr = scene.getBoundingClientRect();
+    const x = r.left - sr.left + r.width / 2 + rnd(-18, 18);
+    const y = r.top - sr.top + 6;
+    floatText('-' + fmt(dmg), x, y, 'enemyhit');
+    $$('#party-holder .fighter img').forEach(img => {
+      img.classList.remove('hurt'); void img.offsetWidth; img.classList.add('hurt');
+    });
+    if (from) VFX.anim('scratch', x, y + 14, { scale: 0.8, fps: 22, alpha: 0.9 });
+    VFX.kick(2, 80);
+    Sound.hit();
   }
 
   function enemyLunge(e) {
@@ -800,11 +872,39 @@ const UI = (() => {
     w.innerHTML = html;
   }
 
+  /* ----- collapsible, level-gated panels -----
+     A new player should not meet six upgrade cards and a twelve-slot fusion
+     board on their first battle. Both stay shut and locked until the game has
+     had a chance to teach the basics. */
+  function renderPanels() {
+    for (const [key, id] of [['upgrades', '#upgrade-panel'], ['fusion', '#merge-panel']]) {
+      const el0 = $(id);
+      if (!el0) continue;
+      const open = !!(S.settings.panels && S.settings.panels[key]);
+      const lock = !unlocked(key);
+      el0.classList.toggle('collapsed', lock || !open);
+      el0.classList.toggle('locked-panel', lock);
+      const head = el0.querySelector('.panel-head');
+      if (head) head.disabled = lock;
+      const note = el0.querySelector('.panel-note');
+      if (note) note.textContent = lock ? `unlocks at Lv.${UNLOCKS[key]}` : '';
+    }
+  }
+  function togglePanel(key) {
+    if (!unlocked(key)) { toast(`Unlocks at level ${UNLOCKS[key]}`); return; }
+    S.settings.panels[key] = !S.settings.panels[key];
+    Sound.click();
+    save();
+    renderPanels();
+  }
+
   /* ----- cookie-clicker upgrades ----- */
   function renderUpgrades() {
     const strip = $('#upgrade-strip');
     if (!strip) return;
+    renderPanels();
     strip.innerHTML = '';
+    if (!unlocked('upgrades')) return;
     for (const def of UPGRADE_DEFS) {
       const lvl = S.upgrades[def.key] || 0;
       const cost = upgradeCost(def.key);
@@ -834,6 +934,8 @@ const UI = (() => {
   function renderMerge() {
     const board = $('#merge-board');
     if (!board) return;
+    renderPanels();
+    if (!unlocked('fusion')) { board.innerHTML = ''; return; }
     Merge.regen();
     board.innerHTML = '';
     S.merge.board.forEach((it, i) => {
@@ -1496,6 +1598,16 @@ const UI = (() => {
     $('#pity-note').textContent = `Guaranteed rare+ within ${left} pull${left > 1 ? 's' : ''} · x10 always contains a rare+ · ${S.summons.total} total pulls`;
     $('#lab-points').textContent = S.lab.points;
     $('#lab-cost').textContent = Lab.COST;
+    const labPanel = $('#lab-panel');
+    if (labPanel) {
+      const lock = !unlocked('lab');
+      labPanel.classList.toggle('locked-panel', lock);
+      const rollBtn = $('#btn-lab-roll');
+      if (rollBtn) rollBtn.disabled = lock || S.lab.points < Lab.COST;
+      const hint = labPanel.querySelector('.hint-line');
+      if (hint && lock) hint.textContent =
+        `The Lab opens at level ${UNLOCKS.lab}. Keep practising — your points are already banking up.`;
+    }
     const shelf = $('#relic-shelf');
     shelf.innerHTML = '';
     for (const r of RELICS) {
@@ -2255,11 +2367,12 @@ const UI = (() => {
     switchTab, currentTab, renderAll, renderHud, renderScene, renderSceneBg,
     renderToday, renderFocus, renderRhythm, renderJournal,
     startSession, openSessionOverlay, tickSession, showSessionSetup,
+    renderSessionBattle,
     renderEnemies, renderEnemyHp, renderBossTimer, renderPartyHp, renderParty,
     renderBattleStats, renderBoost, showHit, showKillRewards, attackTween,
-    enemyLunge, startAdvance, renderUltMeter, showUltimateCast, skillFlash,
+    enemyLunge, showPartyHit, startAdvance, renderUltMeter, showUltimateCast, skillFlash,
     showDefeat, hideDefeat, showEncounter, renderQuestLog, renderUpgrades,
-    renderCooldowns, tickCooldowns,
+    renderCooldowns, tickCooldowns, renderPanels, togglePanel,
     renderMerge, mergeSpawnFx, mergeFuseFx, showMap,
     renderBeasts, renderCollection, showCreature, showFeedPicker,
     renderFarm, waterGarden, showMealModal, showKcalTargetModal, renderFood,

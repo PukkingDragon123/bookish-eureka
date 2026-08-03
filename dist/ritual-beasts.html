@@ -929,6 +929,35 @@ button.hud-chip:active { transform: translateY(2px); }
 .sring-mid b { font-size: 40px; font-variant-numeric: tabular-nums; text-shadow: 2px 2px 0 var(--ink); }
 .sring-mid span { font-size: 9px; color: var(--txt-dim); letter-spacing: 1px; }
 .sring-beast { position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%); animation: herobob 2.6s steps(6, jump-none) infinite; }
+/* the party fighting on in the background while you work */
+.s-battle { width: 100%; max-width: 320px; margin-top: 14px; }
+.sb-label {
+  font-size: 8.5px; letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--brass); text-align: center; margin-bottom: 5px;
+}
+.sb-scene {
+  position: relative; height: 74px; overflow: hidden;
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--line); outline-offset: calc(var(--px) * -2);
+}
+.sb-bg {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center 62%;
+  image-rendering: pixelated; filter: brightness(.72) saturate(.85);
+}
+.sb-party, .sb-foe { position: absolute; bottom: 3px; display: flex; align-items: flex-end; gap: 3px; }
+.sb-party { left: 6px; }
+.sb-foe { right: 8px; flex-direction: column; align-items: center; gap: 2px; }
+.sb-party img { animation: pbob 2.4s steps(4, jump-none) infinite; transform: scaleX(-1); }
+.sb-foe img { animation: pbob 2.1s steps(4, jump-none) infinite; }
+.sb-hp { width: 34px; height: 4px; background: #170e05; border: 1px solid var(--ink); }
+.sb-hp > i { display: block; height: 100%; background: var(--hp); }
+.sb-stats {
+  display: flex; justify-content: space-around; gap: 8px; margin-top: 5px;
+  font-size: 9px; color: var(--txt-dim);
+}
+.sb-stats b { color: var(--gold); font-variant-numeric: tabular-nums; margin-left: 3px; }
+
 #session-overlay .s-hint { font-size: 9.5px; color: var(--txt-dim); text-align: center; max-width: 280px; line-height: 1.7; margin-top: 12px; }
 #session-overlay .s-btns { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; justify-content: center; }
 .s-rewards {
@@ -1053,6 +1082,15 @@ button.hud-chip:active { transform: translateY(2px); }
   60% { transform: scaleX(-1) rotate(10deg) translate(8px, 2px); }
   100% { transform: scaleX(-1); }
 }
+.fighter img.hurt { animation: hurtflash .3s steps(3); }
+@keyframes hurtflash {
+  0%, 100% { filter: drop-shadow(0 3px 0 rgba(0,0,0,.35)); }
+  40% { filter: drop-shadow(0 3px 0 rgba(0,0,0,.35)) brightness(2.4) sepia(1) hue-rotate(-40deg) saturate(6); }
+}
+.dmg-float.enemyhit {
+  color: #ff6a5a; font-size: 15px;
+  text-shadow: 2px 2px 0 #3a0d08, 0 0 8px rgba(255,80,60,.5);
+}
 .fighter .flvl {
   font-size: 8px;
   background: rgba(30,18,8,.9);
@@ -1175,6 +1213,30 @@ button.hud-chip:active { transform: translateY(2px); }
 .cdmeter { width: 34px; height: 5px; background: #170e05; border: 1px solid var(--ink); flex: none; }
 .cdmeter i { display: block; height: 100%; background: var(--gem); }
 .cdmeter.rdy i { background: var(--good); }
+
+/* collapsible panels: shut by default, one tap to open, locked until earned */
+.panel { padding: 0; overflow: hidden; }
+.panel-head {
+  width: 100%; display: flex; align-items: center; gap: 6px;
+  background: none; border: none; cursor: pointer; font-family: inherit;
+  color: var(--brass); font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase;
+  padding: 10px 10px; text-align: left;
+}
+.panel-head:disabled { cursor: default; color: var(--txt-dim); }
+.panel-head .chev {
+  margin-left: auto; width: 0; height: 0; flex: none;
+  border-left: 5px solid transparent; border-right: 5px solid transparent;
+  border-top: 6px solid currentColor; transition: transform .18s;
+}
+.panel.collapsed .panel-head .chev { transform: rotate(-90deg); }
+.panel-note { font-size: 8.5px; color: var(--txt-dim); text-transform: none; letter-spacing: .4px; }
+.panel > *:not(.panel-head) { padding-bottom: 9px; }
+/* !important because the inner strips are styled by id (#merge-foot, #upgrade-strip)
+   and an id selector would otherwise out-rank this class rule and stay visible */
+.panel.collapsed > *:not(.panel-head) { display: none !important; }
+.panel.locked-panel { filter: saturate(.4) brightness(.86); }
+.locked-panel #btn-lab-roll { opacity: .5; }
+#merge-panel .panel-head #merge-bonuses { margin-left: 8px; }
 
 #upgrade-strip { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; padding: 2px 10px 7px; }
 .upg {
@@ -1924,10 +1986,15 @@ button.hud-chip:active { transform: translateY(2px); }
         </div>
         <div id="quest-log" title="Open the quest board"></div>
         <div id="cooldown-strip"></div>
-        <div id="upgrade-strip"></div>
-        <div id="merge-panel" class="card">
-          <div class="card-head"><i class="ico ico-portal"></i> Fusion camp
-            <span id="merge-bonuses"></span></div>
+        <div id="upgrade-panel" class="card panel collapsed">
+          <button class="panel-head" data-panel="upgrades">
+            <i class="ico ico-sword"></i> Camp upgrades
+            <span class="panel-note" id="upgrade-note"></span><i class="chev"></i></button>
+          <div id="upgrade-strip"></div>
+        </div>
+        <div id="merge-panel" class="card panel collapsed">
+          <button class="panel-head" data-panel="fusion"><i class="ico ico-portal"></i> Fusion camp
+            <span id="merge-bonuses"></span><i class="chev"></i></button>
           <div id="merge-board"></div>
           <div id="merge-foot">
             <button id="btn-portal" class="pixbtn primary sm"><i class="ico ico-portal"></i> Summon gear <b id="portal-energy"></b></button>
@@ -2663,7 +2730,7 @@ function defaultState() {
     exTimer: null,       // {kind:'exercise'|'walk'|'create', mins, startedAt}
     quests: { day: null, list: [] },
     summons: { total: 0, sinceRare: 0 },
-    settings: { sound: true },
+    settings: { sound: true, panels: { upgrades: false, fusion: false } },
     tutorial: {},
     lastSeen: Date.now(),
     starterCid: null,
@@ -2699,6 +2766,7 @@ function load() {
     S = Object.assign(defaultState(), data);
     S.player = Object.assign(defaultState().player, data.player);
     S.settings = Object.assign(defaultState().settings, data.settings);
+  S.settings.panels = Object.assign(defaultState().settings.panels, S.settings.panels);
     sanitize();
     return S.onboarded;
   } catch (e) { return false; }
@@ -2745,6 +2813,10 @@ function relicBonusStat(stat) {
 function xpForLevel(lvl) { return Math.floor(90 * Math.pow(1.38, lvl - 1)); }
 
 /* ---------- cookie-clicker battle upgrades ---------- */
+/* The game opens up instead of dumping everything on a new player at once. */
+const UNLOCKS = { upgrades: 3, fusion: 6, lab: 8 };
+function unlocked(key) { return S.player.level >= (UNLOCKS[key] || 0); }
+
 const UPGRADE_DEFS = [
   { key: 'dmg',  name: 'Whetstone',   icon: 'sword',  per: 5, unit: '% damage',   base: 30 },
   { key: 'spd',  name: 'War Drums',   icon: 'timer',  per: 3, unit: '% atk speed', base: 45 },
@@ -4250,6 +4322,9 @@ const Battle = (() => {
         gold: Math.floor(5 * Math.pow(1.24, g - 1) * (isBoss ? 16 : 1) / (packSize === 1 ? 1 : 1.5)),
         xp: Math.floor((2 + g * 0.55) * (isBoss ? 10 : 1) / (packSize === 1 ? 1 : 1.5)),
         slot: i, dying: false,
+        // enemies swing on their own clock so damage arrives in readable hits
+        atkEvery: isBoss ? 2.4 : rnd(2.8, 4.2),
+        atkCd: rnd(0.9, 2.4),          // stagger the first swings
       });
     }
     if (isBoss) { bossTimeLeft = 30; Sound.boss(); }
@@ -4282,6 +4357,21 @@ const Battle = (() => {
     const g = globalStage();
     const n = alive().length;
     return 3.2 * Math.pow(1.25, g - 1) * (front() && front().boss ? 1.5 : 1) * (1 + (n - 1) * 0.45);
+  }
+  /* One swing's worth of damage. Derived from the old continuous DPS so the
+     overall difficulty curve is untouched — it just arrives in visible chunks
+     instead of an invisible trickle.
+
+     Capped at a third of the party's health: chunked damage would otherwise let
+     a single swing delete a full health bar on an over-levelled stage, which is
+     even less readable than the trickle it replaced. With the cap you always
+     see at least three hits land, so losing is something you watch happen and
+     can retreat from rather than something that just occurs. */
+  const MAX_SWING_FRAC = 0.34;
+  function enemySwing(e) {
+    const share = enemyDps() / Math.max(1, alive().length);
+    const raw = share * e.atkEvery * rnd(0.85, 1.15);
+    return Math.min(raw, partyHpMax() * MAX_SWING_FRAC);
   }
   function partyHpMax() {
     let hp = 0;
@@ -4380,6 +4470,8 @@ const Battle = (() => {
     }
     if (advancing > 0) {
       advancing--;
+      partyHp = Math.min(1, partyHp + 0.02);     // catch your breath between waves
+      UI.renderPartyHp(partyHp);
       if (advancing === 0) spawnWave();
       return;
     }
@@ -4396,11 +4488,18 @@ const Battle = (() => {
     if (ultCharge >= 100) fireUltimate();
     UI.renderUltMeter(ultCharge);
 
-    // enemies strike back (visual lunge from a random attacker)
-    const edmg = enemyDps() * dt * rnd(0.8, 1.2);
-    partyHp = clamp(partyHp - edmg / partyHpMax() + 0.004, 0, 1);
+    // enemies strike back on their own timers — each swing is a visible hit
+    for (const e of alive()) {
+      e.atkCd -= dt;
+      if (e.atkCd > 0) continue;
+      e.atkCd = e.atkEvery;
+      const dmg = enemySwing(e);
+      partyHp = clamp(partyHp - dmg / partyHpMax(), 0, 1);
+      UI.enemyLunge(e);
+      UI.showPartyHit(dmg, e);
+      if (partyHp <= 0) break;
+    }
     UI.renderPartyHp(partyHp);
-    if (Math.random() < 0.16) UI.enemyLunge(pick(alive()));
 
     const f = front();
     if (f && f.boss) {
@@ -4546,7 +4645,7 @@ const Battle = (() => {
 
   return {
     tick, spawnWave, challengeBoss, currentDpsEstimate, offlineGains, travel,
-    regionUnlocked, skillListFor, cooldownState, TICK_MS,
+    regionUnlocked, skillListFor, cooldownState, partyHpMax, TICK_MS,
     get enemies() { return enemies; },
     get partyHp() { return partyHp; },
     get ultCharge() { return ultCharge; },
@@ -5386,7 +5485,8 @@ const UI = (() => {
   }
 
   function startSession(mins) {
-    S.session = { mins, startedAt: Date.now(), paused: false, elapsedBefore: 0 };
+    S.session = { mins, startedAt: Date.now(), paused: false, elapsedBefore: 0,
+                  kills0: S.kills, gold0: S.player.gold };
     save();
     Sound.quest();
     openSessionOverlay();
@@ -5410,6 +5510,18 @@ const UI = (() => {
         </svg>
         <div class="sring-mid"><b id="s-left">--:--</b><span id="s-state">REMAINING</span></div>
         ${cid ? `<img class="sring-beast" src="${sprite(cid)}">` : ''}
+      </div>
+      <div class="s-battle">
+        <div class="sb-label">Your party is fighting while you work</div>
+        <div class="sb-scene">
+          <div class="sb-bg"></div>
+          <div class="sb-party"></div>
+          <div class="sb-foe"></div>
+        </div>
+        <div class="sb-stats">
+          <span><i class="ico ico-sword"></i> defeated <b id="sb-kills">0</b></span>
+          <span><i class="ico ico-gold"></i> earned <b id="sb-gold">0</b></span>
+        </div>
       </div>
       <div class="s-hint">The clock keeps running if you close this — it is real time,
         not screen time. Put the phone down and go do the thing.</div>
@@ -5448,6 +5560,48 @@ const UI = (() => {
     tickSession();
   }
 
+  /* the little live battle inside the session overlay */
+  let sbFoe = null;
+  function renderSessionBattle() {
+    const wrap = $('#session-overlay .sb-scene');
+    if (!wrap) return;
+    const bg = wrap.querySelector('.sb-bg');
+    if (bg && !bg.dataset.area) {
+      bg.style.backgroundImage = `url(${assetUrl(AREAS[S.stage.area].bg)})`;
+      bg.dataset.area = S.stage.area;
+    }
+    const pw = wrap.querySelector('.sb-party');
+    if (pw && pw.dataset.n !== String(S.party.length)) {
+      pw.innerHTML = '';
+      for (const cid of S.party) {
+        const img = el('img');
+        img.src = sprite(cid);
+        fitSprite(img, cid, 38);
+        pw.appendChild(img);
+      }
+      pw.dataset.n = String(S.party.length);
+    }
+    const foe = Battle.enemies.filter(e => !e.dying)[0] || null;
+    const fw = wrap.querySelector('.sb-foe');
+    if (fw && foe && sbFoe !== foe.cid) {
+      sbFoe = foe.cid;
+      fw.innerHTML = `<img src="${sprite(foe.cid)}"><span class="sb-hp"><i></i></span>`;
+      fitSprite(fw.querySelector('img'), foe.cid, 44);
+    } else if (fw && !foe) {
+      fw.innerHTML = ''; sbFoe = null;
+    }
+    if (fw && foe) {
+      const i = fw.querySelector('.sb-hp > i');
+      if (i) i.style.width = Math.max(0, 100 * foe.hp / foe.hpMax) + '%';
+    }
+    const s = S.session;
+    if (s) {
+      const k = $('#sb-kills'), g = $('#sb-gold');
+      if (k) k.textContent = fmt(Math.max(0, S.kills - (s.kills0 || 0)));
+      if (g) g.textContent = fmt(Math.max(0, S.player.gold - (s.gold0 || 0)));
+    }
+  }
+
   /* called once a second from main */
   function tickSession() {
     const o = $('#session-overlay');
@@ -5461,6 +5615,7 @@ const UI = (() => {
     if (st) st.textContent = S.session.paused ? 'PAUSED' : 'REMAINING';
     const fill = o.querySelector('.sring .fill');
     if (fill) fill.style.strokeDashoffset = 597 * (left / (S.session.mins * 60000));
+    renderSessionBattle();
   }
 
   function finishSession(early) {
@@ -5647,6 +5802,22 @@ const UI = (() => {
       VFX.kick(2, 90);
       setTimeout(() => f.classList.remove('striking'), 230);
     }, 210);
+  }
+
+  /* an enemy swing landing on the party — a number you can actually see */
+  function showPartyHit(dmg, from) {
+    const holder = $('#party-holder'), scene = $('#scene');
+    if (!holder || !scene) return;
+    const r = holder.getBoundingClientRect(), sr = scene.getBoundingClientRect();
+    const x = r.left - sr.left + r.width / 2 + rnd(-18, 18);
+    const y = r.top - sr.top + 6;
+    floatText('-' + fmt(dmg), x, y, 'enemyhit');
+    $$('#party-holder .fighter img').forEach(img => {
+      img.classList.remove('hurt'); void img.offsetWidth; img.classList.add('hurt');
+    });
+    if (from) VFX.anim('scratch', x, y + 14, { scale: 0.8, fps: 22, alpha: 0.9 });
+    VFX.kick(2, 80);
+    Sound.hit();
   }
 
   function enemyLunge(e) {
@@ -5902,11 +6073,39 @@ const UI = (() => {
     w.innerHTML = html;
   }
 
+  /* ----- collapsible, level-gated panels -----
+     A new player should not meet six upgrade cards and a twelve-slot fusion
+     board on their first battle. Both stay shut and locked until the game has
+     had a chance to teach the basics. */
+  function renderPanels() {
+    for (const [key, id] of [['upgrades', '#upgrade-panel'], ['fusion', '#merge-panel']]) {
+      const el0 = $(id);
+      if (!el0) continue;
+      const open = !!(S.settings.panels && S.settings.panels[key]);
+      const lock = !unlocked(key);
+      el0.classList.toggle('collapsed', lock || !open);
+      el0.classList.toggle('locked-panel', lock);
+      const head = el0.querySelector('.panel-head');
+      if (head) head.disabled = lock;
+      const note = el0.querySelector('.panel-note');
+      if (note) note.textContent = lock ? `unlocks at Lv.${UNLOCKS[key]}` : '';
+    }
+  }
+  function togglePanel(key) {
+    if (!unlocked(key)) { toast(`Unlocks at level ${UNLOCKS[key]}`); return; }
+    S.settings.panels[key] = !S.settings.panels[key];
+    Sound.click();
+    save();
+    renderPanels();
+  }
+
   /* ----- cookie-clicker upgrades ----- */
   function renderUpgrades() {
     const strip = $('#upgrade-strip');
     if (!strip) return;
+    renderPanels();
     strip.innerHTML = '';
+    if (!unlocked('upgrades')) return;
     for (const def of UPGRADE_DEFS) {
       const lvl = S.upgrades[def.key] || 0;
       const cost = upgradeCost(def.key);
@@ -5936,6 +6135,8 @@ const UI = (() => {
   function renderMerge() {
     const board = $('#merge-board');
     if (!board) return;
+    renderPanels();
+    if (!unlocked('fusion')) { board.innerHTML = ''; return; }
     Merge.regen();
     board.innerHTML = '';
     S.merge.board.forEach((it, i) => {
@@ -6598,6 +6799,16 @@ const UI = (() => {
     $('#pity-note').textContent = `Guaranteed rare+ within ${left} pull${left > 1 ? 's' : ''} · x10 always contains a rare+ · ${S.summons.total} total pulls`;
     $('#lab-points').textContent = S.lab.points;
     $('#lab-cost').textContent = Lab.COST;
+    const labPanel = $('#lab-panel');
+    if (labPanel) {
+      const lock = !unlocked('lab');
+      labPanel.classList.toggle('locked-panel', lock);
+      const rollBtn = $('#btn-lab-roll');
+      if (rollBtn) rollBtn.disabled = lock || S.lab.points < Lab.COST;
+      const hint = labPanel.querySelector('.hint-line');
+      if (hint && lock) hint.textContent =
+        `The Lab opens at level ${UNLOCKS.lab}. Keep practising — your points are already banking up.`;
+    }
     const shelf = $('#relic-shelf');
     shelf.innerHTML = '';
     for (const r of RELICS) {
@@ -7357,11 +7568,12 @@ const UI = (() => {
     switchTab, currentTab, renderAll, renderHud, renderScene, renderSceneBg,
     renderToday, renderFocus, renderRhythm, renderJournal,
     startSession, openSessionOverlay, tickSession, showSessionSetup,
+    renderSessionBattle,
     renderEnemies, renderEnemyHp, renderBossTimer, renderPartyHp, renderParty,
     renderBattleStats, renderBoost, showHit, showKillRewards, attackTween,
-    enemyLunge, startAdvance, renderUltMeter, showUltimateCast, skillFlash,
+    enemyLunge, showPartyHit, startAdvance, renderUltMeter, showUltimateCast, skillFlash,
     showDefeat, hideDefeat, showEncounter, renderQuestLog, renderUpgrades,
-    renderCooldowns, tickCooldowns,
+    renderCooldowns, tickCooldowns, renderPanels, togglePanel,
     renderMerge, mergeSpawnFx, mergeFuseFx, showMap,
     renderBeasts, renderCollection, showCreature, showFeedPicker,
     renderFarm, waterGarden, showMealModal, showKcalTargetModal, renderFood,
@@ -7398,6 +7610,7 @@ const UI = (() => {
   $('#btn-all-quests').onclick = () => UI.switchTab('quests');
   $('#quest-log').onclick = () => UI.switchTab('quests');
   $('#hero-edit').onclick = () => UI.showPlanEditor();
+  $$('.panel-head').forEach(b => b.onclick = () => UI.togglePanel(b.dataset.panel));
 
   /* ---- first-run vs returning ---- */
   if (!hadSave || !S.dream || !S.dream.key) {

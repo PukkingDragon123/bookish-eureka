@@ -113,10 +113,15 @@
         </div>
         <div id="quest-log" title="Open the quest board"></div>
         <div id="cooldown-strip"></div>
-        <div id="upgrade-strip"></div>
-        <div id="merge-panel" class="card">
-          <div class="card-head"><i class="ico ico-portal"></i> Fusion camp
-            <span id="merge-bonuses"></span></div>
+        <div id="upgrade-panel" class="card panel collapsed">
+          <button class="panel-head" data-panel="upgrades">
+            <i class="ico ico-sword"></i> Camp upgrades
+            <span class="panel-note" id="upgrade-note"></span><i class="chev"></i></button>
+          <div id="upgrade-strip"></div>
+        </div>
+        <div id="merge-panel" class="card panel collapsed">
+          <button class="panel-head" data-panel="fusion"><i class="ico ico-portal"></i> Fusion camp
+            <span id="merge-bonuses"></span><i class="chev"></i></button>
           <div id="merge-board"></div>
           <div id="merge-foot">
             <button id="btn-portal" class="pixbtn primary sm"><i class="ico ico-portal"></i> Summon gear <b id="portal-energy"></b></button>

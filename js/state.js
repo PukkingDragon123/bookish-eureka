@@ -84,7 +84,7 @@ function defaultState() {
     exTimer: null,       // {kind:'exercise'|'walk'|'create', mins, startedAt}
     quests: { day: null, list: [] },
     summons: { total: 0, sinceRare: 0 },
-    settings: { sound: true },
+    settings: { sound: true, panels: { upgrades: false, fusion: false } },
     tutorial: {},
     lastSeen: Date.now(),
     starterCid: null,
@@ -120,6 +120,7 @@ function load() {
     S = Object.assign(defaultState(), data);
     S.player = Object.assign(defaultState().player, data.player);
     S.settings = Object.assign(defaultState().settings, data.settings);
+  S.settings.panels = Object.assign(defaultState().settings.panels, S.settings.panels);
     sanitize();
     return S.onboarded;
   } catch (e) { return false; }
@@ -166,6 +167,10 @@ function relicBonusStat(stat) {
 function xpForLevel(lvl) { return Math.floor(90 * Math.pow(1.38, lvl - 1)); }
 
 /* ---------- cookie-clicker battle upgrades ---------- */
+/* The game opens up instead of dumping everything on a new player at once. */
+const UNLOCKS = { upgrades: 3, fusion: 6, lab: 8 };
+function unlocked(key) { return S.player.level >= (UNLOCKS[key] || 0); }
+
 const UPGRADE_DEFS = [
   { key: 'dmg',  name: 'Whetstone',   icon: 'sword',  per: 5, unit: '% damage',   base: 30 },
   { key: 'spd',  name: 'War Drums',   icon: 'timer',  per: 3, unit: '% atk speed', base: 45 },

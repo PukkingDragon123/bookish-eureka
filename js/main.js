@@ -22,6 +22,7 @@
   $('#btn-all-quests').onclick = () => UI.switchTab('quests');
   $('#quest-log').onclick = () => UI.switchTab('quests');
   $('#hero-edit').onclick = () => UI.showPlanEditor();
+  $$('.panel-head').forEach(b => b.onclick = () => UI.togglePanel(b.dataset.panel));
 
   /* ---- first-run vs returning ---- */
   if (!hadSave || !S.dream || !S.dream.key) {

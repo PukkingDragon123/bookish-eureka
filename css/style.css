@@ -411,6 +411,35 @@ button.hud-chip:active { transform: translateY(2px); }
 .sring-mid b { font-size: 40px; font-variant-numeric: tabular-nums; text-shadow: 2px 2px 0 var(--ink); }
 .sring-mid span { font-size: 9px; color: var(--txt-dim); letter-spacing: 1px; }
 .sring-beast { position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%); animation: herobob 2.6s steps(6, jump-none) infinite; }
+/* the party fighting on in the background while you work */
+.s-battle { width: 100%; max-width: 320px; margin-top: 14px; }
+.sb-label {
+  font-size: 8.5px; letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--brass); text-align: center; margin-bottom: 5px;
+}
+.sb-scene {
+  position: relative; height: 74px; overflow: hidden;
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--line); outline-offset: calc(var(--px) * -2);
+}
+.sb-bg {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center 62%;
+  image-rendering: pixelated; filter: brightness(.72) saturate(.85);
+}
+.sb-party, .sb-foe { position: absolute; bottom: 3px; display: flex; align-items: flex-end; gap: 3px; }
+.sb-party { left: 6px; }
+.sb-foe { right: 8px; flex-direction: column; align-items: center; gap: 2px; }
+.sb-party img { animation: pbob 2.4s steps(4, jump-none) infinite; transform: scaleX(-1); }
+.sb-foe img { animation: pbob 2.1s steps(4, jump-none) infinite; }
+.sb-hp { width: 34px; height: 4px; background: #170e05; border: 1px solid var(--ink); }
+.sb-hp > i { display: block; height: 100%; background: var(--hp); }
+.sb-stats {
+  display: flex; justify-content: space-around; gap: 8px; margin-top: 5px;
+  font-size: 9px; color: var(--txt-dim);
+}
+.sb-stats b { color: var(--gold); font-variant-numeric: tabular-nums; margin-left: 3px; }
+
 #session-overlay .s-hint { font-size: 9.5px; color: var(--txt-dim); text-align: center; max-width: 280px; line-height: 1.7; margin-top: 12px; }
 #session-overlay .s-btns { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; justify-content: center; }
 .s-rewards {
@@ -535,6 +564,15 @@ button.hud-chip:active { transform: translateY(2px); }
   60% { transform: scaleX(-1) rotate(10deg) translate(8px, 2px); }
   100% { transform: scaleX(-1); }
 }
+.fighter img.hurt { animation: hurtflash .3s steps(3); }
+@keyframes hurtflash {
+  0%, 100% { filter: drop-shadow(0 3px 0 rgba(0,0,0,.35)); }
+  40% { filter: drop-shadow(0 3px 0 rgba(0,0,0,.35)) brightness(2.4) sepia(1) hue-rotate(-40deg) saturate(6); }
+}
+.dmg-float.enemyhit {
+  color: #ff6a5a; font-size: 15px;
+  text-shadow: 2px 2px 0 #3a0d08, 0 0 8px rgba(255,80,60,.5);
+}
 .fighter .flvl {
   font-size: 8px;
   background: rgba(30,18,8,.9);
@@ -657,6 +695,30 @@ button.hud-chip:active { transform: translateY(2px); }
 .cdmeter { width: 34px; height: 5px; background: #170e05; border: 1px solid var(--ink); flex: none; }
 .cdmeter i { display: block; height: 100%; background: var(--gem); }
 .cdmeter.rdy i { background: var(--good); }
+
+/* collapsible panels: shut by default, one tap to open, locked until earned */
+.panel { padding: 0; overflow: hidden; }
+.panel-head {
+  width: 100%; display: flex; align-items: center; gap: 6px;
+  background: none; border: none; cursor: pointer; font-family: inherit;
+  color: var(--brass); font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase;
+  padding: 10px 10px; text-align: left;
+}
+.panel-head:disabled { cursor: default; color: var(--txt-dim); }
+.panel-head .chev {
+  margin-left: auto; width: 0; height: 0; flex: none;
+  border-left: 5px solid transparent; border-right: 5px solid transparent;
+  border-top: 6px solid currentColor; transition: transform .18s;
+}
+.panel.collapsed .panel-head .chev { transform: rotate(-90deg); }
+.panel-note { font-size: 8.5px; color: var(--txt-dim); text-transform: none; letter-spacing: .4px; }
+.panel > *:not(.panel-head) { padding-bottom: 9px; }
+/* !important because the inner strips are styled by id (#merge-foot, #upgrade-strip)
+   and an id selector would otherwise out-rank this class rule and stay visible */
+.panel.collapsed > *:not(.panel-head) { display: none !important; }
+.panel.locked-panel { filter: saturate(.4) brightness(.86); }
+.locked-panel #btn-lab-roll { opacity: .5; }
+#merge-panel .panel-head #merge-bonuses { margin-left: 8px; }
 
 #upgrade-strip { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; padding: 2px 10px 7px; }
 .upg {

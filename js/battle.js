@@ -50,6 +50,9 @@ const Battle = (() => {
         gold: Math.floor(5 * Math.pow(1.24, g - 1) * (isBoss ? 16 : 1) / (packSize === 1 ? 1 : 1.5)),
         xp: Math.floor((2 + g * 0.55) * (isBoss ? 10 : 1) / (packSize === 1 ? 1 : 1.5)),
         slot: i, dying: false,
+        // enemies swing on their own clock so damage arrives in readable hits
+        atkEvery: isBoss ? 2.4 : rnd(2.8, 4.2),
+        atkCd: rnd(0.9, 2.4),          // stagger the first swings
       });
     }
     if (isBoss) { bossTimeLeft = 30; Sound.boss(); }
@@ -82,6 +85,21 @@ const Battle = (() => {
     const g = globalStage();
     const n = alive().length;
     return 3.2 * Math.pow(1.25, g - 1) * (front() && front().boss ? 1.5 : 1) * (1 + (n - 1) * 0.45);
+  }
+  /* One swing's worth of damage. Derived from the old continuous DPS so the
+     overall difficulty curve is untouched — it just arrives in visible chunks
+     instead of an invisible trickle.
+
+     Capped at a third of the party's health: chunked damage would otherwise let
+     a single swing delete a full health bar on an over-levelled stage, which is
+     even less readable than the trickle it replaced. With the cap you always
+     see at least three hits land, so losing is something you watch happen and
+     can retreat from rather than something that just occurs. */
+  const MAX_SWING_FRAC = 0.34;
+  function enemySwing(e) {
+    const share = enemyDps() / Math.max(1, alive().length);
+    const raw = share * e.atkEvery * rnd(0.85, 1.15);
+    return Math.min(raw, partyHpMax() * MAX_SWING_FRAC);
   }
   function partyHpMax() {
     let hp = 0;
@@ -180,6 +198,8 @@ const Battle = (() => {
     }
     if (advancing > 0) {
       advancing--;
+      partyHp = Math.min(1, partyHp + 0.02);     // catch your breath between waves
+      UI.renderPartyHp(partyHp);
       if (advancing === 0) spawnWave();
       return;
     }
@@ -196,11 +216,18 @@ const Battle = (() => {
     if (ultCharge >= 100) fireUltimate();
     UI.renderUltMeter(ultCharge);
 
-    // enemies strike back (visual lunge from a random attacker)
-    const edmg = enemyDps() * dt * rnd(0.8, 1.2);
-    partyHp = clamp(partyHp - edmg / partyHpMax() + 0.004, 0, 1);
+    // enemies strike back on their own timers — each swing is a visible hit
+    for (const e of alive()) {
+      e.atkCd -= dt;
+      if (e.atkCd > 0) continue;
+      e.atkCd = e.atkEvery;
+      const dmg = enemySwing(e);
+      partyHp = clamp(partyHp - dmg / partyHpMax(), 0, 1);
+      UI.enemyLunge(e);
+      UI.showPartyHit(dmg, e);
+      if (partyHp <= 0) break;
+    }
     UI.renderPartyHp(partyHp);
-    if (Math.random() < 0.16) UI.enemyLunge(pick(alive()));
 
     const f = front();
     if (f && f.boss) {
@@ -346,7 +373,7 @@ const Battle = (() => {
 
   return {
     tick, spawnWave, challengeBoss, currentDpsEstimate, offlineGains, travel,
-    regionUnlocked, skillListFor, cooldownState, TICK_MS,
+    regionUnlocked, skillListFor, cooldownState, partyHpMax, TICK_MS,
     get enemies() { return enemies; },
     get partyHp() { return partyHp; },
     get ultCharge() { return ultCharge; },
