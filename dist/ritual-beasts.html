@@ -427,47 +427,55 @@
 .prop.prop-sun{background-position:-96px 0;}
 
 /* ============ Dreamkeep ============
-   A maker's workbench at golden hour: oiled wood, brass, parchment and
-   growing green. Pixel-hard edges everywhere, stepped motion, one committed
-   world — the app should feel like a handmade object you want to pick up.  */
+   Deep indigo night with a warm amber signal. The old oiled-wood palette put
+   brown on brown, so nothing could ever be the brightest thing on screen; a
+   cool dark ground gives amber and cyan somewhere to sit, and the one warm
+   accent is spent only on what the player should touch next.                */
 
 :root {
-  --ink:      #1e1208;
-  --bg0:      #2a1c10;
-  --bg1:      #382614;
-  --bg2:      #4a331c;
-  --bg3:      #5f4426;
-  --bg-lift:  #6d4f2c;
-  --line:     #825f37;
-  --line-hi:  #b9884b;
-  --brass:    #d9a24f;
+  --ink:      #080b16;
+  --bg0:      #101529;
+  --bg1:      #171d36;
+  --bg2:      #1f2745;
+  --bg3:      #2a3457;
+  --bg-lift:  #364272;
+  --line:     #3d4a7a;
+  --line-hi:  #6274b5;
+  --brass:    #ffb454;
 
-  --parch:    #f4e7c6;
-  --parch-lo: #cbb083;
+  --parch:    #eef2ff;
+  --parch-lo: #aab4d8;
 
-  --txt:      #fbf2e0;
-  --txt-dim:  #cbab7f;
-  --txt-ink:  #33220f;
+  --txt:      #f2f5ff;
+  --txt-dim:  #97a3ce;
+  --txt-ink:  #0b1020;
 
-  --gold:     #ffd15c;
-  --gold-lo:  #b8821e;
-  --gem:      #6fd9ea;
-  --mana:     #b78dff;
-  --ess:      #93ecb4;
-  --hp:       #ec6060;
-  --xp:       #ffbc55;
-  --good:     #96ce5e;
-  --leaf:     #74b247;
-  --sky:      #7fc4e8;
-  --danger:   #ec6060;
+  --gold:     #ffc247;
+  --gold-lo:  #d18f16;
+  --gem:      #45e0f0;
+  --mana:     #9d7bff;
+  --ess:      #4fe6a8;
+  --hp:       #ff5f6d;
+  --xp:       #ffa63d;
+  --good:     #3fdc86;
+  --leaf:     #4fd873;
+  --sky:      #56b8f5;
+  --danger:   #ff5f6d;
 
-  --rare:      #5aa2e8;
-  --epic:      #c08cff;
-  --legendary: #ffd15c;
+  --rare:      #45a6ff;
+  --epic:      #b47cff;
+  --legendary: #ffc247;
 
   --px: 2px;
-  --grain: repeating-linear-gradient(90deg, rgba(0,0,0,.075) 0 2px, transparent 2px 7px, rgba(255,255,255,.03) 7px 9px, transparent 9px 15px);
+  --grain: repeating-linear-gradient(90deg, rgba(0,0,0,.10) 0 2px, transparent 2px 7px, rgba(255,255,255,.028) 7px 9px, transparent 9px 15px);
   --hard: 0 4px 0 var(--ink);
+
+  /* one shared motion language so nothing animates on its own private curve */
+  --ease: cubic-bezier(.22,.9,.28,1);
+  --pop:  cubic-bezier(.34,1.56,.44,1);
+  --t-fast: .14s;
+  --t-med:  .24s;
+  --t-slow: .42s;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -534,7 +542,7 @@ button { font-family: inherit; letter-spacing: .5px; color: inherit; }
 }
 .pixbar {
   position: relative; display: block; height: 9px;
-  background: #170e05;
+  background: #0a0e1c;
   border: var(--px) solid var(--ink);
   overflow: hidden; flex: 1;
 }
@@ -702,7 +710,7 @@ button.hud-chip:active { transform: translateY(2px); }
 #hero-sky {
   position: absolute; inset: 0;
   background:
-    linear-gradient(180deg, #2d4a63 0%, #6b5a5e 42%, #b9764a 72%, #e0a256 100%);
+    linear-gradient(180deg, #131a33 0%, #2f2a5c 38%, #7b3f6e 68%, #d8794f 100%);
 }
 #hero-sky::after {                     /* pixel sun band */
   content: ''; position: absolute; inset: 0;
@@ -748,7 +756,7 @@ button.hud-chip:active { transform: translateY(2px); }
 /* --- focus card: the single most important thing on screen --- */
 #focus-card { padding: 0 10px; margin-top: 10px; }
 .focus {
-  background: linear-gradient(165deg, #5c4423, #3d2915);
+  background: linear-gradient(165deg, #2b3765, #171d36);
   border: var(--px) solid var(--ink);
   outline: var(--px) solid var(--brass);
   outline-offset: calc(var(--px) * -2);
@@ -822,7 +830,7 @@ button.hud-chip:active { transform: translateY(2px); }
 /* --- session overlay: the focus timer --- */
 #session-overlay {
   position: fixed; inset: 0; z-index: 260;
-  background: radial-gradient(circle at 50% 42%, #3a2a16 0%, #180f06 78%);
+  background: radial-gradient(circle at 50% 40%, #202a52 0%, #070a14 80%);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 4px; padding: 20px;
   animation: fadein .25s steps(4);
@@ -832,7 +840,7 @@ button.hud-chip:active { transform: translateY(2px); }
 .sring { position: relative; width: 214px; height: 214px; margin: 6px 0; }
 .sring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 .sring circle { fill: none; stroke-width: 10; }
-.sring .track { stroke: #170e05; }
+.sring .track { stroke: #0a0e1c; }
 .sring .fill { stroke: var(--gold); stroke-dasharray: 597; transition: stroke-dashoffset 1s linear; }
 .sring .glow { stroke: rgba(255,209,92,.25); stroke-width: 18; }
 .sring-mid { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -860,7 +868,7 @@ button.hud-chip:active { transform: translateY(2px); }
 .sb-foe { right: 8px; flex-direction: column; align-items: center; gap: 2px; }
 .sb-party img { animation: pbob 2.4s steps(4, jump-none) infinite; transform: scaleX(-1); }
 .sb-foe img { animation: pbob 2.1s steps(4, jump-none) infinite; }
-.sb-hp { width: 34px; height: 4px; background: #170e05; border: 1px solid var(--ink); }
+.sb-hp { width: 34px; height: 4px; background: #0a0e1c; border: 1px solid var(--ink); }
 .sb-hp > i { display: block; height: 100%; background: var(--hp); }
 .sb-stats {
   display: flex; justify-content: space-around; gap: 8px; margin-top: 5px;
@@ -1007,7 +1015,7 @@ button.hud-chip:active { transform: translateY(2px); }
   border: var(--px) solid var(--ink);
   padding: 0 4px; margin-top: 1px;
 }
-.fighter .fhp { width: 40px; height: 5px; margin-top: 2px; background: #170e05; border: 1px solid var(--ink); }
+.fighter .fhp { width: 40px; height: 5px; margin-top: 2px; background: #0a0e1c; border: 1px solid var(--ink); }
 .fighter .fhp i { display: block; height: 100%; background: var(--good); }
 
 #skill-flash {
@@ -1072,7 +1080,7 @@ button.hud-chip:active { transform: translateY(2px); }
 }
 #encounter-overlay h3 { font-size: 15.5px; color: var(--gold); margin-bottom: 4px; }
 #encounter-overlay .enc-sub { font-size: 12.5px; color: var(--txt-dim); margin-bottom: 8px; }
-.enc-bar { position: relative; height: 18px; background: #170e05; border: var(--px) solid var(--ink); overflow: hidden; cursor: pointer; }
+.enc-bar { position: relative; height: 18px; background: #0a0e1c; border: var(--px) solid var(--ink); overflow: hidden; cursor: pointer; }
 .enc-bar .zone { position: absolute; top: 0; bottom: 0; background: var(--gold-lo); }
 .enc-bar .zone.sweet { background: var(--gold); }
 .enc-bar .cursor { position: absolute; top: 0; bottom: 0; width: 5px; background: #fff; box-shadow: 0 0 6px #fff; }
@@ -1120,7 +1128,7 @@ button.hud-chip:active { transform: translateY(2px); }
 .cdcard .cdbars { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .cdrow { display: flex; align-items: center; gap: 3px; font-size: 11px; color: var(--txt-dim); }
 .cdrow .cdname { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cdmeter { width: 34px; height: 5px; background: #170e05; border: 1px solid var(--ink); flex: none; }
+.cdmeter { width: 34px; height: 5px; background: #0a0e1c; border: 1px solid var(--ink); flex: none; }
 .cdmeter i { display: block; height: 100%; background: var(--gem); }
 .cdmeter.rdy i { background: var(--good); }
 
@@ -1291,8 +1299,8 @@ button.hud-chip:active { transform: translateY(2px); }
 .plotcell .emptymark {
   width: 30px; height: 12px; margin-bottom: 9px;
   border-radius: 50%;
-  background: #241811;
-  border: 1px solid #402e1c;
+  background: #0d1120;
+  border: 1px solid #2c3763;
   box-shadow: inset 0 3px 5px rgba(0,0,0,.85), 0 1px 0 rgba(255,240,210,.08);
 }
 .plotcell.empty-plot:active .emptymark { transform: translateY(2px); }
@@ -1333,7 +1341,7 @@ button.hud-chip:active { transform: translateY(2px); }
 #kcal-ring { position: relative; width: 84px; height: 84px; flex-shrink: 0; }
 #kcal-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 #kcal-ring circle { fill: none; stroke-width: 9; }
-#kcal-ring .track { stroke: #170e05; }
+#kcal-ring .track { stroke: #0a0e1c; }
 #kcal-ring .fill { stroke: var(--good); stroke-dasharray: 213.6; stroke-dashoffset: 213.6; transition: stroke-dashoffset .5s steps(10), stroke .2s; }
 #kcal-mid { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 #kcal-mid b { font-size: 18px; }
@@ -1461,7 +1469,7 @@ button.hud-chip:active { transform: translateY(2px); }
 
 #challenge-card, #today-challenge { padding: 0 10px; }
 .challenge {
-  background: linear-gradient(160deg, #58471a, #3b2916);
+  background: linear-gradient(160deg, #3a2f6b, #1d2242);
   border: var(--px) solid var(--ink);
   outline: var(--px) solid var(--gold);
   outline-offset: calc(var(--px) * -2);
@@ -1500,7 +1508,7 @@ button.hud-chip:active { transform: translateY(2px); }
 .ritual .rdesc { font-size: 12.5px; color: var(--txt-dim); margin-top: 2px; line-height: 1.5; }
 .rreward { font-size: 12.5px; color: var(--mana); display: flex; align-items: center; gap: 3px; margin-top: 2px; flex-wrap: wrap; }
 .ritual .rprog { display: flex; gap: 2px; margin-top: 4px; }
-.ritual .rprog i { width: 12px; height: 6px; background: #170e05; border: 1px solid var(--ink); }
+.ritual .rprog i { width: 12px; height: 6px; background: #0a0e1c; border: 1px solid var(--ink); }
 .ritual .rprog i.f { background: var(--good); }
 .ritual .rbtn { flex-shrink: 0; white-space: nowrap; }
 
@@ -1678,7 +1686,7 @@ button.hud-chip:active { transform: translateY(2px); }
 .timer-ring { position: relative; width: 168px; height: 168px; margin: 10px auto; }
 .timer-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 .timer-ring circle { fill: none; stroke-width: 11; }
-.timer-ring .track { stroke: #170e05; }
+.timer-ring .track { stroke: #0a0e1c; }
 .timer-ring .fill { stroke: var(--gem); transition: stroke-dashoffset 1s linear; }
 .timer-mid { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .timer-mid b { font-size: 28px; font-variant-numeric: tabular-nums; }
@@ -1832,6 +1840,91 @@ body, button { letter-spacing: 0; }
 .pixbtn.huge { min-height: 62px; }
 .qclaim, .rbtn { min-height: 38px; }
 
+/* ============================================================
+   MOTION — one shared language, driven by the --t-*/--ease tokens
+   ============================================================ */
+
+/* tabs and cards settle in rather than snapping */
+.tab.active { animation: tabin var(--t-med) var(--ease); }
+@keyframes tabin { from { opacity: 0; transform: translateY(8px); } }
+.card, .panel { transition: box-shadow var(--t-med) var(--ease), transform var(--t-fast) var(--ease); }
+.card:active { transform: translateY(1px); }
+.pixbtn { transition: transform var(--t-fast) var(--ease), filter var(--t-fast) var(--ease); }
+.pixbtn:active { transform: translateY(3px) scale(.985); }
+.pixbtn.primary:not(:disabled) { animation: breathe 2.8s var(--ease) infinite; }
+@keyframes breathe { 50% { filter: brightness(1.1); } }
+#tabbar button { transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease); }
+#tabbar button.active .ico { animation: tabpop var(--t-med) var(--pop); }
+@keyframes tabpop { 0% { transform: scale(.7); } 100% { transform: scale(1); } }
+.pixbar > i { transition: width var(--t-slow) var(--ease); }
+
+/* --- light attack: a short jab, no screen kick --- */
+.fighter.jab { transform: translate(var(--dashx, 18px), var(--dashy, -2px)); }
+.fighter.jab img { animation: jabtwitch .13s steps(2); }
+@keyframes jabtwitch { 50% { transform: scaleX(-1) rotate(-8deg); } }
+.dmg-float.lightdmg { font-size: 13px; color: #dfe6ff; text-shadow: 1px 1px 0 var(--ink); opacity: .95; }
+
+/* --- charge attack: visible wind-up before it travels --- */
+.fighter.winding img {
+  animation: windup .24s var(--ease);
+  filter: drop-shadow(0 3px 0 rgba(0,0,0,.35)) brightness(1.35);
+}
+@keyframes windup {
+  0%   { transform: scaleX(-1); }
+  70%  { transform: scaleX(-1) translateX(-9px) scale(1.09); }
+  100% { transform: scaleX(-1) translateX(-5px) scale(1.04); }
+}
+
+/* --- combat power ticking up --- */
+.bstat-inline.cp b { color: var(--gem); }
+#stat-cp.cp-up { animation: cppop .5s var(--pop); }
+@keyframes cppop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.45); color: var(--gold); }
+  100% { transform: scale(1); }
+}
+
+/* --- XP arriving --- */
+#hud-level.xp-pulse { animation: xppulse .45s var(--pop); }
+@keyframes xppulse { 40% { transform: scale(1.09); box-shadow: 0 0 0 3px rgba(255,194,71,.35); } }
+
+/* --- level-up screen --- */
+.sreveal.levelup h2 { color: var(--gold); font-size: 30px; }
+.lu-rows { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; text-align: left; }
+.lu-row {
+  display: flex; align-items: center; gap: 9px;
+  background: var(--bg1); border: var(--px) solid var(--ink);
+  padding: 9px 10px; font-size: 14px;
+  animation: lurow .4s var(--pop) both;
+}
+@keyframes lurow { from { opacity: 0; transform: translateX(-14px); } }
+.lu-row .lu-tick {
+  width: 16px; height: 16px; flex: none; position: relative;
+}
+.lu-row .lu-tick::before {
+  content: ''; position: absolute; left: 2px; top: 7px;
+  width: 5px; height: 2px; background: var(--good);
+  box-shadow: 3px -3px 0 var(--good), 6px -6px 0 var(--good), 9px -9px 0 var(--good);
+}
+.lu-row.unlock { border-color: var(--gold); background: #2b2647; }
+.lu-row.unlock .lu-tick::before { background: var(--gold); box-shadow: 3px -3px 0 var(--gold), 6px -6px 0 var(--gold), 9px -9px 0 var(--gold); }
+.lu-row.soon { opacity: .7; font-size: 13px; }
+.lu-row.stat { color: var(--txt-dim); }
+.lu-row b { color: var(--gem); }
+
+/* --- panels opening --- */
+.panel:not(.collapsed) > *:not(.panel-head) { animation: paneldrop var(--t-med) var(--ease); }
+@keyframes paneldrop { from { opacity: 0; transform: translateY(-8px); } }
+
+/* --- merge / spawn feedback --- */
+.mslot { transition: transform var(--t-fast) var(--ease), outline-color var(--t-fast) var(--ease); }
+.mitem { transition: transform var(--t-fast) var(--pop); }
+.mslot.drop-ok { transform: scale(1.06); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pixbtn.primary:not(:disabled) { animation: none; }
+}
+
 </style>
 <div id="app">
 
@@ -1854,7 +1947,6 @@ body, button { letter-spacing: 0; }
         <b id="hud-mana">0</b>
       </div>
       <div class="hud-chip ess-chip" title="Essence"><i class="ico ico-essence"></i><b id="hud-ess">0</b></div>
-      <div class="hud-chip lab-chip" title="Lab points"><i class="ico ico-flask"></i><b id="hud-lab">0</b></div>
       <div class="hud-chip seed-chip" title="Seeds"><i class="ico ico-seed"></i><b id="hud-seeds">0</b></div>
     </div>
   </header>
@@ -1931,6 +2023,7 @@ body, button { letter-spacing: 0; }
           <b id="ult-pct">0%</b>
           <div class="bstat-inline"><span>DPS</span><b id="stat-dps">0</b></div>
           <div class="bstat-inline"><span>Kills</span><b id="stat-kills">0</b></div>
+          <div class="bstat-inline cp"><span>Power</span><b id="stat-cp">0</b></div>
         </div>
         <div id="quest-log" title="Open the quest board"></div>
         <div id="cooldown-strip"></div>
@@ -2004,12 +2097,6 @@ body, button { letter-spacing: 0; }
       <h2 class="tab-title"><i class="ico ico-mana"></i> Summoning banners</h2>
       <div id="banner-rail"></div>
       <div id="pity-note" class="subtle"></div>
-      <h2 class="tab-title"><i class="ico ico-flask"></i> The Lab <span class="subtle">points: <b id="lab-points">0</b></span></h2>
-      <div id="lab-panel" class="card">
-        <p class="hint-line">Spend lab points on mutations, serums, grafted skills and jackpots.</p>
-        <button id="btn-lab-roll" class="pixbtn primary wide"><i class="ico ico-flask"></i> Run experiment
-          <span><b id="lab-cost">10</b> pts</span></button>
-      </div>
       <h2 class="tab-title"><i class="ico ico-relic"></i> Relics</h2>
       <div id="relic-shelf"></div>
     </section>
@@ -2759,7 +2846,20 @@ function xpForLevel(lvl) { return Math.floor(90 * Math.pow(1.38, lvl - 1)); }
 
 /* ---------- cookie-clicker battle upgrades ---------- */
 /* The game opens up instead of dumping everything on a new player at once. */
-const UNLOCKS = { upgrades: 3, fusion: 6, lab: 8 };
+const UNLOCKS = { upgrades: 3, fusion: 6 };
+/* Level -> what it hands you. Drives the level-up screen, so growing is never
+   just a bigger number with no explanation attached. */
+const LEVEL_REWARDS = {
+  3:  ['Camp upgrades unlocked', '2nd party slot'],
+  4:  ['+1 gear slot in the Fusion camp'],
+  6:  ['Fusion camp unlocked', '3rd party slot'],
+  8:  ['+1 gear slot'],
+  10: ['Support pal slot'],
+  12: ['4th party slot'],
+  14: ['+1 gear slot'],
+  16: ['2nd support pal slot'],
+};
+function levelRewards(lvl) { return LEVEL_REWARDS[lvl] || []; }
 function unlocked(key) { return S.player.level >= (UNLOCKS[key] || 0); }
 
 const UPGRADE_DEFS = [
@@ -2899,7 +2999,9 @@ function grantEssence(n) {
   return n;
 }
 function grantGems(n) { S.player.gems += n; return n; }
-function grantLabPoints(n) { S.lab.points += n; return n; }
+/* The Lab is gone. Everything that used to award lab points now pays gems, so
+   no reward path silently drops its payout. */
+function grantLabPoints(n) { return grantGems(n); }
 function grantSeeds(n) { S.farm.seeds += n; return n; }
 
 function grantPlayerXp(n) {
@@ -2914,9 +3016,14 @@ function grantPlayerXp(n) {
   if (leveled) {
     Sound.levelup();
     confetti(34);
-    showLevelUpFlash(S.player.level);
-    toast(`Discipline Level ${S.player.level}!`, 'gold');
-    if (typeof UI !== 'undefined') UI.renderAll();
+    if (typeof UI !== 'undefined') {
+      UI.renderAll();
+      UI.showLevelUp(S.player.level);          // says what the level actually gave you
+    } else {
+      showLevelUpFlash(S.player.level);
+    }
+  } else if (n > 0 && typeof UI !== 'undefined') {
+    UI.floatXp(n);
   }
   return n;
 }
@@ -4136,85 +4243,6 @@ const Farm = (() => {
 
 </script>
 <script>
-/* ============ Ritual Beasts — The Lab ============
-   Lab points come from quests, challenges, logins and big fusions.
-   One roll = one experiment: mutations, serums, skill grafts, jackpots.     */
-'use strict';
-
-const Lab = (() => {
-  const COST = 10;
-
-  const OUTCOMES = [
-    { key: 'mutation', w: 42 },
-    { key: 'serum',    w: 24 },
-    { key: 'graft',    w: 20 },
-    { key: 'jackpot',  w: 14 },
-  ];
-
-  function roll() {
-    if (S.lab.points < COST) { toast('Not enough lab points — quests grant them!'); return null; }
-    if (!Object.keys(S.beasts).length) return null;
-    S.lab.points -= COST;
-    S.lab.rolls++;
-    Quests.progress('lab', 1);
-    const r = weightedPick(OUTCOMES, o => o.w);
-    let result;
-    switch (r.key) {
-      case 'mutation': {
-        const cid = pick(Object.keys(S.beasts));
-        const stat = pick(['atk', 'hp', 'spd']);
-        const amt = irnd(6, 14);
-        const inst = S.beasts[cid];
-        inst.mut = inst.mut || {};
-        inst.mut[stat] = (inst.mut[stat] || 0) + amt;
-        result = {
-          kind: 'mutation', icon: 'flask', cid,
-          title: 'MUTATION!',
-          text: `${C_BY_ID[cid].name} mutates: permanent +${amt}% ${({atk:'attack',hp:'vitality',spd:'speed'})[stat]}!`,
-        };
-        break;
-      }
-      case 'serum':
-        S.lab.serums = (S.lab.serums || 0) + 1;
-        result = {
-          kind: 'serum', icon: 'flask',
-          title: 'PARTY SERUM',
-          text: `The whole party grows stronger: +1% attack forever (x${S.lab.serums} brewed).`,
-        };
-        break;
-      case 'graft': {
-        const cid = pick(Object.keys(S.beasts));
-        const donor = pick(window.CREATURES.filter(c => c.id !== cid));
-        const inst = S.beasts[cid];
-        inst.graft = donor.id;
-        const sk = Lore.kit(donor.id).skills[1];
-        result = {
-          kind: 'graft', icon: 'bolt', cid,
-          title: 'SKILL GRAFT!',
-          text: `${C_BY_ID[cid].name} learns ${sk.name} from ${donor.name}'s essence — a third skill in battle!`,
-        };
-        break;
-      }
-      default: {
-        const gems = irnd(15, 30), ess = irnd(10, 20), seeds = irnd(2, 4);
-        grantGems(gems); grantEssence(ess); grantSeeds(seeds);
-        result = {
-          kind: 'jackpot', icon: 'chest',
-          title: 'JACKPOT!',
-          text: `The experiment overflows: +${gems} gems, +${ess} essence, +${seeds} seeds!`,
-        };
-      }
-    }
-    Sound.summon();
-    save();
-    return result;
-  }
-
-  return { roll, COST };
-})();
-
-</script>
-<script>
 /* ============ Ritual Beasts — battle engine v3 ============
    Packs of 1-3 enemies walk in from the right; the party advances between
    waves; skills and ultimates land as travelling attack tweens with typed
@@ -4231,6 +4259,7 @@ const Battle = (() => {
   let bossTimeLeft = 0;
   let ultCharge = 0;
   const cds = {};
+  const lightCds = {};      // per-beast light-attack clock
   let sinceEncounter = 0;
 
   /* ----- pack generation ----- */
@@ -4246,6 +4275,7 @@ const Battle = (() => {
   }
 
   function spawnWave() {
+    for (const k of Object.keys(lightCds)) lightCds[k] = rnd(0.15, 0.6);
     const g = globalStage();
     const isBoss = S.stage.wave === WAVES_PER_STAGE && !S.stage.farm;
     const pool = enemyPoolForArea(S.stage.area);
@@ -4318,6 +4348,19 @@ const Battle = (() => {
     const raw = share * e.atkEvery * rnd(0.85, 1.15);
     return Math.min(raw, partyHpMax() * MAX_SWING_FRAC);
   }
+  /* A single legible number for party strength, so upgrades visibly do something. */
+  function combatPower() {
+    let atk = 0, hp = 0;
+    for (const cid of S.party) {
+      const st = beastStats(cid);
+      atk += st.atk * (1 + st.spd / 50);
+      hp += st.hp;
+    }
+    const dmgMult = 1 + relicBonusStat('dmg') + upgradeBonus('dmg') + mergeBonus('dmg');
+    const hpMult = 1 + relicBonusStat('hp') + upgradeBonus('hp') + mergeBonus('hp');
+    return Math.round(atk * dmgMult * 1.6 + hp * hpMult * 0.5);
+  }
+
   function partyHpMax() {
     let hp = 0;
     for (const cid of S.party) hp += beastStats(cid).hp;
@@ -4333,7 +4376,7 @@ const Battle = (() => {
     target.hp -= amount;
     const life = Lore.passiveBonus('lifest');
     if (life > 0) partyHp = Math.min(1, partyHp + (amount * life) / partyHpMax());
-    if (!opts.silent) UI.showHit(target, amount, opts.crit, opts.vfx, opts.label);
+    if (!opts.silent) UI.showHit(target, amount, opts.crit, opts.vfx, opts.label, opts.light);
     if (!opts.noCharge) {
       ultCharge = Math.min(100, ultCharge +
         (opts.charge || 2.1) * (1 + Lore.passiveBonus('ult') + upgradeBonus('ult')));
@@ -4361,6 +4404,34 @@ const Battle = (() => {
     return list;
   }
 
+  /* ----- three attack tiers -----
+     Light: every beast swings on a short clock for small damage. This carries
+     the DPS the invisible "chip" used to, but you watch it happen.
+     Charge: the beast's skills, on their own cooldowns, with a wind-up.
+     Ultimate: at full charge, hits the whole pack. */
+  function lightEvery(cid) {
+    const st = beastStats(cid);
+    return clamp(1.9 - st.spd / 60, 0.75, 1.9);   // faster beasts swing more often
+  }
+
+  function tickLightAttacks(dt) {
+    const t = front();
+    if (!t) return;
+    for (const cid of S.party) {
+      lightCds[cid] = (lightCds[cid] || 0) - dt;
+      if (lightCds[cid] > 0) continue;
+      const every = lightEvery(cid);
+      lightCds[cid] = every;
+      const crit = Math.random() < critChance();
+      // same damage-per-second the chip used to do, delivered per swing
+      const dmg = memberDps(cid, t) * 0.55 * every * (crit ? 2.2 : 1) * rnd(0.9, 1.12);
+      UI.lightAttack(cid, t, () => {
+        const cur = front();
+        if (cur) hitEnemy(cur, dmg, { crit, light: true, charge: crit ? 3.2 : 1.9 });
+      });
+    }
+  }
+
   function trySkills() {
     const t = front();
     if (!t) return;
@@ -4373,7 +4444,7 @@ const Battle = (() => {
         cds[key] = sk.cd;
         const crit = Math.random() < critChance();
         const dmg = memberDps(cid, t) * sk.power * (crit ? 2.2 : 1) * rnd(0.92, 1.1);
-        UI.attackTween(cid, t, () => {
+        UI.chargeAttack(cid, t, sk, () => {
           hitEnemy(t, dmg, { crit, vfx: sk.vfx, label: sk.name, charge: i === 0 ? 5 : 12 });
           // heavy skills splash the back rank
           if (i >= 1) for (const o of alive()) {
@@ -4425,10 +4496,7 @@ const Battle = (() => {
 
     tickCooldowns(dt);
 
-    const t = front();
-    const chip = partyDps() * dt * 0.55 * rnd(0.86, 1.16);
-    hitEnemy(t, chip, { silent: true, charge: 1.8 });
-
+    tickLightAttacks(dt);
     trySkills();
     if (ultCharge >= 100) fireUltimate();
     UI.renderUltMeter(ultCharge);
@@ -4590,7 +4658,7 @@ const Battle = (() => {
 
   return {
     tick, spawnWave, challengeBoss, currentDpsEstimate, offlineGains, travel,
-    regionUnlocked, skillListFor, cooldownState, partyHpMax, TICK_MS,
+    regionUnlocked, skillListFor, cooldownState, partyHpMax, combatPower, TICK_MS,
     get enemies() { return enemies; },
     get partyHp() { return partyHp; },
     get ultCharge() { return ultCharge; },
@@ -4894,10 +4962,10 @@ const Quests = (() => {
     { icon: 'gold',    text: '400 gold',        grant: () => grantGold(400) },
     { icon: 'seed',    text: '3 seeds',         grant: () => grantSeeds(3) },
     { icon: 'gem',     text: '15 gems',         grant: () => grantGems(15) },
-    { icon: 'flask',   text: '8 lab points',    grant: () => grantLabPoints(8) },
+    { icon: 'gem',     text: '8 gems',          grant: () => grantGems(8) },
     { icon: 'essence', text: '20 essence',      grant: () => grantEssence(20) },
     { icon: 'mana',    text: '80 mana',         grant: () => grantMana(80) },
-    { icon: 'chest',   text: 'Grand chest',     grant: () => { grantGems(30); grantLabPoints(10); grantSeeds(4); } },
+    { icon: 'chest',   text: 'Grand chest',     grant: () => { grantGems(40); grantSeeds(4); } },
   ];
 
   /* which quest pools and challenge tags suit the chosen dream */
@@ -4956,7 +5024,7 @@ const Quests = (() => {
   function completeChallenge(btnEl) {
     if (S.challenge.done) return;
     S.challenge.done = true;
-    grantLabPoints(CHALLENGE_REWARD.lp);
+    grantGems(CHALLENGE_REWARD.lp);
     grantGems(CHALLENGE_REWARD.gems);
     grantPlayerXp(40);
     bumpStreakToday();
@@ -5012,7 +5080,7 @@ const Quests = (() => {
     const r = q.reward;
     const bits = [];
     if (r.gems) { grantGems(r.gems); bits.push(`+${r.gems} gems`); }
-    if (r.lp) { grantLabPoints(r.lp); bits.push(`+${r.lp} lab pts`); }
+    if (r.lp) { grantGems(r.lp); bits.push(`+${r.lp} gems`); }
     if (r.seeds) { grantSeeds(r.seeds); bits.push(`+${r.seeds} seeds`); }
     if (r.mana) { grantMana(r.mana); bits.push(`+${r.mana} mana`); }
     if (r.gold) { const g = grantGold(60 * Math.pow(1.2, globalStage())); bits.push(`+${fmt(g)} gold`); }
@@ -5178,7 +5246,6 @@ const UI = (() => {
     $('#hud-mana').textContent = fmt(S.player.mana);
     $('#hud-mana-fill').style.width = (100 * S.player.mana / manaMax()) + '%';
     $('#hud-ess').textContent = fmt(S.player.essence);
-    $('#hud-lab').textContent = fmt(S.lab.points);
     $('#hud-seeds').textContent = fmt(S.farm.seeds);
     $('#hud-streak').textContent = S.streak.count;
   }
@@ -5599,7 +5666,7 @@ const UI = (() => {
     box.querySelector('.mrow').appendChild(ok);
     const pre = box.querySelector('#s-rewards');
     pre.innerHTML = `${icon('mana')} mana &nbsp;  XP &nbsp; ${icon('essence')} essence
-      &nbsp; ${icon('seed')} seeds &nbsp; ${icon('flask')} lab pts`;
+      &nbsp; ${icon('seed')} seeds &nbsp; ${icon('gem')} gems`;
     openModal(box, { noClose: true });
     setTimeout(() => { const i = box.querySelector('#s-note'); if (i) i.focus(); }, 80);
   }
@@ -5703,16 +5770,19 @@ const UI = (() => {
     return { x: r.left - sr.left + r.width / 2, y: r.top - sr.top + r.height * 0.6 };
   }
 
-  function showHit(target, dmg, crit, vfx, label) {
+  function showHit(target, dmg, crit, vfx, label, light) {
     const p = foePoint(target);
     if (!p) return;
-    floatText(fmt(dmg), p.x, p.y - 26, crit ? 'crit' : '');
+    floatText(fmt(dmg), p.x, p.y - 26,
+              crit ? 'crit' : light ? 'lightdmg' : '');
     const d = foeEl(target);
     if (d) {
       const img = d.querySelector('img');
       img.classList.remove('hit'); void img.offsetWidth; img.classList.add('hit');
     }
-    if (vfx) VFX.cast(vfx, p.x, p.y, crit ? 1.5 : 1);
+    if (light && !crit) {
+      VFX.anim('scratch', p.x, p.y, { scale: 0.72, fps: 24, flip: Math.random() < .5 });
+    } else if (vfx) VFX.cast(vfx, p.x, p.y, crit ? 1.5 : 1);
     else VFX.hit(p.x, p.y, 'metal', crit);
     if (crit) VFX.kick(3, 130);
     if (label) skillFlash(label, false);
@@ -5760,6 +5830,30 @@ const UI = (() => {
     if (from) VFX.anim('scratch', x, y + 14, { scale: 0.8, fps: 22, alpha: 0.9 });
     VFX.kick(2, 80);
     Sound.hit();
+  }
+
+  /* a quick jab: short hop forward, small effect, no screen kick */
+  function lightAttack(cid, target, onImpact) {
+    const i = S.party.indexOf(cid);
+    const f = $$('#party-holder .fighter')[i < 0 ? 0 : i];
+    if (!f) { setTimeout(onImpact, 60); return; }
+    f.style.setProperty('--dashx', '18px');
+    f.style.setProperty('--dashy', '-2px');
+    f.classList.remove('jab'); void f.offsetWidth; f.classList.add('jab');
+    setTimeout(() => { f.classList.remove('jab'); onImpact(); }, 130);
+  }
+
+  /* a charge attack winds up visibly, then travels the full distance */
+  function chargeAttack(cid, target, sk, onImpact) {
+    const i = S.party.indexOf(cid);
+    const f = $$('#party-holder .fighter')[i < 0 ? 0 : i];
+    if (!f) { setTimeout(onImpact, 120); return; }
+    f.classList.remove('winding'); void f.offsetWidth; f.classList.add('winding');
+    skillFlash(sk.name, false);
+    setTimeout(() => {
+      f.classList.remove('winding');
+      attackTween(cid, target, onImpact);
+    }, 240);
   }
 
   function enemyLunge(e) {
@@ -5868,6 +5962,17 @@ const UI = (() => {
   function renderBattleStats() {
     $('#stat-dps').textContent = fmt(Battle.currentDpsEstimate());
     $('#stat-kills').textContent = fmt(S.kills);
+    const cp = $('#stat-cp');
+    if (cp) {
+      const v = Battle.combatPower();
+      if (cp.dataset.v !== String(v)) {
+        if (cp.dataset.v !== undefined) {
+          cp.classList.remove('cp-up'); void cp.offsetWidth; cp.classList.add('cp-up');
+        }
+        cp.dataset.v = String(v);
+        cp.textContent = fmt(v);
+      }
+    }
   }
 
   let flashTimer = null;
@@ -5985,7 +6090,7 @@ const UI = (() => {
     const gold = grantGold(Math.floor((30 + hits * 45) * Math.pow(1.2, globalStage())));
     const bits = [`+${fmt(gold)} gold`];
     if (hits >= 3) { grantSeeds(1); bits.push('+1 seed'); }
-    if (hits >= 5) { grantLabPoints(2); bits.push('+2 lab pts'); }
+    if (hits >= 5) { grantGems(2); bits.push('+2 gems'); }
     toast(`Cache opened: ${bits.join(', ')}`, 'gold');
     confetti(16);
     renderHud();
@@ -6739,18 +6844,6 @@ const UI = (() => {
     }
     const left = Summon.PITY_EVERY - (S.summons.sinceRare % Summon.PITY_EVERY);
     $('#pity-note').textContent = `Guaranteed rare+ within ${left} pull${left > 1 ? 's' : ''} · x10 always contains a rare+ · ${S.summons.total} total pulls`;
-    $('#lab-points').textContent = S.lab.points;
-    $('#lab-cost').textContent = Lab.COST;
-    const labPanel = $('#lab-panel');
-    if (labPanel) {
-      const lock = !unlocked('lab');
-      labPanel.classList.toggle('locked-panel', lock);
-      const rollBtn = $('#btn-lab-roll');
-      if (rollBtn) rollBtn.disabled = lock || S.lab.points < Lab.COST;
-      const hint = labPanel.querySelector('.hint-line');
-      if (hint && lock) hint.textContent =
-        `The Lab opens at level ${UNLOCKS.lab}. Keep practising — your points are already banking up.`;
-    }
     const shelf = $('#relic-shelf');
     shelf.innerHTML = '';
     for (const r of RELICS) {
@@ -6868,30 +6961,6 @@ const UI = (() => {
     confetti(30);
   }
 
-  /* ----- lab ----- */
-  function runLab() {
-    const res = Lab.roll();
-    if (!res) return;
-    renderHud();
-    $('#lab-points').textContent = S.lab.points;
-    const box = el('div', 'sreveal');
-    box.innerHTML = `
-      <div class="snew">${res.title}</div>
-      <div class="burst"><div class="rays"></div>
-        ${res.cid ? `<img src="${assetUrl('assets/creatures/' + C_BY_ID[res.cid].file)}">` : `<div style="z-index:1;transform:scale(4)">${icon(res.icon, 'huge')}</div>`}
-      </div>
-      <p style="font-size:11px;line-height:1.7;padding:0 6px">${res.text}</p>
-      <div class="mrow"></div>`;
-    if (res.cid) fitSprite(box.querySelector('.burst img'), res.cid, 130);
-    const again = el('button', 'pixbtn primary sm');
-    again.innerHTML = `<b>Again</b><span>${icon('flask')} ${Lab.COST}</span>`;
-    again.disabled = S.lab.points < Lab.COST;
-    again.onclick = () => { closeAllModals(); runLab(); };
-    box.querySelector('.mrow').appendChild(again);
-    confetti(26);
-    openModal(box);
-  }
-
   /* ================= quests tab ================= */
   function renderQuests() {
     Quests.generateToday();
@@ -6932,8 +7001,7 @@ const UI = (() => {
       ['sword', 'Beasts defeated', fmt(S.kills)],
       ['skull', 'Bosses slain', fmt(S.bossKills)],
       ['paw', 'Companions bonded', Object.keys(S.beasts).length],
-      ['flask', 'Experiments run', S.lab.rolls || 0],
-      ['book', 'Journey started', new Date(S.created).toLocaleDateString()],
+            ['book', 'Journey started', new Date(S.created).toLocaleDateString()],
     ];
     for (const [ic, k, v] of stats) j.appendChild(el('div', 'jstat', `<span>${icon(ic)}${k}</span><b>${v}</b>`));
   }
@@ -6966,7 +7034,7 @@ const UI = (() => {
       <div style="flex:1;min-width:0">
         <div class="cname">${done ? 'DONE: ' : ''}${ch.name}</div>
         <div class="cdesc">${ch.desc}</div>
-        <div class="crew">${icon('flask')} +${Quests.CHALLENGE_REWARD.lp} lab pts ${icon('gem')} +${Quests.CHALLENGE_REWARD.gems} gems · waters the garden</div>
+        <div class="crew">${icon('gem')} +${Quests.CHALLENGE_REWARD.lp} gems ${icon('gem')} +${Quests.CHALLENGE_REWARD.gems} gems · waters the garden</div>
         <div class="cbtns"></div>
       </div>`;
     const btns = card.querySelector('.cbtns');
@@ -7364,6 +7432,58 @@ const UI = (() => {
     draw();
   }
 
+  /* XP is visible as it arrives, rising off the level chip */
+  let xpQueue = 0, xpTimer = null;
+  function floatXp(n) {
+    xpQueue += n;
+    if (xpTimer) return;
+    xpTimer = setTimeout(() => {
+      const amount = xpQueue; xpQueue = 0; xpTimer = null;
+      const chip = $('#hud-level');
+      if (!chip || amount <= 0) return;
+      const r = chip.getBoundingClientRect();
+      const f = el('div', 'dmg-float xp-f', '+' + fmt(amount) + ' XP');
+      f.style.cssText = `position:fixed;left:${r.left + r.width / 2 - 18}px;` +
+                        `top:${r.bottom - 4}px;z-index:300`;
+      document.body.appendChild(f);
+      setTimeout(() => f.remove(), 1200);
+      chip.classList.remove('xp-pulse'); void chip.offsetWidth; chip.classList.add('xp-pulse');
+    }, 400);                        // batch a burst of gains into one number
+  }
+
+  /* Levelling up now tells you what it handed you. */
+  function showLevelUp(lvl) {
+    const rewards = levelRewards(lvl);
+    const cid = heroBeastId();
+    const box = el('div', 'sreveal levelup');
+    box.innerHTML = `
+      <div class="snew">LEVEL UP</div>
+      <h2>Level ${lvl}</h2>
+      ${cid ? `<div class="burst"><div class="rays"></div><img src="${sprite(cid)}"></div>` : ''}
+      <div class="lu-rows"></div>
+      <div class="mrow"></div>`;
+    if (cid) fitSprite(box.querySelector('.burst img'), cid, 116);
+    const rows = box.querySelector('.lu-rows');
+    const add = (txt, kind) => {
+      const r = el('div', 'lu-row ' + (kind || ''));
+      r.innerHTML = `<span class="lu-tick"></span><span>${txt}</span>`;
+      rows.appendChild(r);
+    };
+    add(`Party health and damage up`, 'stat');
+    add(`Combat power now <b>${fmt(Battle.combatPower())}</b>`, 'stat');
+    for (const r of rewards) add(r, 'unlock');
+    if (!rewards.length) {
+      const nextAt = Object.keys(LEVEL_REWARDS).map(Number).filter(l => l > lvl).sort((a, b) => a - b)[0];
+      if (nextAt) add(`Next unlock at level ${nextAt}`, 'soon');
+    }
+    const ok = el('button', 'pixbtn gold', '<b>Nice</b>');
+    ok.onclick = () => { closeAllModals(); renderAll(); };
+    box.querySelector('.mrow').appendChild(ok);
+    openModal(box, { noClose: true });
+    Sound.levelup();
+    rows.querySelectorAll('.lu-row').forEach((r, i) => { r.style.animationDelay = (i * 110) + 'ms'; });
+  }
+
   /* ================= settings / welcome ================= */
   function showSettings() {
     const box = el('div');
@@ -7513,16 +7633,17 @@ const UI = (() => {
     renderSessionBattle,
     renderEnemies, renderEnemyHp, renderBossTimer, renderPartyHp, renderParty,
     renderBattleStats, renderBoost, showHit, showKillRewards, attackTween,
-    enemyLunge, showPartyHit, startAdvance, renderUltMeter, showUltimateCast, skillFlash,
+    enemyLunge, showPartyHit, lightAttack, chargeAttack, startAdvance, renderUltMeter, showUltimateCast, skillFlash,
     showDefeat, hideDefeat, showEncounter, renderQuestLog, renderUpgrades,
     renderCooldowns, tickCooldowns, renderPanels, togglePanel,
     renderMerge, mergeSpawnFx, mergeFuseFx, showMap,
     renderBeasts, renderCollection, showCreature, showFeedPicker,
     renderFarm, waterGarden, showMealModal, showKcalTargetModal, renderFood,
-    renderSummon, playWish, showSummonReveal, showRelicReveal, runLab,
+    renderSummon, playWish, showSummonReveal, showRelicReveal,
     renderQuests, renderRituals, markQuestDot, maybeShowLogin,
     showTimerModal, updateTimerModal, showAddCustomModal,
     showSettings, showPlanEditor, showOnboarding, showWelcomeBack,
+    floatXp, showLevelUp,
   };
 })();
 
@@ -7547,7 +7668,6 @@ const UI = (() => {
   $('#btn-add-custom').onclick = () => UI.showAddCustomModal();
   $('#btn-portal').onclick = () => Merge.spawn(false);
   $('#btn-portal-gold').onclick = () => Merge.spawn(true);
-  $('#btn-lab-roll').onclick = () => UI.runLab();
   $('#btn-water').onclick = () => UI.waterGarden();
   $('#btn-all-quests').onclick = () => UI.switchTab('quests');
   $('#quest-log').onclick = () => UI.switchTab('quests');

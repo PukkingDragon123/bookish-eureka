@@ -65,10 +65,10 @@ const Quests = (() => {
     { icon: 'gold',    text: '400 gold',        grant: () => grantGold(400) },
     { icon: 'seed',    text: '3 seeds',         grant: () => grantSeeds(3) },
     { icon: 'gem',     text: '15 gems',         grant: () => grantGems(15) },
-    { icon: 'flask',   text: '8 lab points',    grant: () => grantLabPoints(8) },
+    { icon: 'gem',     text: '8 gems',          grant: () => grantGems(8) },
     { icon: 'essence', text: '20 essence',      grant: () => grantEssence(20) },
     { icon: 'mana',    text: '80 mana',         grant: () => grantMana(80) },
-    { icon: 'chest',   text: 'Grand chest',     grant: () => { grantGems(30); grantLabPoints(10); grantSeeds(4); } },
+    { icon: 'chest',   text: 'Grand chest',     grant: () => { grantGems(40); grantSeeds(4); } },
   ];
 
   /* which quest pools and challenge tags suit the chosen dream */
@@ -127,7 +127,7 @@ const Quests = (() => {
   function completeChallenge(btnEl) {
     if (S.challenge.done) return;
     S.challenge.done = true;
-    grantLabPoints(CHALLENGE_REWARD.lp);
+    grantGems(CHALLENGE_REWARD.lp);
     grantGems(CHALLENGE_REWARD.gems);
     grantPlayerXp(40);
     bumpStreakToday();
@@ -183,7 +183,7 @@ const Quests = (() => {
     const r = q.reward;
     const bits = [];
     if (r.gems) { grantGems(r.gems); bits.push(`+${r.gems} gems`); }
-    if (r.lp) { grantLabPoints(r.lp); bits.push(`+${r.lp} lab pts`); }
+    if (r.lp) { grantGems(r.lp); bits.push(`+${r.lp} gems`); }
     if (r.seeds) { grantSeeds(r.seeds); bits.push(`+${r.seeds} seeds`); }
     if (r.mana) { grantMana(r.mana); bits.push(`+${r.mana} mana`); }
     if (r.gold) { const g = grantGold(60 * Math.pow(1.2, globalStage())); bits.push(`+${fmt(g)} gold`); }

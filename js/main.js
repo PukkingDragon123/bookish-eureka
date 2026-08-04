@@ -17,7 +17,6 @@
   $('#btn-add-custom').onclick = () => UI.showAddCustomModal();
   $('#btn-portal').onclick = () => Merge.spawn(false);
   $('#btn-portal-gold').onclick = () => Merge.spawn(true);
-  $('#btn-lab-roll').onclick = () => UI.runLab();
   $('#btn-water').onclick = () => UI.waterGarden();
   $('#btn-all-quests').onclick = () => UI.switchTab('quests');
   $('#quest-log').onclick = () => UI.switchTab('quests');

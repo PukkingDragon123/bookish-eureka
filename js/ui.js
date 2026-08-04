@@ -32,7 +32,6 @@ const UI = (() => {
     $('#hud-mana').textContent = fmt(S.player.mana);
     $('#hud-mana-fill').style.width = (100 * S.player.mana / manaMax()) + '%';
     $('#hud-ess').textContent = fmt(S.player.essence);
-    $('#hud-lab').textContent = fmt(S.lab.points);
     $('#hud-seeds').textContent = fmt(S.farm.seeds);
     $('#hud-streak').textContent = S.streak.count;
   }
@@ -453,7 +452,7 @@ const UI = (() => {
     box.querySelector('.mrow').appendChild(ok);
     const pre = box.querySelector('#s-rewards');
     pre.innerHTML = `${icon('mana')} mana &nbsp;  XP &nbsp; ${icon('essence')} essence
-      &nbsp; ${icon('seed')} seeds &nbsp; ${icon('flask')} lab pts`;
+      &nbsp; ${icon('seed')} seeds &nbsp; ${icon('gem')} gems`;
     openModal(box, { noClose: true });
     setTimeout(() => { const i = box.querySelector('#s-note'); if (i) i.focus(); }, 80);
   }
@@ -557,16 +556,19 @@ const UI = (() => {
     return { x: r.left - sr.left + r.width / 2, y: r.top - sr.top + r.height * 0.6 };
   }
 
-  function showHit(target, dmg, crit, vfx, label) {
+  function showHit(target, dmg, crit, vfx, label, light) {
     const p = foePoint(target);
     if (!p) return;
-    floatText(fmt(dmg), p.x, p.y - 26, crit ? 'crit' : '');
+    floatText(fmt(dmg), p.x, p.y - 26,
+              crit ? 'crit' : light ? 'lightdmg' : '');
     const d = foeEl(target);
     if (d) {
       const img = d.querySelector('img');
       img.classList.remove('hit'); void img.offsetWidth; img.classList.add('hit');
     }
-    if (vfx) VFX.cast(vfx, p.x, p.y, crit ? 1.5 : 1);
+    if (light && !crit) {
+      VFX.anim('scratch', p.x, p.y, { scale: 0.72, fps: 24, flip: Math.random() < .5 });
+    } else if (vfx) VFX.cast(vfx, p.x, p.y, crit ? 1.5 : 1);
     else VFX.hit(p.x, p.y, 'metal', crit);
     if (crit) VFX.kick(3, 130);
     if (label) skillFlash(label, false);
@@ -614,6 +616,30 @@ const UI = (() => {
     if (from) VFX.anim('scratch', x, y + 14, { scale: 0.8, fps: 22, alpha: 0.9 });
     VFX.kick(2, 80);
     Sound.hit();
+  }
+
+  /* a quick jab: short hop forward, small effect, no screen kick */
+  function lightAttack(cid, target, onImpact) {
+    const i = S.party.indexOf(cid);
+    const f = $$('#party-holder .fighter')[i < 0 ? 0 : i];
+    if (!f) { setTimeout(onImpact, 60); return; }
+    f.style.setProperty('--dashx', '18px');
+    f.style.setProperty('--dashy', '-2px');
+    f.classList.remove('jab'); void f.offsetWidth; f.classList.add('jab');
+    setTimeout(() => { f.classList.remove('jab'); onImpact(); }, 130);
+  }
+
+  /* a charge attack winds up visibly, then travels the full distance */
+  function chargeAttack(cid, target, sk, onImpact) {
+    const i = S.party.indexOf(cid);
+    const f = $$('#party-holder .fighter')[i < 0 ? 0 : i];
+    if (!f) { setTimeout(onImpact, 120); return; }
+    f.classList.remove('winding'); void f.offsetWidth; f.classList.add('winding');
+    skillFlash(sk.name, false);
+    setTimeout(() => {
+      f.classList.remove('winding');
+      attackTween(cid, target, onImpact);
+    }, 240);
   }
 
   function enemyLunge(e) {
@@ -722,6 +748,17 @@ const UI = (() => {
   function renderBattleStats() {
     $('#stat-dps').textContent = fmt(Battle.currentDpsEstimate());
     $('#stat-kills').textContent = fmt(S.kills);
+    const cp = $('#stat-cp');
+    if (cp) {
+      const v = Battle.combatPower();
+      if (cp.dataset.v !== String(v)) {
+        if (cp.dataset.v !== undefined) {
+          cp.classList.remove('cp-up'); void cp.offsetWidth; cp.classList.add('cp-up');
+        }
+        cp.dataset.v = String(v);
+        cp.textContent = fmt(v);
+      }
+    }
   }
 
   let flashTimer = null;
@@ -839,7 +876,7 @@ const UI = (() => {
     const gold = grantGold(Math.floor((30 + hits * 45) * Math.pow(1.2, globalStage())));
     const bits = [`+${fmt(gold)} gold`];
     if (hits >= 3) { grantSeeds(1); bits.push('+1 seed'); }
-    if (hits >= 5) { grantLabPoints(2); bits.push('+2 lab pts'); }
+    if (hits >= 5) { grantGems(2); bits.push('+2 gems'); }
     toast(`Cache opened: ${bits.join(', ')}`, 'gold');
     confetti(16);
     renderHud();
@@ -1593,18 +1630,6 @@ const UI = (() => {
     }
     const left = Summon.PITY_EVERY - (S.summons.sinceRare % Summon.PITY_EVERY);
     $('#pity-note').textContent = `Guaranteed rare+ within ${left} pull${left > 1 ? 's' : ''} · x10 always contains a rare+ · ${S.summons.total} total pulls`;
-    $('#lab-points').textContent = S.lab.points;
-    $('#lab-cost').textContent = Lab.COST;
-    const labPanel = $('#lab-panel');
-    if (labPanel) {
-      const lock = !unlocked('lab');
-      labPanel.classList.toggle('locked-panel', lock);
-      const rollBtn = $('#btn-lab-roll');
-      if (rollBtn) rollBtn.disabled = lock || S.lab.points < Lab.COST;
-      const hint = labPanel.querySelector('.hint-line');
-      if (hint && lock) hint.textContent =
-        `The Lab opens at level ${UNLOCKS.lab}. Keep practising — your points are already banking up.`;
-    }
     const shelf = $('#relic-shelf');
     shelf.innerHTML = '';
     for (const r of RELICS) {
@@ -1722,30 +1747,6 @@ const UI = (() => {
     confetti(30);
   }
 
-  /* ----- lab ----- */
-  function runLab() {
-    const res = Lab.roll();
-    if (!res) return;
-    renderHud();
-    $('#lab-points').textContent = S.lab.points;
-    const box = el('div', 'sreveal');
-    box.innerHTML = `
-      <div class="snew">${res.title}</div>
-      <div class="burst"><div class="rays"></div>
-        ${res.cid ? `<img src="${assetUrl('assets/creatures/' + C_BY_ID[res.cid].file)}">` : `<div style="z-index:1;transform:scale(4)">${icon(res.icon, 'huge')}</div>`}
-      </div>
-      <p style="font-size:11px;line-height:1.7;padding:0 6px">${res.text}</p>
-      <div class="mrow"></div>`;
-    if (res.cid) fitSprite(box.querySelector('.burst img'), res.cid, 130);
-    const again = el('button', 'pixbtn primary sm');
-    again.innerHTML = `<b>Again</b><span>${icon('flask')} ${Lab.COST}</span>`;
-    again.disabled = S.lab.points < Lab.COST;
-    again.onclick = () => { closeAllModals(); runLab(); };
-    box.querySelector('.mrow').appendChild(again);
-    confetti(26);
-    openModal(box);
-  }
-
   /* ================= quests tab ================= */
   function renderQuests() {
     Quests.generateToday();
@@ -1786,8 +1787,7 @@ const UI = (() => {
       ['sword', 'Beasts defeated', fmt(S.kills)],
       ['skull', 'Bosses slain', fmt(S.bossKills)],
       ['paw', 'Companions bonded', Object.keys(S.beasts).length],
-      ['flask', 'Experiments run', S.lab.rolls || 0],
-      ['book', 'Journey started', new Date(S.created).toLocaleDateString()],
+            ['book', 'Journey started', new Date(S.created).toLocaleDateString()],
     ];
     for (const [ic, k, v] of stats) j.appendChild(el('div', 'jstat', `<span>${icon(ic)}${k}</span><b>${v}</b>`));
   }
@@ -1820,7 +1820,7 @@ const UI = (() => {
       <div style="flex:1;min-width:0">
         <div class="cname">${done ? 'DONE: ' : ''}${ch.name}</div>
         <div class="cdesc">${ch.desc}</div>
-        <div class="crew">${icon('flask')} +${Quests.CHALLENGE_REWARD.lp} lab pts ${icon('gem')} +${Quests.CHALLENGE_REWARD.gems} gems · waters the garden</div>
+        <div class="crew">${icon('gem')} +${Quests.CHALLENGE_REWARD.lp} gems ${icon('gem')} +${Quests.CHALLENGE_REWARD.gems} gems · waters the garden</div>
         <div class="cbtns"></div>
       </div>`;
     const btns = card.querySelector('.cbtns');
@@ -2218,6 +2218,58 @@ const UI = (() => {
     draw();
   }
 
+  /* XP is visible as it arrives, rising off the level chip */
+  let xpQueue = 0, xpTimer = null;
+  function floatXp(n) {
+    xpQueue += n;
+    if (xpTimer) return;
+    xpTimer = setTimeout(() => {
+      const amount = xpQueue; xpQueue = 0; xpTimer = null;
+      const chip = $('#hud-level');
+      if (!chip || amount <= 0) return;
+      const r = chip.getBoundingClientRect();
+      const f = el('div', 'dmg-float xp-f', '+' + fmt(amount) + ' XP');
+      f.style.cssText = `position:fixed;left:${r.left + r.width / 2 - 18}px;` +
+                        `top:${r.bottom - 4}px;z-index:300`;
+      document.body.appendChild(f);
+      setTimeout(() => f.remove(), 1200);
+      chip.classList.remove('xp-pulse'); void chip.offsetWidth; chip.classList.add('xp-pulse');
+    }, 400);                        // batch a burst of gains into one number
+  }
+
+  /* Levelling up now tells you what it handed you. */
+  function showLevelUp(lvl) {
+    const rewards = levelRewards(lvl);
+    const cid = heroBeastId();
+    const box = el('div', 'sreveal levelup');
+    box.innerHTML = `
+      <div class="snew">LEVEL UP</div>
+      <h2>Level ${lvl}</h2>
+      ${cid ? `<div class="burst"><div class="rays"></div><img src="${sprite(cid)}"></div>` : ''}
+      <div class="lu-rows"></div>
+      <div class="mrow"></div>`;
+    if (cid) fitSprite(box.querySelector('.burst img'), cid, 116);
+    const rows = box.querySelector('.lu-rows');
+    const add = (txt, kind) => {
+      const r = el('div', 'lu-row ' + (kind || ''));
+      r.innerHTML = `<span class="lu-tick"></span><span>${txt}</span>`;
+      rows.appendChild(r);
+    };
+    add(`Party health and damage up`, 'stat');
+    add(`Combat power now <b>${fmt(Battle.combatPower())}</b>`, 'stat');
+    for (const r of rewards) add(r, 'unlock');
+    if (!rewards.length) {
+      const nextAt = Object.keys(LEVEL_REWARDS).map(Number).filter(l => l > lvl).sort((a, b) => a - b)[0];
+      if (nextAt) add(`Next unlock at level ${nextAt}`, 'soon');
+    }
+    const ok = el('button', 'pixbtn gold', '<b>Nice</b>');
+    ok.onclick = () => { closeAllModals(); renderAll(); };
+    box.querySelector('.mrow').appendChild(ok);
+    openModal(box, { noClose: true });
+    Sound.levelup();
+    rows.querySelectorAll('.lu-row').forEach((r, i) => { r.style.animationDelay = (i * 110) + 'ms'; });
+  }
+
   /* ================= settings / welcome ================= */
   function showSettings() {
     const box = el('div');
@@ -2367,15 +2419,16 @@ const UI = (() => {
     renderSessionBattle,
     renderEnemies, renderEnemyHp, renderBossTimer, renderPartyHp, renderParty,
     renderBattleStats, renderBoost, showHit, showKillRewards, attackTween,
-    enemyLunge, showPartyHit, startAdvance, renderUltMeter, showUltimateCast, skillFlash,
+    enemyLunge, showPartyHit, lightAttack, chargeAttack, startAdvance, renderUltMeter, showUltimateCast, skillFlash,
     showDefeat, hideDefeat, showEncounter, renderQuestLog, renderUpgrades,
     renderCooldowns, tickCooldowns, renderPanels, togglePanel,
     renderMerge, mergeSpawnFx, mergeFuseFx, showMap,
     renderBeasts, renderCollection, showCreature, showFeedPicker,
     renderFarm, waterGarden, showMealModal, showKcalTargetModal, renderFood,
-    renderSummon, playWish, showSummonReveal, showRelicReveal, runLab,
+    renderSummon, playWish, showSummonReveal, showRelicReveal,
     renderQuests, renderRituals, markQuestDot, maybeShowLogin,
     showTimerModal, updateTimerModal, showAddCustomModal,
     showSettings, showPlanEditor, showOnboarding, showWelcomeBack,
+    floatXp, showLevelUp,
   };
 })();

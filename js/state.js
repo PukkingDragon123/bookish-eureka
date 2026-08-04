@@ -168,7 +168,20 @@ function xpForLevel(lvl) { return Math.floor(90 * Math.pow(1.38, lvl - 1)); }
 
 /* ---------- cookie-clicker battle upgrades ---------- */
 /* The game opens up instead of dumping everything on a new player at once. */
-const UNLOCKS = { upgrades: 3, fusion: 6, lab: 8 };
+const UNLOCKS = { upgrades: 3, fusion: 6 };
+/* Level -> what it hands you. Drives the level-up screen, so growing is never
+   just a bigger number with no explanation attached. */
+const LEVEL_REWARDS = {
+  3:  ['Camp upgrades unlocked', '2nd party slot'],
+  4:  ['+1 gear slot in the Fusion camp'],
+  6:  ['Fusion camp unlocked', '3rd party slot'],
+  8:  ['+1 gear slot'],
+  10: ['Support pal slot'],
+  12: ['4th party slot'],
+  14: ['+1 gear slot'],
+  16: ['2nd support pal slot'],
+};
+function levelRewards(lvl) { return LEVEL_REWARDS[lvl] || []; }
 function unlocked(key) { return S.player.level >= (UNLOCKS[key] || 0); }
 
 const UPGRADE_DEFS = [
@@ -308,7 +321,9 @@ function grantEssence(n) {
   return n;
 }
 function grantGems(n) { S.player.gems += n; return n; }
-function grantLabPoints(n) { S.lab.points += n; return n; }
+/* The Lab is gone. Everything that used to award lab points now pays gems, so
+   no reward path silently drops its payout. */
+function grantLabPoints(n) { return grantGems(n); }
 function grantSeeds(n) { S.farm.seeds += n; return n; }
 
 function grantPlayerXp(n) {
@@ -323,9 +338,14 @@ function grantPlayerXp(n) {
   if (leveled) {
     Sound.levelup();
     confetti(34);
-    showLevelUpFlash(S.player.level);
-    toast(`Discipline Level ${S.player.level}!`, 'gold');
-    if (typeof UI !== 'undefined') UI.renderAll();
+    if (typeof UI !== 'undefined') {
+      UI.renderAll();
+      UI.showLevelUp(S.player.level);          // says what the level actually gave you
+    } else {
+      showLevelUpFlash(S.player.level);
+    }
+  } else if (n > 0 && typeof UI !== 'undefined') {
+    UI.floatXp(n);
   }
   return n;
 }

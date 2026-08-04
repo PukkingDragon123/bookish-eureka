@@ -14,6 +14,7 @@ const Battle = (() => {
   let bossTimeLeft = 0;
   let ultCharge = 0;
   const cds = {};
+  const lightCds = {};      // per-beast light-attack clock
   let sinceEncounter = 0;
 
   /* ----- pack generation ----- */
@@ -29,6 +30,7 @@ const Battle = (() => {
   }
 
   function spawnWave() {
+    for (const k of Object.keys(lightCds)) lightCds[k] = rnd(0.15, 0.6);
     const g = globalStage();
     const isBoss = S.stage.wave === WAVES_PER_STAGE && !S.stage.farm;
     const pool = enemyPoolForArea(S.stage.area);
@@ -101,6 +103,19 @@ const Battle = (() => {
     const raw = share * e.atkEvery * rnd(0.85, 1.15);
     return Math.min(raw, partyHpMax() * MAX_SWING_FRAC);
   }
+  /* A single legible number for party strength, so upgrades visibly do something. */
+  function combatPower() {
+    let atk = 0, hp = 0;
+    for (const cid of S.party) {
+      const st = beastStats(cid);
+      atk += st.atk * (1 + st.spd / 50);
+      hp += st.hp;
+    }
+    const dmgMult = 1 + relicBonusStat('dmg') + upgradeBonus('dmg') + mergeBonus('dmg');
+    const hpMult = 1 + relicBonusStat('hp') + upgradeBonus('hp') + mergeBonus('hp');
+    return Math.round(atk * dmgMult * 1.6 + hp * hpMult * 0.5);
+  }
+
   function partyHpMax() {
     let hp = 0;
     for (const cid of S.party) hp += beastStats(cid).hp;
@@ -116,7 +131,7 @@ const Battle = (() => {
     target.hp -= amount;
     const life = Lore.passiveBonus('lifest');
     if (life > 0) partyHp = Math.min(1, partyHp + (amount * life) / partyHpMax());
-    if (!opts.silent) UI.showHit(target, amount, opts.crit, opts.vfx, opts.label);
+    if (!opts.silent) UI.showHit(target, amount, opts.crit, opts.vfx, opts.label, opts.light);
     if (!opts.noCharge) {
       ultCharge = Math.min(100, ultCharge +
         (opts.charge || 2.1) * (1 + Lore.passiveBonus('ult') + upgradeBonus('ult')));
@@ -144,6 +159,34 @@ const Battle = (() => {
     return list;
   }
 
+  /* ----- three attack tiers -----
+     Light: every beast swings on a short clock for small damage. This carries
+     the DPS the invisible "chip" used to, but you watch it happen.
+     Charge: the beast's skills, on their own cooldowns, with a wind-up.
+     Ultimate: at full charge, hits the whole pack. */
+  function lightEvery(cid) {
+    const st = beastStats(cid);
+    return clamp(1.9 - st.spd / 60, 0.75, 1.9);   // faster beasts swing more often
+  }
+
+  function tickLightAttacks(dt) {
+    const t = front();
+    if (!t) return;
+    for (const cid of S.party) {
+      lightCds[cid] = (lightCds[cid] || 0) - dt;
+      if (lightCds[cid] > 0) continue;
+      const every = lightEvery(cid);
+      lightCds[cid] = every;
+      const crit = Math.random() < critChance();
+      // same damage-per-second the chip used to do, delivered per swing
+      const dmg = memberDps(cid, t) * 0.55 * every * (crit ? 2.2 : 1) * rnd(0.9, 1.12);
+      UI.lightAttack(cid, t, () => {
+        const cur = front();
+        if (cur) hitEnemy(cur, dmg, { crit, light: true, charge: crit ? 3.2 : 1.9 });
+      });
+    }
+  }
+
   function trySkills() {
     const t = front();
     if (!t) return;
@@ -156,7 +199,7 @@ const Battle = (() => {
         cds[key] = sk.cd;
         const crit = Math.random() < critChance();
         const dmg = memberDps(cid, t) * sk.power * (crit ? 2.2 : 1) * rnd(0.92, 1.1);
-        UI.attackTween(cid, t, () => {
+        UI.chargeAttack(cid, t, sk, () => {
           hitEnemy(t, dmg, { crit, vfx: sk.vfx, label: sk.name, charge: i === 0 ? 5 : 12 });
           // heavy skills splash the back rank
           if (i >= 1) for (const o of alive()) {
@@ -208,10 +251,7 @@ const Battle = (() => {
 
     tickCooldowns(dt);
 
-    const t = front();
-    const chip = partyDps() * dt * 0.55 * rnd(0.86, 1.16);
-    hitEnemy(t, chip, { silent: true, charge: 1.8 });
-
+    tickLightAttacks(dt);
     trySkills();
     if (ultCharge >= 100) fireUltimate();
     UI.renderUltMeter(ultCharge);
@@ -373,7 +413,7 @@ const Battle = (() => {
 
   return {
     tick, spawnWave, challengeBoss, currentDpsEstimate, offlineGains, travel,
-    regionUnlocked, skillListFor, cooldownState, partyHpMax, TICK_MS,
+    regionUnlocked, skillListFor, cooldownState, partyHpMax, combatPower, TICK_MS,
     get enemies() { return enemies; },
     get partyHp() { return partyHp; },
     get ultCharge() { return ultCharge; },

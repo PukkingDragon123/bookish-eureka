@@ -33,7 +33,6 @@
         <b id="hud-mana">0</b>
       </div>
       <div class="hud-chip ess-chip" title="Essence"><i class="ico ico-essence"></i><b id="hud-ess">0</b></div>
-      <div class="hud-chip lab-chip" title="Lab points"><i class="ico ico-flask"></i><b id="hud-lab">0</b></div>
       <div class="hud-chip seed-chip" title="Seeds"><i class="ico ico-seed"></i><b id="hud-seeds">0</b></div>
     </div>
   </header>
@@ -110,6 +109,7 @@
           <b id="ult-pct">0%</b>
           <div class="bstat-inline"><span>DPS</span><b id="stat-dps">0</b></div>
           <div class="bstat-inline"><span>Kills</span><b id="stat-kills">0</b></div>
+          <div class="bstat-inline cp"><span>Power</span><b id="stat-cp">0</b></div>
         </div>
         <div id="quest-log" title="Open the quest board"></div>
         <div id="cooldown-strip"></div>
@@ -183,12 +183,6 @@
       <h2 class="tab-title"><i class="ico ico-mana"></i> Summoning banners</h2>
       <div id="banner-rail"></div>
       <div id="pity-note" class="subtle"></div>
-      <h2 class="tab-title"><i class="ico ico-flask"></i> The Lab <span class="subtle">points: <b id="lab-points">0</b></span></h2>
-      <div id="lab-panel" class="card">
-        <p class="hint-line">Spend lab points on mutations, serums, grafted skills and jackpots.</p>
-        <button id="btn-lab-roll" class="pixbtn primary wide"><i class="ico ico-flask"></i> Run experiment
-          <span><b id="lab-cost">10</b> pts</span></button>
-      </div>
       <h2 class="tab-title"><i class="ico ico-relic"></i> Relics</h2>
       <div id="relic-shelf"></div>
     </section>
@@ -238,7 +232,6 @@
 <script src="js/vfx.js"></script>
 <script src="js/merge.js"></script>
 <script src="js/farm.js"></script>
-<script src="js/lab.js"></script>
 <script src="js/battle.js"></script>
 <script src="js/habits.js"></script>
 <script src="js/quests.js"></script>

@@ -1,45 +1,53 @@
 /* ============ Dreamkeep ============
-   A maker's workbench at golden hour: oiled wood, brass, parchment and
-   growing green. Pixel-hard edges everywhere, stepped motion, one committed
-   world — the app should feel like a handmade object you want to pick up.  */
+   Deep indigo night with a warm amber signal. The old oiled-wood palette put
+   brown on brown, so nothing could ever be the brightest thing on screen; a
+   cool dark ground gives amber and cyan somewhere to sit, and the one warm
+   accent is spent only on what the player should touch next.                */
 
 :root {
-  --ink:      #1e1208;
-  --bg0:      #2a1c10;
-  --bg1:      #382614;
-  --bg2:      #4a331c;
-  --bg3:      #5f4426;
-  --bg-lift:  #6d4f2c;
-  --line:     #825f37;
-  --line-hi:  #b9884b;
-  --brass:    #d9a24f;
+  --ink:      #080b16;
+  --bg0:      #101529;
+  --bg1:      #171d36;
+  --bg2:      #1f2745;
+  --bg3:      #2a3457;
+  --bg-lift:  #364272;
+  --line:     #3d4a7a;
+  --line-hi:  #6274b5;
+  --brass:    #ffb454;
 
-  --parch:    #f4e7c6;
-  --parch-lo: #cbb083;
+  --parch:    #eef2ff;
+  --parch-lo: #aab4d8;
 
-  --txt:      #fbf2e0;
-  --txt-dim:  #cbab7f;
-  --txt-ink:  #33220f;
+  --txt:      #f2f5ff;
+  --txt-dim:  #97a3ce;
+  --txt-ink:  #0b1020;
 
-  --gold:     #ffd15c;
-  --gold-lo:  #b8821e;
-  --gem:      #6fd9ea;
-  --mana:     #b78dff;
-  --ess:      #93ecb4;
-  --hp:       #ec6060;
-  --xp:       #ffbc55;
-  --good:     #96ce5e;
-  --leaf:     #74b247;
-  --sky:      #7fc4e8;
-  --danger:   #ec6060;
+  --gold:     #ffc247;
+  --gold-lo:  #d18f16;
+  --gem:      #45e0f0;
+  --mana:     #9d7bff;
+  --ess:      #4fe6a8;
+  --hp:       #ff5f6d;
+  --xp:       #ffa63d;
+  --good:     #3fdc86;
+  --leaf:     #4fd873;
+  --sky:      #56b8f5;
+  --danger:   #ff5f6d;
 
-  --rare:      #5aa2e8;
-  --epic:      #c08cff;
-  --legendary: #ffd15c;
+  --rare:      #45a6ff;
+  --epic:      #b47cff;
+  --legendary: #ffc247;
 
   --px: 2px;
-  --grain: repeating-linear-gradient(90deg, rgba(0,0,0,.075) 0 2px, transparent 2px 7px, rgba(255,255,255,.03) 7px 9px, transparent 9px 15px);
+  --grain: repeating-linear-gradient(90deg, rgba(0,0,0,.10) 0 2px, transparent 2px 7px, rgba(255,255,255,.028) 7px 9px, transparent 9px 15px);
   --hard: 0 4px 0 var(--ink);
+
+  /* one shared motion language so nothing animates on its own private curve */
+  --ease: cubic-bezier(.22,.9,.28,1);
+  --pop:  cubic-bezier(.34,1.56,.44,1);
+  --t-fast: .14s;
+  --t-med:  .24s;
+  --t-slow: .42s;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -106,7 +114,7 @@ button { font-family: inherit; letter-spacing: .5px; color: inherit; }
 }
 .pixbar {
   position: relative; display: block; height: 9px;
-  background: #170e05;
+  background: #0a0e1c;
   border: var(--px) solid var(--ink);
   overflow: hidden; flex: 1;
 }
@@ -274,7 +282,7 @@ button.hud-chip:active { transform: translateY(2px); }
 #hero-sky {
   position: absolute; inset: 0;
   background:
-    linear-gradient(180deg, #2d4a63 0%, #6b5a5e 42%, #b9764a 72%, #e0a256 100%);
+    linear-gradient(180deg, #131a33 0%, #2f2a5c 38%, #7b3f6e 68%, #d8794f 100%);
 }
 #hero-sky::after {                     /* pixel sun band */
   content: ''; position: absolute; inset: 0;
@@ -320,7 +328,7 @@ button.hud-chip:active { transform: translateY(2px); }
 /* --- focus card: the single most important thing on screen --- */
 #focus-card { padding: 0 10px; margin-top: 10px; }
 .focus {
-  background: linear-gradient(165deg, #5c4423, #3d2915);
+  background: linear-gradient(165deg, #2b3765, #171d36);
   border: var(--px) solid var(--ink);
   outline: var(--px) solid var(--brass);
   outline-offset: calc(var(--px) * -2);
@@ -394,7 +402,7 @@ button.hud-chip:active { transform: translateY(2px); }
 /* --- session overlay: the focus timer --- */
 #session-overlay {
   position: fixed; inset: 0; z-index: 260;
-  background: radial-gradient(circle at 50% 42%, #3a2a16 0%, #180f06 78%);
+  background: radial-gradient(circle at 50% 40%, #202a52 0%, #070a14 80%);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 4px; padding: 20px;
   animation: fadein .25s steps(4);
@@ -404,7 +412,7 @@ button.hud-chip:active { transform: translateY(2px); }
 .sring { position: relative; width: 214px; height: 214px; margin: 6px 0; }
 .sring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 .sring circle { fill: none; stroke-width: 10; }
-.sring .track { stroke: #170e05; }
+.sring .track { stroke: #0a0e1c; }
 .sring .fill { stroke: var(--gold); stroke-dasharray: 597; transition: stroke-dashoffset 1s linear; }
 .sring .glow { stroke: rgba(255,209,92,.25); stroke-width: 18; }
 .sring-mid { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -432,7 +440,7 @@ button.hud-chip:active { transform: translateY(2px); }
 .sb-foe { right: 8px; flex-direction: column; align-items: center; gap: 2px; }
 .sb-party img { animation: pbob 2.4s steps(4, jump-none) infinite; transform: scaleX(-1); }
 .sb-foe img { animation: pbob 2.1s steps(4, jump-none) infinite; }
-.sb-hp { width: 34px; height: 4px; background: #170e05; border: 1px solid var(--ink); }
+.sb-hp { width: 34px; height: 4px; background: #0a0e1c; border: 1px solid var(--ink); }
 .sb-hp > i { display: block; height: 100%; background: var(--hp); }
 .sb-stats {
   display: flex; justify-content: space-around; gap: 8px; margin-top: 5px;
@@ -579,7 +587,7 @@ button.hud-chip:active { transform: translateY(2px); }
   border: var(--px) solid var(--ink);
   padding: 0 4px; margin-top: 1px;
 }
-.fighter .fhp { width: 40px; height: 5px; margin-top: 2px; background: #170e05; border: 1px solid var(--ink); }
+.fighter .fhp { width: 40px; height: 5px; margin-top: 2px; background: #0a0e1c; border: 1px solid var(--ink); }
 .fighter .fhp i { display: block; height: 100%; background: var(--good); }
 
 #skill-flash {
@@ -644,7 +652,7 @@ button.hud-chip:active { transform: translateY(2px); }
 }
 #encounter-overlay h3 { font-size: 15.5px; color: var(--gold); margin-bottom: 4px; }
 #encounter-overlay .enc-sub { font-size: 12.5px; color: var(--txt-dim); margin-bottom: 8px; }
-.enc-bar { position: relative; height: 18px; background: #170e05; border: var(--px) solid var(--ink); overflow: hidden; cursor: pointer; }
+.enc-bar { position: relative; height: 18px; background: #0a0e1c; border: var(--px) solid var(--ink); overflow: hidden; cursor: pointer; }
 .enc-bar .zone { position: absolute; top: 0; bottom: 0; background: var(--gold-lo); }
 .enc-bar .zone.sweet { background: var(--gold); }
 .enc-bar .cursor { position: absolute; top: 0; bottom: 0; width: 5px; background: #fff; box-shadow: 0 0 6px #fff; }
@@ -692,7 +700,7 @@ button.hud-chip:active { transform: translateY(2px); }
 .cdcard .cdbars { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .cdrow { display: flex; align-items: center; gap: 3px; font-size: 11px; color: var(--txt-dim); }
 .cdrow .cdname { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cdmeter { width: 34px; height: 5px; background: #170e05; border: 1px solid var(--ink); flex: none; }
+.cdmeter { width: 34px; height: 5px; background: #0a0e1c; border: 1px solid var(--ink); flex: none; }
 .cdmeter i { display: block; height: 100%; background: var(--gem); }
 .cdmeter.rdy i { background: var(--good); }
 
@@ -863,8 +871,8 @@ button.hud-chip:active { transform: translateY(2px); }
 .plotcell .emptymark {
   width: 30px; height: 12px; margin-bottom: 9px;
   border-radius: 50%;
-  background: #241811;
-  border: 1px solid #402e1c;
+  background: #0d1120;
+  border: 1px solid #2c3763;
   box-shadow: inset 0 3px 5px rgba(0,0,0,.85), 0 1px 0 rgba(255,240,210,.08);
 }
 .plotcell.empty-plot:active .emptymark { transform: translateY(2px); }
@@ -905,7 +913,7 @@ button.hud-chip:active { transform: translateY(2px); }
 #kcal-ring { position: relative; width: 84px; height: 84px; flex-shrink: 0; }
 #kcal-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 #kcal-ring circle { fill: none; stroke-width: 9; }
-#kcal-ring .track { stroke: #170e05; }
+#kcal-ring .track { stroke: #0a0e1c; }
 #kcal-ring .fill { stroke: var(--good); stroke-dasharray: 213.6; stroke-dashoffset: 213.6; transition: stroke-dashoffset .5s steps(10), stroke .2s; }
 #kcal-mid { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 #kcal-mid b { font-size: 18px; }
@@ -1033,7 +1041,7 @@ button.hud-chip:active { transform: translateY(2px); }
 
 #challenge-card, #today-challenge { padding: 0 10px; }
 .challenge {
-  background: linear-gradient(160deg, #58471a, #3b2916);
+  background: linear-gradient(160deg, #3a2f6b, #1d2242);
   border: var(--px) solid var(--ink);
   outline: var(--px) solid var(--gold);
   outline-offset: calc(var(--px) * -2);
@@ -1072,7 +1080,7 @@ button.hud-chip:active { transform: translateY(2px); }
 .ritual .rdesc { font-size: 12.5px; color: var(--txt-dim); margin-top: 2px; line-height: 1.5; }
 .rreward { font-size: 12.5px; color: var(--mana); display: flex; align-items: center; gap: 3px; margin-top: 2px; flex-wrap: wrap; }
 .ritual .rprog { display: flex; gap: 2px; margin-top: 4px; }
-.ritual .rprog i { width: 12px; height: 6px; background: #170e05; border: 1px solid var(--ink); }
+.ritual .rprog i { width: 12px; height: 6px; background: #0a0e1c; border: 1px solid var(--ink); }
 .ritual .rprog i.f { background: var(--good); }
 .ritual .rbtn { flex-shrink: 0; white-space: nowrap; }
 
@@ -1250,7 +1258,7 @@ button.hud-chip:active { transform: translateY(2px); }
 .timer-ring { position: relative; width: 168px; height: 168px; margin: 10px auto; }
 .timer-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 .timer-ring circle { fill: none; stroke-width: 11; }
-.timer-ring .track { stroke: #170e05; }
+.timer-ring .track { stroke: #0a0e1c; }
 .timer-ring .fill { stroke: var(--gem); transition: stroke-dashoffset 1s linear; }
 .timer-mid { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .timer-mid b { font-size: 28px; font-variant-numeric: tabular-nums; }
@@ -1403,3 +1411,88 @@ body, button { letter-spacing: 0; }
 .pixbtn.tiny { min-height: 36px; }
 .pixbtn.huge { min-height: 62px; }
 .qclaim, .rbtn { min-height: 38px; }
+
+/* ============================================================
+   MOTION — one shared language, driven by the --t-*/--ease tokens
+   ============================================================ */
+
+/* tabs and cards settle in rather than snapping */
+.tab.active { animation: tabin var(--t-med) var(--ease); }
+@keyframes tabin { from { opacity: 0; transform: translateY(8px); } }
+.card, .panel { transition: box-shadow var(--t-med) var(--ease), transform var(--t-fast) var(--ease); }
+.card:active { transform: translateY(1px); }
+.pixbtn { transition: transform var(--t-fast) var(--ease), filter var(--t-fast) var(--ease); }
+.pixbtn:active { transform: translateY(3px) scale(.985); }
+.pixbtn.primary:not(:disabled) { animation: breathe 2.8s var(--ease) infinite; }
+@keyframes breathe { 50% { filter: brightness(1.1); } }
+#tabbar button { transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease); }
+#tabbar button.active .ico { animation: tabpop var(--t-med) var(--pop); }
+@keyframes tabpop { 0% { transform: scale(.7); } 100% { transform: scale(1); } }
+.pixbar > i { transition: width var(--t-slow) var(--ease); }
+
+/* --- light attack: a short jab, no screen kick --- */
+.fighter.jab { transform: translate(var(--dashx, 18px), var(--dashy, -2px)); }
+.fighter.jab img { animation: jabtwitch .13s steps(2); }
+@keyframes jabtwitch { 50% { transform: scaleX(-1) rotate(-8deg); } }
+.dmg-float.lightdmg { font-size: 13px; color: #dfe6ff; text-shadow: 1px 1px 0 var(--ink); opacity: .95; }
+
+/* --- charge attack: visible wind-up before it travels --- */
+.fighter.winding img {
+  animation: windup .24s var(--ease);
+  filter: drop-shadow(0 3px 0 rgba(0,0,0,.35)) brightness(1.35);
+}
+@keyframes windup {
+  0%   { transform: scaleX(-1); }
+  70%  { transform: scaleX(-1) translateX(-9px) scale(1.09); }
+  100% { transform: scaleX(-1) translateX(-5px) scale(1.04); }
+}
+
+/* --- combat power ticking up --- */
+.bstat-inline.cp b { color: var(--gem); }
+#stat-cp.cp-up { animation: cppop .5s var(--pop); }
+@keyframes cppop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.45); color: var(--gold); }
+  100% { transform: scale(1); }
+}
+
+/* --- XP arriving --- */
+#hud-level.xp-pulse { animation: xppulse .45s var(--pop); }
+@keyframes xppulse { 40% { transform: scale(1.09); box-shadow: 0 0 0 3px rgba(255,194,71,.35); } }
+
+/* --- level-up screen --- */
+.sreveal.levelup h2 { color: var(--gold); font-size: 30px; }
+.lu-rows { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; text-align: left; }
+.lu-row {
+  display: flex; align-items: center; gap: 9px;
+  background: var(--bg1); border: var(--px) solid var(--ink);
+  padding: 9px 10px; font-size: 14px;
+  animation: lurow .4s var(--pop) both;
+}
+@keyframes lurow { from { opacity: 0; transform: translateX(-14px); } }
+.lu-row .lu-tick {
+  width: 16px; height: 16px; flex: none; position: relative;
+}
+.lu-row .lu-tick::before {
+  content: ''; position: absolute; left: 2px; top: 7px;
+  width: 5px; height: 2px; background: var(--good);
+  box-shadow: 3px -3px 0 var(--good), 6px -6px 0 var(--good), 9px -9px 0 var(--good);
+}
+.lu-row.unlock { border-color: var(--gold); background: #2b2647; }
+.lu-row.unlock .lu-tick::before { background: var(--gold); box-shadow: 3px -3px 0 var(--gold), 6px -6px 0 var(--gold), 9px -9px 0 var(--gold); }
+.lu-row.soon { opacity: .7; font-size: 13px; }
+.lu-row.stat { color: var(--txt-dim); }
+.lu-row b { color: var(--gem); }
+
+/* --- panels opening --- */
+.panel:not(.collapsed) > *:not(.panel-head) { animation: paneldrop var(--t-med) var(--ease); }
+@keyframes paneldrop { from { opacity: 0; transform: translateY(-8px); } }
+
+/* --- merge / spawn feedback --- */
+.mslot { transition: transform var(--t-fast) var(--ease), outline-color var(--t-fast) var(--ease); }
+.mitem { transition: transform var(--t-fast) var(--pop); }
+.mslot.drop-ok { transform: scale(1.06); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pixbtn.primary:not(:disabled) { animation: none; }
+}
