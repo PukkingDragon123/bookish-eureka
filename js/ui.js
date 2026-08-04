@@ -1162,7 +1162,7 @@ const UI = (() => {
       const art = isMove ? moveIcon(sk.type, sk.moveIdx) : skillIcon(sk.type, cid + sk.name);
       return `
       <div class="skillrow ${isMove ? 'moverow' : ''} ${lockedMv ? 'locked-move' : ''}">
-        <div class="sicon" style="background:${TYPE_COLORS[sk.type] || '#666'}">${art}</div>
+        <div class="sicon" style="background:${hexAlpha(TYPE_COLORS[sk.type] || '#666', .16)}">${art}</div>
         <div><div class="sname">${sk.name}${isMove ? ' <span class="mvtag">MOVE</span>' : ''}</div>
         <div class="sdesc">${sk.desc}</div>
         <div class="smeta">${Math.round(sk.power * 100)}% power · ${sk.cd}s cooldown ·
@@ -1174,7 +1174,7 @@ const UI = (() => {
     if (owned && inst.graft && C_BY_ID[inst.graft]) {
       const g = Lore.kit(inst.graft).skills[1];
       graftHtml = `<div class="skillrow graftrow">
-        <div class="sicon" style="background:${TYPE_COLORS[g.type] || '#666'}">${skillIcon(g.type, cid + g.name)}</div>
+        <div class="sicon" style="background:${hexAlpha(TYPE_COLORS[g.type] || '#666', .16)}">${skillIcon(g.type, cid + g.name)}</div>
         <div><div class="sname">${g.name} <span class="subtle">(grafted)</span></div>
         <div class="sdesc">Lab-grafted from ${C_BY_ID[inst.graft].name}.</div>
         <div class="smeta">${Math.round(g.power * 100)}% power · ${(g.cd * 1.4).toFixed(1)}s cooldown</div></div>
@@ -1183,7 +1183,7 @@ const UI = (() => {
 
     const u = kit.ult;
     const ultHtml = `<div class="skillrow ultrow">
-      <div class="sicon" style="background:${TYPE_COLORS[u.type] || '#666'}">${skillIcon('Ultimate', cid + u.name)}</div>
+      <div class="sicon" style="background:${hexAlpha(TYPE_COLORS[u.type] || '#666', .16)}">${skillIcon('Ultimate', cid + u.name)}</div>
       <div><div class="sname">${u.name}</div><div class="sdesc">${u.desc}</div>
       <div class="smeta">${Math.round(u.power * 100)}% power · hits every enemy at 100% charge</div></div>
     </div>`;

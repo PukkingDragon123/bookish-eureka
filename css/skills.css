@@ -1,5 +1,5 @@
 /* spell icons */
-.spell.sp-0,.spell.sp-1,.spell.sp-2,.spell.sp-3,.spell.sp-4,.spell.sp-5,.spell.sp-6,.spell.sp-7,.spell.sp-8,.spell.sp-9,.spell.sp-10,.spell.sp-11,.spell.sp-12,.spell.sp-13,.spell.sp-14,.spell.sp-15,.spell.sp-16,.spell.sp-17,.spell.sp-18,.spell.sp-19,.spell.sp-20,.spell.sp-21,.spell.sp-22,.spell.sp-23,.spell.sp-24,.spell.sp-25,.spell.sp-26,.spell.sp-27,.spell.sp-28,.spell.sp-29,.spell.sp-30,.spell.sp-31,.spell.sp-32,.spell.sp-33,.spell.sp-34,.spell.sp-35,.spell.sp-36,.spell.sp-37,.spell.sp-38,.spell.sp-39,.spell.sp-40,.spell.sp-41,.spell.sp-42,.spell.sp-43,.spell.sp-44,.spell.sp-45,.spell.sp-46,.spell.sp-47,.spell.sp-48,.spell.sp-49,.spell.sp-50,.spell.sp-51,.spell.sp-52,.spell.sp-53,.spell.sp-54,.spell.sp-55,.spell.sp-56,.spell.sp-57,.spell.sp-58,.spell.sp-59{display:inline-block;flex:none;width:26px;height:26px;background-image:url(../assets/ui/skills.png);background-size:800% 800%;image-rendering:pixelated;vertical-align:-6px;}
+.spell.sp-0,.spell.sp-1,.spell.sp-2,.spell.sp-3,.spell.sp-4,.spell.sp-5,.spell.sp-6,.spell.sp-7,.spell.sp-8,.spell.sp-9,.spell.sp-10,.spell.sp-11,.spell.sp-12,.spell.sp-13,.spell.sp-14,.spell.sp-15,.spell.sp-16,.spell.sp-17,.spell.sp-18,.spell.sp-19,.spell.sp-20,.spell.sp-21,.spell.sp-22,.spell.sp-23,.spell.sp-24,.spell.sp-25,.spell.sp-26,.spell.sp-27,.spell.sp-28,.spell.sp-29,.spell.sp-30,.spell.sp-31,.spell.sp-32,.spell.sp-33,.spell.sp-34,.spell.sp-35,.spell.sp-36,.spell.sp-37,.spell.sp-38,.spell.sp-39,.spell.sp-40,.spell.sp-41,.spell.sp-42,.spell.sp-43,.spell.sp-44,.spell.sp-45,.spell.sp-46,.spell.sp-47,.spell.sp-48,.spell.sp-49,.spell.sp-50,.spell.sp-51,.spell.sp-52,.spell.sp-53,.spell.sp-54,.spell.sp-55,.spell.sp-56,.spell.sp-57,.spell.sp-58,.spell.sp-59{display:inline-block;flex:none;width:34px;height:34px;background-image:url(../assets/ui/skills.png);background-size:800% 800%;vertical-align:-7px;}
 .spell.sp-0{background-position:0.0% 0.0%;}
 .spell.sp-1{background-position:14.29% 0.0%;}
 .spell.sp-2{background-position:28.57% 0.0%;}
@@ -60,5 +60,5 @@
 .spell.sp-57{background-position:14.29% 100.0%;}
 .spell.sp-58{background-position:28.57% 100.0%;}
 .spell.sp-59{background-position:42.86% 100.0%;}
-.spell.big{width:34px;height:34px;vertical-align:-7px;}
-.spell.huge{width:48px;height:48px;vertical-align:-11px;}
+.spell.big{width:44px;height:44px;vertical-align:-10px;}
+.spell.huge{width:56px;height:56px;vertical-align:-12px;}

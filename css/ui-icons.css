@@ -2,7 +2,7 @@
    Every cell is user-supplied art — the build draws no icons itself. */
 .ico{display:none;}
 /* named ui icons */
-.ico.ico-seed,.ico.ico-flask,.ico.ico-mana,.ico.ico-sword,.ico.ico-book,.ico.ico-play,.ico.ico-can,.ico.ico-scroll,.ico.ico-map,.ico.ico-meal,.ico.ico-essence,.ico.ico-chest,.ico.ico-portal,.ico.ico-skull,.ico.ico-gold,.ico.ico-gem,.ico.ico-relic,.ico.ico-streak,.ico.ico-bolt,.ico.ico-water,.ico.ico-muscle,.ico.ico-walk,.ico.ico-cook,.ico.ico-palette,.ico.ico-sunrise,.ico.ico-timer,.ico.ico-star,.ico.ico-paw{display:inline-block;flex:none;width:22px;height:22px;background-image:url(../assets/ui/ui-icons.png);background-size:800% 400%;image-rendering:pixelated;vertical-align:-5px;}
+.ico.ico-seed,.ico.ico-flask,.ico.ico-mana,.ico.ico-sword,.ico.ico-book,.ico.ico-play,.ico.ico-can,.ico.ico-scroll,.ico.ico-map,.ico.ico-meal,.ico.ico-essence,.ico.ico-chest,.ico.ico-portal,.ico.ico-skull,.ico.ico-gold,.ico.ico-gem,.ico.ico-relic,.ico.ico-streak,.ico.ico-bolt,.ico.ico-water,.ico.ico-muscle,.ico.ico-walk,.ico.ico-cook,.ico.ico-palette,.ico.ico-sunrise,.ico.ico-timer,.ico.ico-star,.ico.ico-paw{display:inline-block;flex:none;width:24px;height:24px;background-image:url(../assets/ui/ui-icons.png);background-size:800% 400%;vertical-align:-5px;}
 .ico.ico-seed{background-position:0.0% 0.0%;}
 .ico.ico-flask{background-position:14.29% 0.0%;}
 .ico.ico-mana{background-position:28.57% 0.0%;}
@@ -31,5 +31,5 @@
 .ico.ico-timer{background-position:14.29% 100.0%;}
 .ico.ico-star{background-position:28.57% 100.0%;}
 .ico.ico-paw{background-position:42.86% 100.0%;}
-.ico.big{width:32px;height:32px;vertical-align:-7px;}
-.ico.huge{width:46px;height:46px;vertical-align:-10px;}
+.ico.big{width:34px;height:34px;vertical-align:-7px;}
+.ico.huge{width:48px;height:48px;vertical-align:-11px;}

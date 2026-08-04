@@ -1,5 +1,5 @@
 /* the 9 element icons */
-.elem.el-fire,.elem.el-water,.elem.el-nature,.elem.el-electric,.elem.el-ice,.elem.el-earth,.elem.el-shadow,.elem.el-mystic,.elem.el-metal{display:inline-block;flex:none;width:22px;height:22px;background-image:url(../assets/ui/elements.png);background-size:900% 100%;image-rendering:pixelated;vertical-align:-5px;}
+.elem.el-fire,.elem.el-water,.elem.el-nature,.elem.el-electric,.elem.el-ice,.elem.el-earth,.elem.el-shadow,.elem.el-mystic,.elem.el-metal{display:inline-block;flex:none;width:24px;height:24px;background-image:url(../assets/ui/elements.png);background-size:900% 100%;vertical-align:-5px;}
 .elem.el-fire{background-position:0.0% 0%;}
 .elem.el-water{background-position:12.5% 0%;}
 .elem.el-nature{background-position:25.0% 0%;}
@@ -9,5 +9,5 @@
 .elem.el-shadow{background-position:75.0% 0%;}
 .elem.el-mystic{background-position:87.5% 0%;}
 .elem.el-metal{background-position:100.0% 0%;}
-.elem.big{width:30px;height:30px;vertical-align:-7px;}
-.elem.huge{width:44px;height:44px;vertical-align:-10px;}
+.elem.big{width:32px;height:32px;vertical-align:-7px;}
+.elem.huge{width:46px;height:46px;vertical-align:-10px;}

@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
 """Cut the uploaded art sheets into game-ready spritesheets.
 
-The uploads are big flat-background grids: tiered equipment (4x5), crops
-(5 columns of 5 growth/product rows) and hobby icons (5x2). Each cell is
-background-removed by flood-filling inward from the border — a global colour
-threshold would punch holes in sprites that legitimately contain the sheet's
-background hue — then trimmed, downscaled and re-hardened so the alpha stays
-crisp at pixel-art sizes.
+v2 pipeline — every icon is cut ONE BY ONE, content-aware:
 
-Outputs:
-  assets/ui/gear.png    6 categories x 9 tiers, 64px cells
-  assets/ui/plants.png  9 elements x 4 growth stages, 64px cells
-  assets/ui/crops.png   9 harvested crop items, 48px cells
-  assets/ui/hobby.png   30 hobby / activity icons, 64px cells
-  css/farm-art.css      background-position helpers for all of the above
+  * The whole sheet is keyed at once. Bright-key sheets (magenta / pink)
+    get true chroma-key alpha unmixing with despill, so anti-aliased edges
+    keep a soft 8-bit alpha and zero key-colour fringe. Dark painterly
+    sheets are flood-filled from the border (their art legitimately
+    contains bg-ish darks, so distance keying alone would punch holes).
+  * Icons are then found as connected components and assigned to grid
+    cells by centroid — no blind grid chopping, no inset shaving, so art
+    that drifts across a gridline is never cut flat.
+  * Cells stay big (128px) all the way through; resizing is premultiplied
+    LANCZOS, alpha is never binarised, colours are never snapped.
+
+Outputs: gear / plants / crops / hobby / ui-icons / elements / skills /
+moves spritesheets + their CSS and JS data files.
 """
 import os
 import json
@@ -65,7 +67,6 @@ HOBBY_SHEETS = [
 CURRENCY = ('EBE80611-9F29-4362-82EB-E23F2667F0B8.png',
             ['coin', 'crystal', 'runeegg', 'fireegg'])
 
-# newest upload: a 3x3 utility sheet
 UTIL_SHEET = ('770A4DAA-607F-4D41-AB39-62E212DE9B14.png', 3, 3,
               ['can', 'sprout', 'play',
                'translate', 'swords2', 'dexbook',
@@ -105,17 +106,13 @@ UI_ICONS = {
     'star':    ('moves/Mystic_Attack_Moves.png', 5, 2, 2),  # starfall
     'paw':     (CURRENCY[0], 4, 1, 2),                                 # rune egg
 }
-UI_CELL = 64
 
 # ---- element icons: 3x3, exactly the nine types the game uses ----
 ELEM_SHEET = ('ADA4A098-562C-4C7B-A043-22FFEAEAB879.png', 3, 3)
 ELEM_ORDER = ['Fire', 'Water', 'Nature', 'Electric', 'Ice', 'Earth',
               'Shadow', 'Mystic', 'Metal']
 
-# ---- spell icons: two 6x5 sheets, grouped by element. `SPELL_A` is cleanly
-# element-ordered three-at-a-time; `SPELL_B` groups less regularly, so its
-# element per cell is listed explicitly. Together they give ~6 per element,
-# enough that two creatures of the same type rarely share a skill icon.
+# ---- spell icons: two 6x5 sheets, grouped by element ----
 SPELL_A = ('A2A993CB-18C7-479F-B923-70909CC561B8.png', 6, 5)
 SPELL_A_ELEMS = (['Fire'] * 3 + ['Water'] * 3 + ['Nature'] * 3 + ['Electric'] * 3 +
                  ['Ice'] * 3 + ['Earth'] * 3 + ['Shadow'] * 3 + ['Mystic'] * 3 +
@@ -126,7 +123,6 @@ SPELL_B_ELEMS = ['Fire', 'Fire', 'Fire', 'Water', 'Water', 'Ice',
                  'Ice', 'Ice', 'Ice', 'Earth', 'Earth', 'Ice',
                  'Shadow', 'Shadow', 'Shadow', 'Mystic', 'Mystic', 'Mystic',
                  'Metal', 'Metal', 'Metal', 'Fire', 'Earth', 'Shadow']
-SPELL_CELL = 64
 
 # ---- attack-move icons: one 5x2 sheet per element, names from the manifest ----
 MOVES_DIR = 'moves'
@@ -151,161 +147,172 @@ MOVE_NAMES = {
            'Iron Cannon Shot','Drill Burst','Metal Storm','Gear Trap','Anvil Drop'],
 }
 
+CELL = 128          # packed cell size — kept big so nothing is crushed
 
-# ---------------------------------------------------------------- cutting out
-def cut_bg(cell, tol=58, strict=False):
-    """Drop the flat sheet background and any hole it fills (a ring's centre is
-    background too, and it never touches the border). Then drop specks that
-    bled in from a neighbouring cell of the source grid.
 
-    strict: additionally kill EVERY bg-coloured pixel, connected or not — for
-    magenta-key sheets whose art never legitimately contains the key colour.
-    (An enclosed pocket smaller than the hole threshold survived inside
-    Electric's Storm Beam and several Fire spell icons otherwise.) Never use
-    it on Mystic cells: their pinks sit within tolerance of the magenta key."""
-    a = np.asarray(cell.convert('RGB')).astype(int)
+# ---------------------------------------------------------------- keying
+def _bg_of(a):
+    """Median colour of a 3px border ring."""
+    ring = np.concatenate([a[:3].reshape(-1, 3), a[-3:].reshape(-1, 3),
+                           a[:, :3].reshape(-1, 3), a[:, -3:].reshape(-1, 3)])
+    return np.median(ring, axis=0)
+
+
+def key_sheet(img):
+    """Key a WHOLE sheet -> float alpha (H,W in 0..1) + despilled rgb.
+
+    Bright keys (magenta / pink, high channel spread) use pure colour
+    distance with a soft alpha ramp and despill — the art never contains
+    the key colour, so enclosed pockets die automatically and blended
+    edge pixels keep clean colours.  Dark painterly backgrounds keep the
+    flood-fill approach (their art contains bg-ish darks) but with a soft
+    1px edge so cuts aren't jagged.
+    """
+    a = np.asarray(img.convert('RGB')).astype(np.float64)
     h, w = a.shape[:2]
-    corners = np.array([a[1, 1], a[1, w - 2], a[h - 2, 1], a[h - 2, w - 2]])
-    bg = np.median(corners, axis=0)
-    near = np.abs(a - bg).sum(2) < tol * 3
+    bg = _bg_of(a)
+    bright_key = (bg.max() - bg.min()) > 70 and bg.max() > 150
+    d = np.abs(a - bg).sum(2)
 
-    lab, n = ndimage.label(near)
-    kill = np.zeros(near.shape, bool)
+    if bright_key:
+        # soft chroma ramp: fully bg below t0, fully art above t1
+        t0, t1 = 70.0, 210.0
+        alpha = np.clip((d - t0) / (t1 - t0), 0, 1)
+        # despill: unmix the bg out of semi-transparent pixels
+        mix = (alpha > 0) & (alpha < 1)
+        if mix.any():
+            am = alpha[mix][:, None]
+            a[mix] = np.clip((a[mix] - (1 - am) * bg) / np.maximum(am, 1e-3), 0, 255)
+        # any leftover key-tinted opaque pixel (noise in the key) -> despill too
+        spill = (alpha >= 1) & (d < 340)
+        if bg[0] > 150 and bg[2] > 100 and bg[1] < 120:      # magenta / pink family
+            r_, g_, b_ = a[..., 0], a[..., 1], a[..., 2]
+            spill &= (r_ > g_ + 60) & (b_ > g_ + 30)
+            a[spill, 0] = np.minimum(r_[spill], g_[spill] + 60)
+            a[spill, 2] = np.minimum(b_[spill], g_[spill] + 60)
+    else:
+        near = d < 150
+        lab, n = ndimage.label(near)
+        keep = np.ones((h, w), bool)
+        if n:
+            border = set(lab[0].tolist()) | set(lab[-1].tolist()) | \
+                set(lab[:, 0].tolist()) | set(lab[:, -1].tolist())
+            border.discard(0)
+            sizes = ndimage.sum(near, lab, range(1, n + 1))
+            drop = [i + 1 for i in range(n)
+                    if (i + 1) in border or sizes[i] > 0.002 * h * w]
+            if drop:
+                keep = ~np.isin(lab, drop)
+        alpha = keep.astype(np.float64)
+        # soften the cut edge by half a pixel so it isn't stair-stepped
+        alpha = ndimage.uniform_filter(alpha, 2)
+        alpha[keep & (ndimage.uniform_filter(keep.astype(float), 3) > 0.99)] = 1.0
+
+    rgba = np.dstack([a, alpha * 255]).astype(np.uint8)
+    return rgba
+
+
+def sheet_cells(path, cols, rows, min_px=None):
+    """Key a sheet, then cut every icon out ONE BY ONE.
+
+    Connected components are assigned to grid cells by centroid, so an
+    icon is always taken whole — even the sparkles around it — and a
+    neighbour's overhang never bleeds in, without shaving cell edges.
+    Returns a rows x cols matrix of RGBA images (content-cropped).
+    """
+    img = Image.open(os.path.join(SRC, path))
+    rgba = key_sheet(img)
+    h, w = rgba.shape[:2]
+    ch, cw = h / rows, w / cols
+    if min_px is None:
+        min_px = max(4, int(0.00002 * h * w))        # drop key-noise specks
+
+    solid = rgba[..., 3] > 100
+    lab, n = ndimage.label(solid, structure=np.ones((3, 3)))
+    cells = [[[] for _ in range(cols)] for _ in range(rows)]
     if n:
-        sizes = ndimage.sum(near, lab, range(1, n + 1))
-        border = set(lab[0].tolist()) | set(lab[-1].tolist()) | \
-            set(lab[:, 0].tolist()) | set(lab[:, -1].tolist())
-        border.discard(0)
-        # enclosed background pockets count too, once they are big enough to be
-        # a real hole rather than a dark pixel that happens to match
-        drop = [i + 1 for i in range(n)
-                if (i + 1) in border or sizes[i] > 0.004 * h * w]
-        if drop:
-            kill = np.isin(lab, drop)
+        sizes = ndimage.sum(solid, lab, range(1, n + 1))
+        cys, cxs = zip(*ndimage.center_of_mass(solid, lab, range(1, n + 1)))
+        for i in range(n):
+            if sizes[i] < min_px:
+                continue
+            r = min(rows - 1, int(cys[i] / ch))
+            c = min(cols - 1, int(cxs[i] / cw))
+            cells[r][c].append(i + 1)
 
-    keep = ~kill
-    lab2, n2 = ndimage.label(keep)
-    if n2 > 1:
-        sizes = ndimage.sum(keep, lab2, range(1, n2 + 1))
-        biggest = sizes.max()
-        m = max(2, int(min(h, w) * 0.05))
-        edge = np.zeros(keep.shape, bool)
-        edge[:m] = edge[-m:] = True
-        edge[:, :m] = edge[:, -m:] = True
-        for i in range(n2):
-            if sizes[i] < 0.02 * biggest and (lab2 == i + 1)[edge].any():
-                keep &= lab2 != i + 1
-
-    if strict:
-        keep &= ~near
-    out = np.dstack([a, np.where(keep, 255, 0)]).astype(np.uint8)
-    return Image.fromarray(out, 'RGBA')
+    out = [[None] * cols for _ in range(rows)]
+    for r in range(rows):
+        for c in range(cols):
+            ids = cells[r][c]
+            if not ids:
+                out[r][c] = Image.new('RGBA', (8, 8))
+                continue
+            m = np.isin(lab, ids)
+            ys, xs = np.where(m)
+            y0, y1, x0, x1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
+            piece = rgba[y0:y1, x0:x1].copy()
+            piece[..., 3] = np.where(m[y0:y1, x0:x1], piece[..., 3], 0)
+            out[r][c] = Image.fromarray(piece, 'RGBA')
+    return out
 
 
-def trim(im):
-    bb = im.split()[3].getbbox()
-    return im.crop(bb) if bb else im
-
-
-def harden(im, size, k=None, anchor='center'):
-    """Fit inside a size x size box, then re-crisp the alpha edge.
-
-    Pass k to scale by a shared factor instead of filling the box — growth
-    stages have to keep their relative sizes or a seed ends up as big as a
-    ripe plant."""
-    im = trim(im)
-    if im.width == 0 or im.height == 0:
+# ---------------------------------------------------------------- fitting
+def fit(im, size, k=None, anchor='center', pad=4):
+    """Fit into a size x size box with premultiplied LANCZOS — soft alpha
+    survives, no colour snapping, no jaggies. Pass k for a shared scale
+    (growth stages keep their relative sizes)."""
+    if im.width < 2 or im.height < 2:
         return Image.new('RGBA', (size, size))
     if k is None:
-        k = min((size - 2) / im.width, (size - 2) / im.height)
+        k = min((size - pad) / im.width, (size - pad) / im.height)
     nw = max(1, min(size, round(im.width * k)))
     nh = max(1, min(size, round(im.height * k)))
-    im = im.resize((nw, nh), Image.LANCZOS)
-
-    a = np.asarray(im).astype(int)
-    alpha = a[..., 3]
-    solid = alpha > 118
-    # colours bled toward the background during the downscale — pull each
-    # surviving pixel back toward its nearest fully-opaque neighbour's tone
-    rgb = a[..., :3]
-    keep = alpha > 200
-    if keep.any():
-        idx = ndimage.distance_transform_edt(~keep, return_distances=False,
-                                             return_indices=True)
-        rgb = rgb[idx[0], idx[1]]
-    out = np.dstack([rgb, np.where(solid, 255, 0)]).astype(np.uint8)
-    im = Image.fromarray(out, 'RGBA')
-
-    im = trim(im)
+    a = np.asarray(im).astype(np.float64)
+    al = a[..., 3:] / 255.0
+    pre = np.dstack([a[..., :3] * al, a[..., 3:]])
+    pre = np.asarray(Image.fromarray(pre.astype(np.uint8), 'RGBA')
+                     .resize((nw, nh), Image.LANCZOS)).astype(np.float64)
+    al2 = np.maximum(pre[..., 3:], 1e-3)
+    rgb = np.clip(pre[..., :3] / (al2 / 255.0) * 1.0, 0, 255)
+    outp = np.dstack([rgb, pre[..., 3:]]).astype(np.uint8)
+    im = Image.fromarray(outp, 'RGBA')
     canvas = Image.new('RGBA', (size, size))
-    y = size - im.height if anchor == 'bottom' else (size - im.height) // 2
+    y = size - im.height - 1 if anchor == 'bottom' else (size - im.height) // 2
     canvas.paste(im, ((size - im.width) // 2, max(0, y)))
     return canvas
 
 
-def group_scale(cuts, size):
-    """One scale factor for a set of sprites, sized off the largest."""
-    boxes = [c.split()[3].getbbox() for c in cuts]
-    big = max(max(b[2] - b[0], b[3] - b[1]) for b in boxes if b)
-    return (size - 2) / big
-
-
-def grid(path, cols, rows, inset=0.045):
-    """Split into a uniform grid, shaving a little off every cell edge — the
-    source rows are not perfectly aligned and a neighbour's tip otherwise
-    bleeds in as a floating speck."""
-    im = Image.open(os.path.join(SRC, path)).convert('RGB')
-    cw, ch = im.width / cols, im.height / rows
-    ix, iy = cw * inset, ch * inset
-    return [[im.crop((round(c * cw + ix), round(r * ch + iy),
-                      round((c + 1) * cw - ix), round((r + 1) * ch - iy)))
-             for c in range(cols)] for r in range(rows)]
+def group_scale(cuts, size, pad=4):
+    big = max(max(c.width, c.height) for c in cuts)
+    return (size - pad) / big
 
 
 # ---------------------------------------------------------------- sheet build
-def pack(cells, cols, size, path, colours=96):
-    """Pack and palette-quantize. These are pixel art with hard alpha, so a
-    small palette is visually lossless and keeps the inlined bundle sane."""
+def pack(cells, cols, size, path, colours=255):
+    """Pack into an RGBA-palette sheet. Alpha is posterized to 16 levels
+    (visually identical at icon sizes) so the octree palette holds smooth
+    edges AND rich colour while compressing ~4x smaller than raw RGBA."""
     rows = (len(cells) + cols - 1) // cols
     sheet = Image.new('RGBA', (cols * size, rows * size))
     for i, c in enumerate(cells):
         sheet.paste(c, ((i % cols) * size, (i // cols) * size))
-
-    alpha = sheet.split()[3]
-    flat = Image.new('RGB', sheet.size, (0, 0, 0))
-    flat.paste(sheet.convert('RGB'), mask=alpha)
-    q = flat.quantize(colors=colours - 1, method=Image.MEDIANCUT, dither=Image.NONE)
-    pal = q.getpalette()[:(colours - 1) * 3]
-    pal += [0] * ((colours * 3) - len(pal))          # pad, then a spare slot
-    q.putpalette(pal)
-    idx = np.asarray(q).copy()
-    idx[np.asarray(alpha) <= 128] = colours - 1      # last index = transparent
-    out = Image.fromarray(idx, 'P')
-    out.putpalette(pal)
-    out.save(os.path.join(OUT, path), optimize=False,
-             transparency=bytes([255] * (colours - 1) + [0]))
-    return out
+    a = np.asarray(sheet).copy()
+    a[..., 3] = (a[..., 3] // 16) * 17
+    q = Image.fromarray(a, 'RGBA').quantize(colors=colours, method=Image.FASTOCTREE)
+    q.save(os.path.join(OUT, path), optimize=True)
 
 
 def sheet_css(header, cls, png, cols, rows, base_px, entries, sizes=(), valign=0.22):
-    """Scale-invariant sprite CSS.
-
-    Positions are percentages, so a rule that overrides width/height (or any
-    future size variant) still crops the right cell. The previous px-based
-    emission broke every badge that resized an icon: position stayed tuned to
-    the base size while the cell shrank, drifting the crop by one cell per
-    index — the "element icons bug a lot" report.
-
-    entries: [(suffix, col, row)], e.g. ('.el-fire', 0, 0).
-    sizes:   [(extra_class, px)] size variants — width/height only.
-    """
+    """Scale-invariant sprite CSS: percentage positions, so any width/height
+    override still crops the right cell. Icons are smooth-scaled (the packed
+    cells are 128px, always bigger than display size — pixelated rendering
+    at a downscale is what mangled them before)."""
     out = [header]
     grp = ','.join(f'{cls}{sfx}' for sfx, _, _ in entries)
     out.append(f'{grp}{{display:inline-block;flex:none;'
                f'width:{base_px}px;height:{base_px}px;'
                f'background-image:url(../assets/ui/{png});'
                f'background-size:{cols * 100}% {rows * 100}%;'
-               f'image-rendering:pixelated;'
                f'vertical-align:-{round(base_px * valign)}px;}}')
     for sfx, c, r in entries:
         x = 0 if cols == 1 else round(c / (cols - 1) * 10000) / 100
@@ -318,21 +325,21 @@ def sheet_css(header, cls, png, cols, rows, base_px, entries, sizes=(), valign=0
 
 
 def main():
-    P = 64          # packed cell size
+    P = CELL
 
     # ---- gear: 6 categories x 9 tiers ----
     gear = []
     for path, key, _ in GEAR_SHEETS:
-        g = grid(path, 4, 5)
+        g = sheet_cells(path, 4, 5)
         flat = [g[r][c] for r in range(5) for c in range(4)]
         for t in TIER_PICK:
-            gear.append(harden(cut_bg(flat[t], strict=True), P))
+            gear.append(fit(flat[t], P))
     pack(gear, 9, P, 'gear.png')
     css = ['/* generated by tools/extract-new-art.py — do not hand-edit */']
-    css += sheet_css('/* gear: 6 categories x 9 tiers */', '.gear', 'gear.png', 9, len(GEAR_SHEETS), 32,
+    css += sheet_css('/* gear: 6 categories x 9 tiers */', '.gear', 'gear.png', 9, len(GEAR_SHEETS), 34,
                      [(f'.g-{key}.t{t + 1}', t, gi) for gi, (_, key, _) in enumerate(GEAR_SHEETS)
                       for t in range(9)],
-                     sizes=[('.big', 44)])
+                     sizes=[('.big', 48)])
 
     # ---- plants: 9 elements x 4 stages, plus the harvested crop items ----
     cache = {}
@@ -340,20 +347,20 @@ def main():
     for e in ELEMENTS:
         path, col = CROP_COL[e]
         if path not in cache:
-            cache[path] = grid(path, 5, 5)
+            cache[path] = sheet_cells(path, 5, 5)
         g = cache[path]
-        cuts = [cut_bg(g[r][col]) for r in STAGE_ROWS]
+        cuts = [g[r][col] for r in STAGE_ROWS]
         k = group_scale(cuts, P)
         for c in cuts:
-            plants.append(harden(c, P, k=k, anchor='bottom'))
-        crops.append(harden(cut_bg(g[3][col]), 48))
+            plants.append(fit(c, P, k=k, anchor='bottom'))
+        crops.append(fit(g[3][col], P))
     pack(plants, 4, P, 'plants.png')
-    pack(crops, 9, 48, 'crops.png')
+    pack(crops, 9, P, 'crops.png')
     css += sheet_css('/* plants: 9 elements x 4 growth stages */', '.plant', 'plants.png', 4, 9, 32,
                      [(f'.p-{e.lower()}.s{st}', st, ei) for ei, e in enumerate(ELEMENTS)
                       for st in range(4)],
                      sizes=[('.big', 48), ('.huge', 56)])
-    css += sheet_css('/* harvested crops */', '.crop', 'crops.png', 9, 1, 24,
+    css += sheet_css('/* harvested crops */', '.crop', 'crops.png', 9, 1, 26,
                      [(f'.c-{e.lower()}', ei, 0) for ei, e in enumerate(ELEMENTS)],
                      sizes=[('.big', 40)])
 
@@ -363,52 +370,48 @@ def main():
     for key, (fname, cols, rows_n, idx) in UI_ICONS.items():
         ck = (fname, cols, rows_n)
         if ck not in gcache:
-            gcache[ck] = grid(fname, cols, rows_n)
+            gcache[ck] = sheet_cells(fname, cols, rows_n)
         g = gcache[ck]
-        cell = g[idx // cols][idx % cols]
-        ui_cells.append(harden(cut_bg(cell), UI_CELL))
+        ui_cells.append(fit(g[idx // cols][idx % cols], P))
         ui_keys.append(key)
     UICOLS = 8
     urows = (len(ui_keys) + UICOLS - 1) // UICOLS
-    pack(ui_cells, UICOLS, UI_CELL, 'ui-icons.png')
+    pack(ui_cells, UICOLS, P, 'ui-icons.png')
     icss = ['/* generated by tools/extract-new-art.py from the uploaded sheets.',
             '   Every cell is user-supplied art — the build draws no icons itself. */',
             '.ico{display:none;}']
-    icss += sheet_css('/* named ui icons */', '.ico', 'ui-icons.png', UICOLS, urows, 22,
+    icss += sheet_css('/* named ui icons */', '.ico', 'ui-icons.png', UICOLS, urows, 24,
                       [(f'.ico-{k}', i % UICOLS, i // UICOLS) for i, k in enumerate(ui_keys)],
-                      sizes=[('.big', 32), ('.huge', 46)])
-    # display:none base means unknown keys vanish; art keys re-enable
-    icss = [r.replace('display:inline-block', 'display:inline-block') for r in icss]
+                      sizes=[('.big', 34), ('.huge', 48)])
     open(os.path.join(ROOT, 'css', 'ui-icons.css'), 'w').write('\n'.join(icss) + '\n')
     print(f'ui-icons  {len(ui_keys)} icons: {" ".join(ui_keys)}')
 
     # ---- element icons ----
-    eg = grid(ELEM_SHEET[0], ELEM_SHEET[1], ELEM_SHEET[2])
-    ecells = [harden(cut_bg(eg[i // 3][i % 3]), UI_CELL) for i in range(9)]
-    pack(ecells, 9, UI_CELL, 'elements.png')
-    ecss = sheet_css('/* the 9 element icons */', '.elem', 'elements.png', 9, 1, 22,
+    eg = gcache.get((ELEM_SHEET[0], 3, 3)) or sheet_cells(ELEM_SHEET[0], 3, 3)
+    ecells = [fit(eg[i // 3][i % 3], P) for i in range(9)]
+    pack(ecells, 9, P, 'elements.png')
+    ecss = sheet_css('/* the 9 element icons */', '.elem', 'elements.png', 9, 1, 24,
                      [(f'.el-{e.lower()}', i, 0) for i, e in enumerate(ELEM_ORDER)],
-                     sizes=[('.big', 30), ('.huge', 44)])
+                     sizes=[('.big', 32), ('.huge', 46)])
     open(os.path.join(ROOT, 'css', 'elements.css'), 'w').write('\n'.join(ecss) + '\n')
     print('elements  9 icons')
 
     # ---- spell icons, packed element-major ----
     spells, by_elem = [], {}
     for (sheet, cols, rows_n), elems in ((SPELL_A, SPELL_A_ELEMS), (SPELL_B, SPELL_B_ELEMS)):
-        g = grid(sheet, cols, rows_n)
+        g = sheet_cells(sheet, cols, rows_n)
         for i, e in enumerate(elems):
-            by_elem.setdefault(e, []).append(harden(
-                cut_bg(g[i // cols][i % cols], strict=(e != 'Mystic')), SPELL_CELL))
+            by_elem.setdefault(e, []).append(fit(g[i // cols][i % cols], P))
     order = []
     for e in ELEM_ORDER + ['Ultimate']:
         for cell in by_elem.get(e, []):
             spells.append(cell); order.append(e)
     SCOLS = 8
     srows = (len(spells) + SCOLS - 1) // SCOLS
-    pack(spells, SCOLS, SPELL_CELL, 'skills.png')
-    scss = sheet_css('/* spell icons */', '.spell', 'skills.png', SCOLS, srows, 26,
+    pack(spells, SCOLS, P, 'skills.png')
+    scss = sheet_css('/* spell icons */', '.spell', 'skills.png', SCOLS, srows, 34,
                      [(f'.sp-{i}', i % SCOLS, i // SCOLS) for i in range(len(spells))],
-                     sizes=[('.big', 34), ('.huge', 48)])
+                     sizes=[('.big', 44), ('.huge', 56)])
     open(os.path.join(ROOT, 'css', 'skills.css'), 'w').write('\n'.join(scss) + '\n')
     ranges = {}
     for i, e in enumerate(order):
@@ -421,14 +424,14 @@ def main():
     # ---- attack moves: 10 per element, names from the manifest ----
     mv_cells, mv_meta = [], {}
     for ei, e in enumerate(ELEM_ORDER):
-        g = grid(os.path.join(MOVES_DIR, f'{e}_Attack_Moves.png'), 5, 2)
+        g = sheet_cells(os.path.join(MOVES_DIR, f'{e}_Attack_Moves.png'), 5, 2)
         for i in range(10):
-            mv_cells.append(harden(cut_bg(g[i // 5][i % 5], strict=(e != 'Mystic')), P))
+            mv_cells.append(fit(g[i // 5][i % 5], P))
         mv_meta[e] = {'row': ei, 'names': MOVE_NAMES[e]}
     pack(mv_cells, 10, P, 'moves.png')
-    mcss = sheet_css('/* attack-move icons: 10 per element */', '.move', 'moves.png', 10, 9, 26,
+    mcss = sheet_css('/* attack-move icons: 10 per element */', '.move', 'moves.png', 10, 9, 34,
                      [(f'.mv-{ei}-{i}', i, ei) for ei in range(9) for i in range(10)],
-                     sizes=[('.big', 34), ('.huge', 48)])
+                     sizes=[('.big', 44), ('.huge', 56)])
     open(os.path.join(ROOT, 'css', 'moves.css'), 'w').write('\n'.join(mcss) + '\n')
     open(os.path.join(ROOT, 'js', 'move-data.js'), 'w').write(
         '/* generated by tools/extract-new-art.py — names from the uploaded manifest */\n'
@@ -437,34 +440,35 @@ def main():
 
     # ---- the mentor NPC ----
     npc = Image.open(os.path.join(SRC, 'npc-mentor.png')).convert('RGBA')
-    a = np.asarray(npc)
-    if (a[..., 3] > 8).sum() < 0.02 * a.shape[0] * a.shape[1]:
-        npc = cut_bg(npc.convert('RGB'))
-    else:
-        npc = cut_bg(npc)
-    npc = harden(npc, 192)
+    arr = np.asarray(npc)
+    if (arr[..., 3] < 250).mean() < 0.02:            # no real alpha -> key it
+        npc = Image.fromarray(key_sheet(npc), 'RGBA')
+        bb = npc.split()[3].getbbox()
+        if bb:
+            npc = npc.crop(bb)
+    npc = fit(npc, 192)
     npc.save(os.path.join(OUT, 'npc.png'))
     print('npc       mentor sprite 192px')
 
     # ---- hobby / activity icons ----
     hob, names = [], []
     for path, keys in HOBBY_SHEETS:
-        g = grid(path, 5, 2)
+        g = sheet_cells(path, 5, 2)
         for r in range(2):
             for c in range(5):
-                hob.append(harden(cut_bg(g[r][c]), P))
+                hob.append(fit(g[r][c], P))
                 names.append(keys[r * 5 + c])
     cpath, ckeys = CURRENCY
-    g = grid(cpath, 4, 1)
+    g = sheet_cells(cpath, 4, 1)
     for c in range(4):
-        hob.append(harden(cut_bg(g[0][c]), P))
+        hob.append(fit(g[0][c], P))
         names.append(ckeys[c])
     HCOLS = 8
     hrows = (len(hob) + HCOLS - 1) // HCOLS
     pack(hob, HCOLS, P, 'hobby.png')
-    css += sheet_css('/* hobby icons */', '.hob', 'hobby.png', HCOLS, hrows, 24,
+    css += sheet_css('/* hobby icons */', '.hob', 'hobby.png', HCOLS, hrows, 26,
                      [(f'.h-{n}', i % HCOLS, i // HCOLS) for i, n in enumerate(names)],
-                     sizes=[('.big', 34), ('.huge', 48)])
+                     sizes=[('.big', 36), ('.huge', 48)])
 
     # keep the generated soil / fence / prop rules
     old = os.path.join(ROOT, 'css', 'farm-art.css')

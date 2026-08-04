@@ -1192,7 +1192,7 @@ button.hud-chip:active { transform: translateY(2px); }
 .skillrow .sname { font-size: 14.5px; }
 .skillrow .sdesc { font-size: 12.5px; color: var(--txt-dim); line-height: 1.5; }
 .skillrow .smeta { font-size: 12px; color: var(--gold); margin-top: 2px; }
-.skillrow .sicon { width: 26px; height: 26px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 1px solid var(--ink); }
+.skillrow .sicon { width: 44px; height: 44px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 1px solid var(--ink); }
 .passrow {
   display: flex; gap: 7px; align-items: center;
   background: var(--bg2); border: var(--px) solid var(--ink);
@@ -1531,13 +1531,13 @@ body, button { letter-spacing: 0; }
   display: inline-flex; align-items: center; gap: 4px;
   padding: 3px 8px 3px 5px;
 }
-.typebadge .elem { width: 16px; height: 16px; vertical-align: -3px; }
+.typebadge .elem { width: 20px; height: 20px; vertical-align: -4px; }
 
 /* ---- spell art inside skill rows and the cooldown strip ---- */
 .skillrow .sicon { display: flex; align-items: center; justify-content: center; overflow: hidden; }
-.skillrow .sicon .spell, .skillrow .sicon .move { width: 30px; height: 30px; }
-.cdrow .spell, .cdrow .move { width: 18px; height: 18px; flex: none; vertical-align: -4px; }
-.dfilter .elem { width: 18px; height: 18px; vertical-align: -4px; }
+.skillrow .sicon .spell, .skillrow .sicon .move { width: 42px; height: 42px; }
+.cdrow .spell, .cdrow .move { width: 26px; height: 26px; flex: none; vertical-align: -6px; }
+.dfilter .elem { width: 22px; height: 22px; vertical-align: -5px; }
 
 
 /* ---- chest drop (replaces the timing minigame) ---- */
