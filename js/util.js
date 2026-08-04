@@ -101,6 +101,13 @@ function typeBadges(types) {
 }
 function elemIcon(t, cls) { return `<i class="elem ${cls || ''} el-${String(t).toLowerCase()}"></i>`; }
 
+/* A move's own icon: element row x move index, from the uploaded sheets. */
+function moveIcon(type, idx, cls) {
+  const m = (window.MOVE_DATA || {})[type];
+  if (!m) return '';
+  return `<i class="move ${cls || ''} mv-${m.row}-${idx}"></i>`;
+}
+
 /* Deterministic skill artwork: same creature and slot always gets the same
    icon, drawn from the bank for that skill's element. */
 function skillIcon(type, seed, cls) {

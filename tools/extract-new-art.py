@@ -94,6 +94,16 @@ UI_ICONS = {
     'relic':   (CURRENCY[0], 4, 1, 2),     # rune egg
     'streak':  (CURRENCY[0], 4, 1, 3),     # flame
     'bolt':    (CURRENCY[0], 4, 1, 3),     # flame doubles for the x3 boost
+    # aliases for icon keys quests/habits use, mapped onto uploaded art
+    'water':   ('ADA4A098-562C-4C7B-A043-22FFEAEAB879.png', 3, 3, 1),  # water element
+    'muscle':  ('E5DB9555-D516-4E31-BBFA-6E3449678D48.png', 5, 2, 8),  # dumbbell
+    'walk':    ('E5DB9555-D516-4E31-BBFA-6E3449678D48.png', 5, 2, 5),  # running shoe
+    'cook':    ('E5DB9555-D516-4E31-BBFA-6E3449678D48.png', 5, 2, 3),  # chef hat
+    'palette': ('E5DB9555-D516-4E31-BBFA-6E3449678D48.png', 5, 2, 1),  # paint palette
+    'sunrise': ('E5DB9555-D516-4E31-BBFA-6E3449678D48.png', 5, 2, 9),  # meditation
+    'timer':   (UTIL_SHEET[0], 3, 3, 2),                               # play = start
+    'star':    ('moves/Mystic_Attack_Moves.png', 5, 2, 2),  # starfall
+    'paw':     (CURRENCY[0], 4, 1, 2),                                 # rune egg
 }
 UI_CELL = 64
 
@@ -118,12 +128,41 @@ SPELL_B_ELEMS = ['Fire', 'Fire', 'Fire', 'Water', 'Water', 'Ice',
                  'Metal', 'Metal', 'Metal', 'Fire', 'Earth', 'Shadow']
 SPELL_CELL = 64
 
+# ---- attack-move icons: one 5x2 sheet per element, names from the manifest ----
+MOVES_DIR = 'moves'
+MOVE_NAMES = {
+ 'Fire': ['Fireball Shot','Flame Blade Slash','Ember Meteor','Burning Wave','Magma Burst',
+          'Flame Ring Trap','Solar Beam','Firework Volley','Cinder Mine','Inferno Spiral'],
+ 'Water': ['Water Blade','Tidal Crash','Bubble Bomb','Whirlpool Trap','Water Cannon',
+           'Geyser Burst','Rain Spear Volley','Wave Ring','Splash Dash','Deep-Current Beam'],
+ 'Nature': ['Thorn Lash','Vine Snare','Seed Shot Volley','Leaf Blade','Pollen Burst',
+            'Spore Cloud','Root Quake','Bramble Cutter','Forest Cyclone','Fruit Bomb'],
+ 'Electric': ['Lightning Bolt','Chain Shock','Thunder Ring','Spark Mine','Plasma Orb',
+              'Electric Net','Storm Beam','Voltage Burst','Speed Dash Bolt','Thundercloud Strike'],
+ 'Ice': ['Ice Shard Shot','Frost Wave','Icicle Rain','Freeze Trap','Glacier Spike',
+         'Hail Barrage','Crystal Lance','Frozen Orb','Ice Ring','Blizzard Burst'],
+ 'Earth': ['Rock Throw','Boulder Drop','Stone Spike','Quake Ring','Sand Blast',
+           'Mud Trap','Rock Hammer Impact','Earth Wall Crush','Gravel Volley','Mountain Burst'],
+ 'Shadow': ['Shadow Blade','Void Orb','Dark Wave','Eclipse Beam','Curse Sigil',
+            'Smoke Burst','Shadow Chain','Black-Hole Pull','Night Spike','Silence Seal'],
+ 'Mystic': ['Arcane Bolt','Rune Burst','Starfall','Portal Strike','Dream Wave',
+            'Tarot Slash','Cosmic Spiral','Astral Orb','Magic Circle Blast','Fate Needle Volley'],
+ 'Metal': ['Steel Blade Slash','Gear Saw','Metal Shard Volley','Magnetic Pulse','Chain Hook Strike',
+           'Iron Cannon Shot','Drill Burst','Metal Storm','Gear Trap','Anvil Drop'],
+}
+
 
 # ---------------------------------------------------------------- cutting out
-def cut_bg(cell, tol=58):
+def cut_bg(cell, tol=58, strict=False):
     """Drop the flat sheet background and any hole it fills (a ring's centre is
     background too, and it never touches the border). Then drop specks that
-    bled in from a neighbouring cell of the source grid."""
+    bled in from a neighbouring cell of the source grid.
+
+    strict: additionally kill EVERY bg-coloured pixel, connected or not — for
+    magenta-key sheets whose art never legitimately contains the key colour.
+    (An enclosed pocket smaller than the hole threshold survived inside
+    Electric's Storm Beam and several Fire spell icons otherwise.) Never use
+    it on Mystic cells: their pinks sit within tolerance of the magenta key."""
     a = np.asarray(cell.convert('RGB')).astype(int)
     h, w = a.shape[:2]
     corners = np.array([a[1, 1], a[1, w - 2], a[h - 2, 1], a[h - 2, w - 2]])
@@ -157,6 +196,8 @@ def cut_bg(cell, tol=58):
             if sizes[i] < 0.02 * biggest and (lab2 == i + 1)[edge].any():
                 keep &= lab2 != i + 1
 
+    if strict:
+        keep &= ~near
     out = np.dstack([a, np.where(keep, 255, 0)]).astype(np.uint8)
     return Image.fromarray(out, 'RGBA')
 
@@ -246,9 +287,38 @@ def pack(cells, cols, size, path, colours=96):
     return out
 
 
+def sheet_css(header, cls, png, cols, rows, base_px, entries, sizes=(), valign=0.22):
+    """Scale-invariant sprite CSS.
+
+    Positions are percentages, so a rule that overrides width/height (or any
+    future size variant) still crops the right cell. The previous px-based
+    emission broke every badge that resized an icon: position stayed tuned to
+    the base size while the cell shrank, drifting the crop by one cell per
+    index — the "element icons bug a lot" report.
+
+    entries: [(suffix, col, row)], e.g. ('.el-fire', 0, 0).
+    sizes:   [(extra_class, px)] size variants — width/height only.
+    """
+    out = [header]
+    grp = ','.join(f'{cls}{sfx}' for sfx, _, _ in entries)
+    out.append(f'{grp}{{display:inline-block;flex:none;'
+               f'width:{base_px}px;height:{base_px}px;'
+               f'background-image:url(../assets/ui/{png});'
+               f'background-size:{cols * 100}% {rows * 100}%;'
+               f'image-rendering:pixelated;'
+               f'vertical-align:-{round(base_px * valign)}px;}}')
+    for sfx, c, r in entries:
+        x = 0 if cols == 1 else round(c / (cols - 1) * 10000) / 100
+        y = 0 if rows == 1 else round(r / (rows - 1) * 10000) / 100
+        out.append(f'{cls}{sfx}{{background-position:{x}% {y}%;}}')
+    for extra, px in sizes:
+        out.append(f'{cls}{extra}{{width:{px}px;height:{px}px;'
+                   f'vertical-align:-{round(px * valign)}px;}}')
+    return out
+
+
 def main():
-    css = ['/* generated by tools/extract-new-art.py — do not hand-edit */']
-    P = 64          # packed cell size for gear / plants / hobby
+    P = 64          # packed cell size
 
     # ---- gear: 6 categories x 9 tiers ----
     gear = []
@@ -256,18 +326,13 @@ def main():
         g = grid(path, 4, 5)
         flat = [g[r][c] for r in range(5) for c in range(4)]
         for t in TIER_PICK:
-            gear.append(harden(cut_bg(flat[t]), P))
+            gear.append(harden(cut_bg(flat[t], strict=True), P))
     pack(gear, 9, P, 'gear.png')
-    css.append(f'.gear{{width:32px;height:32px;background-image:url(../assets/ui/gear.png);'
-               f'background-size:{9 * 32}px auto;image-rendering:pixelated;'
-               f'display:inline-block;flex:none;}}')
-    for gi, (_, key, _) in enumerate(GEAR_SHEETS):
-        for t in range(9):
-            css.append(f'.gear.g-{key}.t{t + 1}{{background-position:-{t * 32}px -{gi * 32}px;}}')
-    css.append(f'.gear.big{{width:44px;height:44px;background-size:{9 * 44}px auto;}}')
-    for gi, (_, key, _) in enumerate(GEAR_SHEETS):
-        for t in range(9):
-            css.append(f'.gear.big.g-{key}.t{t + 1}{{background-position:-{t * 44}px -{gi * 44}px;}}')
+    css = ['/* generated by tools/extract-new-art.py — do not hand-edit */']
+    css += sheet_css('/* gear: 6 categories x 9 tiers */', '.gear', 'gear.png', 9, len(GEAR_SHEETS), 32,
+                     [(f'.g-{key}.t{t + 1}', t, gi) for gi, (_, key, _) in enumerate(GEAR_SHEETS)
+                      for t in range(9)],
+                     sizes=[('.big', 44)])
 
     # ---- plants: 9 elements x 4 stages, plus the harvested crop items ----
     cache = {}
@@ -284,26 +349,13 @@ def main():
         crops.append(harden(cut_bg(g[3][col]), 48))
     pack(plants, 4, P, 'plants.png')
     pack(crops, 9, 48, 'crops.png')
-
-    css.append(f'.plant{{width:32px;height:32px;background-image:url(../assets/ui/plants.png);'
-               f'background-size:{4 * 32}px auto;image-rendering:pixelated;display:inline-block;}}')
-    for ei, e in enumerate(ELEMENTS):
-        for s in range(4):
-            css.append(f'.plant.p-{e.lower()}.s{s}{{background-position:-{s * 32}px -{ei * 32}px;}}')
-    for scale, name in ((48, 'big'), (56, 'huge')):
-        css.append(f'.plant.{name}{{width:{scale}px;height:{scale}px;background-size:{4 * scale}px auto;}}')
-        for ei, e in enumerate(ELEMENTS):
-            for s in range(4):
-                css.append(f'.plant.{name}.p-{e.lower()}.s{s}'
-                           f'{{background-position:-{s * scale}px -{ei * scale}px;}}')
-
-    css.append(f'.crop{{width:24px;height:24px;background-image:url(../assets/ui/crops.png);'
-               f'background-size:{9 * 24}px auto;image-rendering:pixelated;display:inline-block;flex:none;}}')
-    for ei, e in enumerate(ELEMENTS):
-        css.append(f'.crop.c-{e.lower()}{{background-position:-{ei * 24}px 0;}}')
-    css.append(f'.crop.big{{width:40px;height:40px;background-size:{9 * 40}px auto;}}')
-    for ei, e in enumerate(ELEMENTS):
-        css.append(f'.crop.big.c-{e.lower()}{{background-position:-{ei * 40}px 0;}}')
+    css += sheet_css('/* plants: 9 elements x 4 growth stages */', '.plant', 'plants.png', 4, 9, 32,
+                     [(f'.p-{e.lower()}.s{st}', st, ei) for ei, e in enumerate(ELEMENTS)
+                      for st in range(4)],
+                     sizes=[('.big', 48), ('.huge', 56)])
+    css += sheet_css('/* harvested crops */', '.crop', 'crops.png', 9, 1, 24,
+                     [(f'.c-{e.lower()}', ei, 0) for ei, e in enumerate(ELEMENTS)],
+                     sizes=[('.big', 40)])
 
     # ---- the UI icon set, entirely from uploaded art ----
     ui_keys, ui_cells = [], []
@@ -317,71 +369,47 @@ def main():
         ui_cells.append(harden(cut_bg(cell), UI_CELL))
         ui_keys.append(key)
     UICOLS = 8
+    urows = (len(ui_keys) + UICOLS - 1) // UICOLS
     pack(ui_cells, UICOLS, UI_CELL, 'ui-icons.png')
-    # A bare `.ico` renders as nothing: only a key that exists in the uploaded
-    # art turns it into a box, so an icon name with no artwork vanishes cleanly
-    # instead of leaving a broken empty square.
-    #
-    # The url() lives on ONE grouped selector per size, not on every key: the
-    # bundler inlines the sheet at each url(), so repeating it across 19 keys x
-    # 3 sizes embedded the same PNG 57 times and added 1.6MB to the build.
     icss = ['/* generated by tools/extract-new-art.py from the uploaded sheets.',
             '   Every cell is user-supplied art — the build draws no icons itself. */',
             '.ico{display:none;}']
-    for size, sel in ((22, ''), (32, '.big'), (46, '.huge')):
-        group = ','.join(f'.ico{sel}.ico-{k}' for k in ui_keys)
-        icss.append(
-            f'{group}{{display:inline-block;flex:none;'
-            f'width:{size}px;height:{size}px;'
-            f'background-image:url(../assets/ui/ui-icons.png);'
-            f'background-size:{UICOLS * size}px auto;'
-            f'image-rendering:pixelated;vertical-align:-{round(size * 0.22)}px;}}')
-        for i, k in enumerate(ui_keys):
-            icss.append(f'.ico{sel}.ico-{k}{{background-position:'
-                        f'-{(i % UICOLS) * size}px -{(i // UICOLS) * size}px;}}')
+    icss += sheet_css('/* named ui icons */', '.ico', 'ui-icons.png', UICOLS, urows, 22,
+                      [(f'.ico-{k}', i % UICOLS, i // UICOLS) for i, k in enumerate(ui_keys)],
+                      sizes=[('.big', 32), ('.huge', 46)])
+    # display:none base means unknown keys vanish; art keys re-enable
+    icss = [r.replace('display:inline-block', 'display:inline-block') for r in icss]
     open(os.path.join(ROOT, 'css', 'ui-icons.css'), 'w').write('\n'.join(icss) + '\n')
-    print(f'ui-icons  {len(ui_keys)} icons from uploaded sheets: {" ".join(ui_keys)}')
+    print(f'ui-icons  {len(ui_keys)} icons: {" ".join(ui_keys)}')
 
     # ---- element icons ----
     eg = grid(ELEM_SHEET[0], ELEM_SHEET[1], ELEM_SHEET[2])
     ecells = [harden(cut_bg(eg[i // 3][i % 3]), UI_CELL) for i in range(9)]
     pack(ecells, 9, UI_CELL, 'elements.png')
-    ecss = ['/* generated by tools/extract-new-art.py from the uploaded element sheet */']
-    for size, sel in ((22, ''), (30, '.big'), (44, '.huge')):
-        grp = ','.join(f'.elem{sel}.el-{e.lower()}' for e in ELEM_ORDER)
-        ecss.append(f'{grp}{{display:inline-block;flex:none;width:{size}px;height:{size}px;'
-                    f'background-image:url(../assets/ui/elements.png);'
-                    f'background-size:{9 * size}px auto;image-rendering:pixelated;'
-                    f'vertical-align:-{round(size * 0.22)}px;}}')
-        for i, e in enumerate(ELEM_ORDER):
-            ecss.append(f'.elem{sel}.el-{e.lower()}{{background-position:-{i * size}px 0;}}')
+    ecss = sheet_css('/* the 9 element icons */', '.elem', 'elements.png', 9, 1, 22,
+                     [(f'.el-{e.lower()}', i, 0) for i, e in enumerate(ELEM_ORDER)],
+                     sizes=[('.big', 30), ('.huge', 44)])
     open(os.path.join(ROOT, 'css', 'elements.css'), 'w').write('\n'.join(ecss) + '\n')
-    print(f'elements  9 icons')
+    print('elements  9 icons')
 
-    # ---- spell icons, packed element-major so a creature can pick by type ----
+    # ---- spell icons, packed element-major ----
     spells, by_elem = [], {}
     for (sheet, cols, rows_n), elems in ((SPELL_A, SPELL_A_ELEMS), (SPELL_B, SPELL_B_ELEMS)):
         g = grid(sheet, cols, rows_n)
         for i, e in enumerate(elems):
-            by_elem.setdefault(e, []).append(harden(cut_bg(g[i // cols][i % cols]), SPELL_CELL))
+            by_elem.setdefault(e, []).append(harden(
+                cut_bg(g[i // cols][i % cols], strict=(e != 'Mystic')), SPELL_CELL))
     order = []
     for e in ELEM_ORDER + ['Ultimate']:
         for cell in by_elem.get(e, []):
             spells.append(cell); order.append(e)
     SCOLS = 8
+    srows = (len(spells) + SCOLS - 1) // SCOLS
     pack(spells, SCOLS, SPELL_CELL, 'skills.png')
-    scss = ['/* generated by tools/extract-new-art.py from the uploaded spell sheets */']
-    for size, sel in ((26, ''), (34, '.big'), (48, '.huge')):
-        grp = ','.join(f'.spell{sel}.sp-{i}' for i in range(len(spells)))
-        scss.append(f'{grp}{{display:inline-block;flex:none;width:{size}px;height:{size}px;'
-                    f'background-image:url(../assets/ui/skills.png);'
-                    f'background-size:{SCOLS * size}px auto;image-rendering:pixelated;'
-                    f'vertical-align:-{round(size * 0.22)}px;}}')
-        for i in range(len(spells)):
-            scss.append(f'.spell{sel}.sp-{i}{{background-position:'
-                        f'-{(i % SCOLS) * size}px -{(i // SCOLS) * size}px;}}')
+    scss = sheet_css('/* spell icons */', '.spell', 'skills.png', SCOLS, srows, 26,
+                     [(f'.sp-{i}', i % SCOLS, i // SCOLS) for i in range(len(spells))],
+                     sizes=[('.big', 34), ('.huge', 48)])
     open(os.path.join(ROOT, 'css', 'skills.css'), 'w').write('\n'.join(scss) + '\n')
-    # which sprite indices belong to which element, for deterministic assignment
     ranges = {}
     for i, e in enumerate(order):
         ranges.setdefault(e, []).append(i)
@@ -390,11 +418,28 @@ def main():
         + json.dumps(ranges) + ';\n')
     print('skills    ' + ' '.join(f'{e}:{len(v)}' for e, v in ranges.items()))
 
+    # ---- attack moves: 10 per element, names from the manifest ----
+    mv_cells, mv_meta = [], {}
+    for ei, e in enumerate(ELEM_ORDER):
+        g = grid(os.path.join(MOVES_DIR, f'{e}_Attack_Moves.png'), 5, 2)
+        for i in range(10):
+            mv_cells.append(harden(cut_bg(g[i // 5][i % 5], strict=(e != 'Mystic')), P))
+        mv_meta[e] = {'row': ei, 'names': MOVE_NAMES[e]}
+    pack(mv_cells, 10, P, 'moves.png')
+    mcss = sheet_css('/* attack-move icons: 10 per element */', '.move', 'moves.png', 10, 9, 26,
+                     [(f'.mv-{ei}-{i}', i, ei) for ei in range(9) for i in range(10)],
+                     sizes=[('.big', 34), ('.huge', 48)])
+    open(os.path.join(ROOT, 'css', 'moves.css'), 'w').write('\n'.join(mcss) + '\n')
+    open(os.path.join(ROOT, 'js', 'move-data.js'), 'w').write(
+        '/* generated by tools/extract-new-art.py — names from the uploaded manifest */\n'
+        'window.MOVE_DATA = ' + json.dumps(mv_meta) + ';\n')
+    print(f'moves     {len(mv_cells)} icons, 10 per element')
+
     # ---- the mentor NPC ----
     npc = Image.open(os.path.join(SRC, 'npc-mentor.png')).convert('RGBA')
     a = np.asarray(npc)
     if (a[..., 3] > 8).sum() < 0.02 * a.shape[0] * a.shape[1]:
-        npc = cut_bg(npc.convert('RGB'))          # sheet had no usable alpha
+        npc = cut_bg(npc.convert('RGB'))
     else:
         npc = cut_bg(npc)
     npc = harden(npc, 192)
@@ -414,18 +459,12 @@ def main():
     for c in range(4):
         hob.append(harden(cut_bg(g[0][c]), P))
         names.append(ckeys[c])
-    COLS = 8
-    pack(hob, COLS, P, 'hobby.png')
-    for scale, sel in ((24, '.hob'), (34, '.hob.big'), (48, '.hob.huge')):
-        if sel == '.hob':
-            css.append(f'.hob{{width:24px;height:24px;background-image:url(../assets/ui/hobby.png);'
-                       f'background-size:{COLS * 24}px auto;image-rendering:pixelated;'
-                       f'display:inline-block;flex:none;vertical-align:-5px;}}')
-        else:
-            css.append(f'{sel}{{width:{scale}px;height:{scale}px;background-size:{COLS * scale}px auto;}}')
-        for i, n in enumerate(names):
-            css.append(f'{sel}.h-{n}{{background-position:'
-                       f'-{(i % COLS) * scale}px -{(i // COLS) * scale}px;}}')
+    HCOLS = 8
+    hrows = (len(hob) + HCOLS - 1) // HCOLS
+    pack(hob, HCOLS, P, 'hobby.png')
+    css += sheet_css('/* hobby icons */', '.hob', 'hobby.png', HCOLS, hrows, 24,
+                     [(f'.h-{n}', i % HCOLS, i // HCOLS) for i, n in enumerate(names)],
+                     sizes=[('.big', 34), ('.huge', 48)])
 
     # keep the generated soil / fence / prop rules
     old = os.path.join(ROOT, 'css', 'farm-art.css')

@@ -709,8 +709,10 @@ const UI = (() => {
       const meters = [];
       p.skills.forEach(sk => {
         const row = el('div', 'cdrow');
-        row.innerHTML = `${skillIcon(sk.type || 'Ultimate', p.cid + sk.name)}` +
-          `<span class="cdname">${sk.name}</span><span class="cdmeter"><i></i></span>`;
+        const art = sk.moveIdx != null ? moveIcon(sk.type, sk.moveIdx)
+                                       : skillIcon(sk.type || 'Ultimate', p.cid + sk.name);
+        row.innerHTML = `${art}<span class="cdname">${sk.name}</span>` +
+          `<span class="cdmeter"><i></i></span>`;
         bars.appendChild(row);
         meters.push(row.querySelector('.cdmeter'));
       });
@@ -823,63 +825,40 @@ const UI = (() => {
   }
   function hideDefeat() { $('#defeat-overlay').classList.add('hidden'); }
 
-  /* ----- roadside encounter minigame ----- */
-  let encTimer = null;
+  /* ----- a chest simply drops; tap it (or wait) to open ----- */
+  let chestTimer = null;
   function showEncounter() {
     const o = $('#encounter-overlay');
     if (!o.classList.contains('hidden')) return;
     o.classList.remove('hidden');
-    let taps = 0, hits = 0;
     o.innerHTML = `
-      <h3>${icon('chest')} A buried cache!</h3>
-      <div class="enc-sub">Tap when the light crosses the gold zone — 3 tries.</div>
-      <div class="enc-bar"><div class="zone"></div><div class="zone sweet"></div><div class="cursor"></div></div>
-      <div class="enc-hits"></div>`;
-    const bar = o.querySelector('.enc-bar');
-    const cursor = o.querySelector('.cursor');
-    const zone = o.querySelector('.zone');
-    const sweet = o.querySelector('.zone.sweet');
-    const hitsEl = o.querySelector('.enc-hits');
-    const z0 = rnd(30, 55), zw = 24, sw = 8;
-    zone.style.left = z0 + '%'; zone.style.width = zw + '%';
-    sweet.style.left = (z0 + zw / 2 - sw / 2) + '%'; sweet.style.width = sw + '%';
-    let t0 = performance.now();
-    const speed = 1100;
-    function anim(now) {
-      const t = ((now - t0) % speed) / speed;
-      const x = t < 0.5 ? t * 2 : (1 - t) * 2;
-      cursor.style.left = (x * 96) + '%';
-      if (!o.classList.contains('hidden')) requestAnimationFrame(anim);
-    }
-    requestAnimationFrame(anim);
-    bar.onclick = () => {
-      if (taps >= 3) return;
-      taps++;
-      const cx = parseFloat(cursor.style.left);
-      const inSweet = cx >= z0 + zw / 2 - sw / 2 - 1 && cx <= z0 + zw / 2 + sw / 2 - 1;
-      const inZone = cx >= z0 - 1 && cx <= z0 + zw - 1;
-      if (inSweet) { hits += 2; hitsEl.textContent += ' PERFECT!'; Sound.quest(); }
-      else if (inZone) { hits += 1; hitsEl.textContent += ' good.'; Sound.coin(); }
-      else { hitsEl.textContent += ' miss…'; Sound.hit(); }
-      if (taps >= 3) {
-        clearTimeout(encTimer);
-        setTimeout(() => finishEncounter(hits), 500);
-      }
+      <div class="chestdrop">
+        <i class="ico huge ico-chest"></i>
+        <div class="chest-tap">A chest! Tap to open</div>
+      </div>`;
+    let opened = false;
+    const open = () => {
+      if (opened) return;
+      opened = true;
+      clearTimeout(chestTimer);
+      const box = o.querySelector('.chestdrop');
+      const r = box.getBoundingClientRect();
+      const sr = $('#scene').getBoundingClientRect();
+      VFX.anim('sparkring', r.left - sr.left + r.width / 2,
+               r.top - sr.top + r.height / 2, { scale: 1.6, fps: 16 });
+      coinBurst(box, 8);
+      Sound.quest();
+      const gold = grantGold(Math.floor(rnd(60, 140) * Math.pow(1.2, globalStage())));
+      const bits = [`+${fmt(gold)} gold`];
+      if (Math.random() < 0.6) { grantSeeds(1); bits.push('+1 seed'); }
+      if (Math.random() < 0.35) { grantGems(3); bits.push('+3 gems'); }
+      box.classList.add('opened');
+      box.querySelector('.chest-tap').textContent = bits.join('  ·  ');
+      setTimeout(() => { o.classList.add('hidden'); renderHud(); }, 1100);
     };
-    clearTimeout(encTimer);
-    encTimer = setTimeout(() => finishEncounter(hits), 9000);
-  }
-  function finishEncounter(hits) {
-    const o = $('#encounter-overlay');
-    if (o.classList.contains('hidden')) return;
-    o.classList.add('hidden');
-    const gold = grantGold(Math.floor((30 + hits * 45) * Math.pow(1.2, globalStage())));
-    const bits = [`+${fmt(gold)} gold`];
-    if (hits >= 3) { grantSeeds(1); bits.push('+1 seed'); }
-    if (hits >= 5) { grantGems(2); bits.push('+2 gems'); }
-    toast(`Cache opened: ${bits.join(', ')}`, 'gold');
-    confetti(16);
-    renderHud();
+    o.onclick = open;
+    clearTimeout(chestTimer);
+    chestTimer = setTimeout(open, 5000);       // opens itself if ignored
   }
 
   /* ----- quest log on the battle screen ----- */
@@ -1177,12 +1156,19 @@ const UI = (() => {
       }).join('') + '</div>';
     }
 
-    const skills = kit.skills.map(sk => `
-      <div class="skillrow">
-        <div class="sicon" style="background:${TYPE_COLORS[sk.type] || '#666'}">${skillIcon(sk.type, cid + sk.name)}</div>
-        <div><div class="sname">${sk.name}</div><div class="sdesc">${sk.desc}</div>
-        <div class="smeta">${Math.round(sk.power * 100)}% power · ${sk.cd}s cooldown · ${sk.type}</div></div>
-      </div>`).join('');
+    const skills = kit.skills.map(sk => {
+      const isMove = sk.moveIdx != null;
+      const lockedMv = sk.unlockLv && lvl < sk.unlockLv;
+      const art = isMove ? moveIcon(sk.type, sk.moveIdx) : skillIcon(sk.type, cid + sk.name);
+      return `
+      <div class="skillrow ${isMove ? 'moverow' : ''} ${lockedMv ? 'locked-move' : ''}">
+        <div class="sicon" style="background:${TYPE_COLORS[sk.type] || '#666'}">${art}</div>
+        <div><div class="sname">${sk.name}${isMove ? ' <span class="mvtag">MOVE</span>' : ''}</div>
+        <div class="sdesc">${sk.desc}</div>
+        <div class="smeta">${Math.round(sk.power * 100)}% power · ${sk.cd}s cooldown ·
+          ${lockedMv ? `unlocks at Lv.${sk.unlockLv}` : sk.type}</div></div>
+      </div>`;
+    }).join('');
 
     let graftHtml = '';
     if (owned && inst.graft && C_BY_ID[inst.graft]) {
@@ -1632,54 +1618,42 @@ const UI = (() => {
     $('#pity-note').textContent = `Guaranteed rare+ within ${left} pull${left > 1 ? 's' : ''} · x10 always contains a rare+ · ${S.summons.total} total pulls`;
   }
 
-  /* ----- wish animation + results ----- */
+  /* ----- summoning: a rune circle of the nine elements ----- */
   function playWish(banner, results) {
     const o = $('#wish-overlay');
     o.classList.remove('hidden');
-    o.innerHTML = '<canvas></canvas><div class="wish-tap">tap to skip</div>';
-    const cv = o.querySelector('canvas');
-    cv.width = o.clientWidth; cv.height = o.clientHeight;
-    const ctx = cv.getContext('2d');
     const best = results.reduce((m, r) => {
       const ri = r.c ? RARITY_ORDER.indexOf(r.c.rarity) : 2;
       return Math.max(m, ri);
     }, 0);
-    const color = best >= 4 ? '#ffce4f' : best >= 3 ? '#bd8bff' : best >= 2 ? '#5aa2e8' : '#c7d4e8';
-    let t0 = performance.now(), done = false;
-    const trail = [];
-    function frame(now) {
+    const color = best >= 4 ? '#ffc247' : best >= 3 ? '#b47cff' : best >= 2 ? '#45a6ff' : '#aab4d8';
+    const els = ['fire', 'water', 'nature', 'electric', 'ice', 'earth', 'shadow', 'mystic', 'metal'];
+    o.innerHTML = `
+      <div class="rune-stage" style="--rune:${color}">
+        <div class="rune-ring">${els.map((e, i) =>
+          `<i class="elem huge el-${e}" style="--i:${i}"></i>`).join('')}</div>
+        <div class="rune-core"><i class="ico huge ico-portal"></i></div>
+        <div class="rune-flash"></div>
+      </div>
+      <div class="wish-tap">tap to skip</div>`;
+    Sound.summon();
+    let done = false;
+    const finish = () => {
       if (done) return;
-      const t = (now - t0) / 1100;
-      ctx.fillStyle = 'rgba(18,10,4,.32)';
-      ctx.fillRect(0, 0, cv.width, cv.height);
-      const x = cv.width * (t * 1.15 - 0.06);
-      const y = cv.height * (0.72 - 0.45 * t) + Math.sin(t * 9) * 14;
-      trail.push({ x, y });
-      for (let i = 0; i < trail.length; i++) {
-        const p = trail[i];
-        const s = 3 + (i / trail.length) * 9;
-        ctx.fillStyle = i === trail.length - 1 ? '#fff' : color;
-        ctx.globalAlpha = i / trail.length;
-        ctx.fillRect(Math.round(p.x / 3) * 3, Math.round(p.y / 3) * 3, s, s);
-      }
-      ctx.globalAlpha = 1;
-      if (t >= 1) {
-        ctx.fillStyle = color;
-        ctx.fillRect(0, 0, cv.width, cv.height);
-        setTimeout(() => { if (!done) closeWish(); }, 120);
-        return;
-      }
-      requestAnimationFrame(frame);
-    }
-    function closeWish() {
       done = true;
       o.classList.add('hidden');
       o.innerHTML = '';
       showPullResults(banner, results);
-    }
-    o.onclick = closeWish;
-    requestAnimationFrame(frame);
-    Sound.summon();
+    };
+    o.onclick = finish;
+    // converge, flash, reveal — timed to the CSS keyframes
+    setTimeout(() => { const st = o.querySelector('.rune-stage'); if (st) st.classList.add('converge'); }, 900);
+    setTimeout(() => {
+      const st = o.querySelector('.rune-stage');
+      if (st) st.classList.add('flashing');
+      VFX.kick(6, 260);
+    }, 1650);
+    setTimeout(finish, 2050);
   }
 
   function showPullResults(banner, results) {

@@ -232,7 +232,79 @@ const VFX = (() => {
   }
 
   /* ---------- composed effects ---------- */
+  /* One recipe per move family, keyed off the manifest name — a Volley rains
+     projectiles, a Beam cuts sideways, a Quake shakes the ground. All composed
+     from the drawn frames plus palette particles, so all 90 moves land with a
+     distinct, readable effect. */
+  function castMove(el, idx, x, y, power) {
+    const key = String(el).toLowerCase();
+    const bank = (window.MOVE_DATA || {})[el];
+    const name = (bank && bank.names[idx] || '').toLowerCase();
+    const P = power || 1;
+    const has = w => name.indexOf(w) >= 0;
+    shockwave(x, y, key, 44 * P);
+    if (has('volley') || has('rain') || has('barrage') || has('hail') || has('firework')) {
+      for (let i = 0; i < 3; i++) {
+        setTimeout(() => {
+          comet(x + rnd(-70, 70), y - 150, x + rnd(-26, 26), y, key, 22);
+          burst(x + rnd(-24, 24), y + rnd(-6, 8), key, 9, 2.8);
+        }, i * 110);
+      }
+      anim('sparkring', x, y, { scale: 1.05, fps: 20, alpha: 0.9 });
+    } else if (has('beam') || has('cannon')) {
+      anim('bolt', x - 8, y - 4, { spin: -0.85, scale: 1.5, fps: 16 });
+      comet(x - 150, y - 6, x, y, key, 26);
+      screenFlash((PAL[key] || PAL.mystic)[1], 120);
+    } else if (has('ring') || has('trap') || has('net') || has('seal') ||
+               has('sigil') || has('circle') || has('snare')) {
+      ring(x, y, key, 18, 42, 1.4);
+      anim('sparkring', x, y, { scale: 1.6, fps: 13, glow: 0.75 });
+    } else if (has('wave') || has('tidal') || has('crash') || has('current')) {
+      anim('swirl', x - 16, y, { scale: 1.45, fps: 15 });
+      shockwave(x, y, key, 78 * P, 1.6);
+      burst(x, y + 8, key, 14, 3.4, { grav: 0.16 });
+    } else if (has('orb') || has('bomb') || has('mine') || has('pulse') || has('hole')) {
+      anim('sparkring', x, y, { scale: 1.4, fps: 15 });
+      burst(x, y, key, 22 * P, 4.2);
+      stop(55);
+    } else if (has('blade') || has('slash') || has('cutter') || has('saw') || has('lash')) {
+      anim(Math.random() < 0.5 ? 'arc' : 'claw', x, y,
+           { scale: 1.3, fps: 19, flip: Math.random() < 0.5 });
+      burst(x, y, key, 9, 3.4);
+    } else if (has('spike') || has('shard') || has('lance') || has('icicle') ||
+               has('spear') || has('needle') || has('drill') || has('thorn')) {
+      shards(x, y, key, 17);
+      anim('claw', x, y, { scale: 1.1, fps: 21, flip: true });
+    } else if (has('dash') || has('rush') || has('hook')) {
+      anim('scratch', x, y, { scale: 1.25, fps: 22 });
+      comet(x - 120, y + 6, x, y, key, 24);
+    } else if (has('quake') || has('hammer') || has('anvil') || has('drop') ||
+               has('crush') || has('throw') || has('boulder') || has('rock') ||
+               has('wall') || has('mountain') || has('impact')) {
+      anim('rubble', x, y - 8, { scale: 1.3, fps: 15 });
+      setTimeout(() => anim('ground', x, y + 16, { scale: 1.35, fps: 15, alpha: 0.95 }), 140);
+      anim('dust', x, y + 18, { scale: 1.2, fps: 13, alpha: 0.8 });
+      kick(4, 220);
+    } else if (has('storm') || has('cloud') || has('thunder') || has('shock') ||
+               has('bolt') || has('strike')) {
+      anim('bolt', x, y - 10, { scale: 1.35, fps: 17 });
+      burst(x, y, key, 13, 3.2);
+      kick(3, 150);
+    } else if (has('spiral') || has('cyclone') || has('whirl')) {
+      anim('swirl', x, y, { scale: 1.4, fps: 16, spin: 0.4 });
+      ring(x, y, key, 12, 30, 1.8);
+    } else {
+      cast(key, x, y, P);
+      return;
+    }
+    start();
+  }
+
   function cast(kind, x, y, power) {
+    if (typeof kind === 'string' && kind.indexOf('move:') === 0) {
+      const bits = kind.split(':');
+      return castMove(bits[1], +bits[2] || 0, x, y, power);
+    }
     power = power || 1;
     // the drawn frames are the effect now — particles below just add grit
     const drawn = FOR_KIND[kind];

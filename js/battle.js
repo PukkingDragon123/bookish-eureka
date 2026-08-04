@@ -150,8 +150,9 @@ const Battle = (() => {
 
   function skillListFor(cid) {
     const kit = Lore.kit(cid);
-    const list = kit.skills.slice();
     const inst = S.beasts[cid];
+    const lvl = inst ? inst.level : 1;
+    const list = kit.skills.filter(sk => !sk.unlockLv || lvl >= sk.unlockLv);
     if (inst && inst.graft && C_BY_ID[inst.graft]) {
       const g = Lore.kit(inst.graft).skills[1];
       list.push(Object.assign({}, g, { cd: g.cd * 1.4, graft: true }));
@@ -406,7 +407,8 @@ const Battle = (() => {
       cid,
       skills: skillListFor(cid).map((sk, i) => {
         const left = cds[cid + '_' + i] || 0;
-        return { name: sk.name, cd: sk.cd, left, frac: clamp(1 - left / sk.cd, 0, 1) };
+        return { name: sk.name, cd: sk.cd, left, frac: clamp(1 - left / sk.cd, 0, 1),
+                 type: sk.type, moveIdx: sk.moveIdx };
       }),
     }));
   }

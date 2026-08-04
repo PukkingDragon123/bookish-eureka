@@ -1,0 +1,111 @@
+ELEMENTAL ATTACK MOVE ICONS — MOVE ORDER
+
+Each sheet is 5 columns x 2 rows. Read left to right across the top row, then left to right across the bottom row.
+
+FIRE — Fire_Attack_Moves.png
+1. Fireball Shot
+2. Flame Blade Slash
+3. Ember Meteor
+4. Burning Wave
+5. Magma Burst
+6. Flame Ring Trap
+7. Solar Beam
+8. Firework Volley
+9. Cinder Mine
+10. Inferno Spiral
+
+WATER — Water_Attack_Moves.png
+1. Water Blade
+2. Tidal Crash
+3. Bubble Bomb
+4. Whirlpool Trap
+5. Water Cannon
+6. Geyser Burst
+7. Rain Spear Volley
+8. Wave Ring
+9. Splash Dash
+10. Deep-Current Beam
+
+NATURE — Nature_Attack_Moves.png
+1. Thorn Lash
+2. Vine Snare
+3. Seed Shot Volley
+4. Leaf Blade
+5. Pollen Burst
+6. Spore Cloud
+7. Root Quake
+8. Bramble Cutter
+9. Forest Cyclone
+10. Fruit Bomb
+
+ELECTRIC — Electric_Attack_Moves.png
+1. Lightning Bolt
+2. Chain Shock
+3. Thunder Ring
+4. Spark Mine
+5. Plasma Orb
+6. Electric Net
+7. Storm Beam
+8. Voltage Burst
+9. Speed Dash Bolt
+10. Thundercloud Strike
+
+ICE — Ice_Attack_Moves.png
+1. Ice Shard Shot
+2. Frost Wave
+3. Icicle Rain
+4. Freeze Trap
+5. Glacier Spike
+6. Hail Barrage
+7. Crystal Lance
+8. Frozen Orb
+9. Ice Ring
+10. Blizzard Burst
+
+EARTH — Earth_Attack_Moves.png
+1. Rock Throw
+2. Boulder Drop
+3. Stone Spike
+4. Quake Ring
+5. Sand Blast
+6. Mud Trap
+7. Rock Hammer Impact
+8. Earth Wall Crush
+9. Gravel Volley
+10. Mountain Burst
+
+SHADOW — Shadow_Attack_Moves.png
+1. Shadow Blade
+2. Void Orb
+3. Dark Wave
+4. Eclipse Beam
+5. Curse Sigil
+6. Smoke Burst
+7. Shadow Chain
+8. Black-Hole Pull
+9. Night Spike
+10. Silence Seal
+
+MYSTIC — Mystic_Attack_Moves.png
+1. Arcane Bolt
+2. Rune Burst
+3. Starfall
+4. Portal Strike
+5. Dream Wave
+6. Tarot Slash
+7. Cosmic Spiral
+8. Astral Orb
+9. Magic Circle Blast
+10. Fate Needle Volley
+
+METAL — Metal_Attack_Moves.png
+1. Steel Blade Slash
+2. Gear Saw
+3. Metal Shard Volley
+4. Magnetic Pulse
+5. Chain Hook Strike
+6. Iron Cannon Shot
+7. Drill Burst
+8. Metal Storm
+9. Gear Trap
+10. Anvil Drop

@@ -190,12 +190,23 @@ const Lore = (() => {
     const s = scaleFor(c);
     const [n1, d1] = pickIn(rng, MOVES[prim].basic);
     const [n2, d2] = pickIn(rng, MOVES[sec].heavy);
-    return [
+    const out = [
       { name: n1, desc: d1, type: prim, vfx: MOVES[prim].vfx,
         power: +(1.0 * s).toFixed(2), cd: 3.2, id: c.id + '_a' },
       { name: n2, desc: d2, type: sec, vfx: MOVES[sec].vfx,
         power: +(2.1 * s).toFixed(2), cd: 7.5, id: c.id + '_b' },
     ];
+    // signature move: one of the ten named moves of its element, with its own
+    // uploaded icon and a composed effect. Unlocks once the beast hits Lv.8.
+    const bank = (window.MOVE_DATA || {})[prim];
+    if (bank) {
+      const mi = Math.floor(rng() * bank.names.length);
+      out.push({ name: bank.names[mi], desc: 'Signature move.',
+                 type: prim, vfx: 'move:' + prim + ':' + mi, moveIdx: mi,
+                 power: +(3.0 * s).toFixed(2), cd: 11, id: c.id + '_m',
+                 unlockLv: 8 });
+    }
+    return out;
   }
 
   function ultimateFor(c) {
