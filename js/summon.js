@@ -70,13 +70,6 @@ const Summon = (() => {
     let guaranteedRare = pulls === 10;
     for (let i = 0; i < pulls; i++) {
       S.summons.total++;
-      // relics only drop on single wild pulls, and never eat a 10-pull slot
-      if (pulls === 1 && Math.random() < RELIC_CHANCE) {
-        const r = pick(RELICS);
-        S.relics[r.id] = (S.relics[r.id] || 0) + 1;
-        results.push({ relic: r });
-        continue;
-      }
       let c = pickCreature(banner);
       if (guaranteedRare && i === pulls - 1 &&
           !results.some(x => x.c && RARITY_ORDER.indexOf(x.c.rarity) >= 2) &&

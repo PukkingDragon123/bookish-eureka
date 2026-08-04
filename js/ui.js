@@ -709,8 +709,8 @@ const UI = (() => {
       const meters = [];
       p.skills.forEach(sk => {
         const row = el('div', 'cdrow');
-        row.innerHTML = `<span class="cdname">${sk.name}</span>
-          <span class="cdmeter"><i></i></span>`;
+        row.innerHTML = `${skillIcon(sk.type || 'Ultimate', p.cid + sk.name)}` +
+          `<span class="cdname">${sk.name}</span><span class="cdmeter"><i></i></span>`;
         bars.appendChild(row);
         meters.push(row.querySelector('.cdmeter'));
       });
@@ -1125,7 +1125,7 @@ const UI = (() => {
     wrap.innerHTML = '';
     for (const o of ['all', 'owned', ...Object.keys(TYPE_COLORS)]) {
       const b = el('button', 'dfilter' + (dexFilter === o ? ' on' : ''),
-        o === 'all' ? 'All' : o === 'owned' ? 'Owned' : icon(TYPE_ICONS[o]) + ' ' + o);
+        o === 'all' ? 'All' : o === 'owned' ? 'Owned' : elemIcon(o) + ' ' + o);
       b.onclick = () => { dexFilter = o; renderBeasts(); };
       wrap.appendChild(b);
     }
@@ -1179,7 +1179,7 @@ const UI = (() => {
 
     const skills = kit.skills.map(sk => `
       <div class="skillrow">
-        <div class="sicon" style="background:${TYPE_COLORS[sk.type] || '#666'}">${icon(TYPE_ICONS[sk.type] || 'sword')}</div>
+        <div class="sicon" style="background:${TYPE_COLORS[sk.type] || '#666'}">${skillIcon(sk.type, cid + sk.name)}</div>
         <div><div class="sname">${sk.name}</div><div class="sdesc">${sk.desc}</div>
         <div class="smeta">${Math.round(sk.power * 100)}% power · ${sk.cd}s cooldown · ${sk.type}</div></div>
       </div>`).join('');
@@ -1188,7 +1188,7 @@ const UI = (() => {
     if (owned && inst.graft && C_BY_ID[inst.graft]) {
       const g = Lore.kit(inst.graft).skills[1];
       graftHtml = `<div class="skillrow graftrow">
-        <div class="sicon" style="background:${TYPE_COLORS[g.type] || '#666'}">${icon('flask')}</div>
+        <div class="sicon" style="background:${TYPE_COLORS[g.type] || '#666'}">${skillIcon(g.type, cid + g.name)}</div>
         <div><div class="sname">${g.name} <span class="subtle">(grafted)</span></div>
         <div class="sdesc">Lab-grafted from ${C_BY_ID[inst.graft].name}.</div>
         <div class="smeta">${Math.round(g.power * 100)}% power · ${(g.cd * 1.4).toFixed(1)}s cooldown</div></div>
@@ -1197,7 +1197,7 @@ const UI = (() => {
 
     const u = kit.ult;
     const ultHtml = `<div class="skillrow ultrow">
-      <div class="sicon" style="background:${TYPE_COLORS[u.type] || '#666'}">${icon(TYPE_ICONS[u.type] || 'star')}</div>
+      <div class="sicon" style="background:${TYPE_COLORS[u.type] || '#666'}">${skillIcon('Ultimate', cid + u.name)}</div>
       <div><div class="sname">${u.name}</div><div class="sdesc">${u.desc}</div>
       <div class="smeta">${Math.round(u.power * 100)}% power · hits every enemy at 100% charge</div></div>
     </div>`;
@@ -1294,7 +1294,7 @@ const UI = (() => {
         S.party.push(cid);
       }
       Sound.click();
-      save(); renderParty(); renderBeasts();
+      save(); applyBuddyTheme(); renderParty(); renderBeasts();
       closeModal(back); showCreature(cid);
     };
     actions.appendChild(pt);
@@ -1630,15 +1630,6 @@ const UI = (() => {
     }
     const left = Summon.PITY_EVERY - (S.summons.sinceRare % Summon.PITY_EVERY);
     $('#pity-note').textContent = `Guaranteed rare+ within ${left} pull${left > 1 ? 's' : ''} · x10 always contains a rare+ · ${S.summons.total} total pulls`;
-    const shelf = $('#relic-shelf');
-    shelf.innerHTML = '';
-    for (const r of RELICS) {
-      const n = S.relics[r.id] || 0;
-      const d = el('div', 'relic' + (n ? ' owned' : ''));
-      d.innerHTML = `${icon(n ? r.icon : 'lock', 'big')}<span class="rname">${n ? r.name : '???'}</span>` +
-        `<span class="rbonus">${n ? r.desc + (n > 1 ? ` x${n}` : '') : 'undiscovered'}</span>`;
-      shelf.appendChild(d);
-    }
   }
 
   /* ----- wish animation + results ----- */
@@ -1694,7 +1685,6 @@ const UI = (() => {
   function showPullResults(banner, results) {
     if (results.length === 1) {
       const r = results[0];
-      if (r.relic) return showRelicReveal(r.relic);
       return showSummonReveal(r.c, r.isNew, r.dup, banner);
     }
     const box = el('div', 'sreveal');
@@ -1702,9 +1692,7 @@ const UI = (() => {
     const grid = box.querySelector('.pull-grid');
     results.forEach((r, i) => {
       const cell = el('div', 'pull-cell' + (r.c && ['rare', 'epic', 'legendary'].includes(r.c.rarity) ? ' r-' + r.c.rarity : ''));
-      if (r.relic) {
-        cell.innerHTML = `${icon(r.relic.icon, 'big')}<span>${r.relic.name}</span>`;
-      } else {
+      {
         cell.innerHTML = `<img src="${assetUrl('assets/creatures/' + r.c.file)}">
           <span>${r.c.name}</span>${r.isNew ? '<span class="pnew">NEW!</span>' : `<span class="subtle">+${r.dup ? r.dup.ess : 0}${' '}ess</span>`}`;
       }
@@ -1734,17 +1722,6 @@ const UI = (() => {
     row.appendChild(again);
     box.appendChild(row);
     if (isNew) confetti(36);
-  }
-
-  function showRelicReveal(r) {
-    const box = el('div', 'sreveal');
-    box.innerHTML = `
-      <div class="snew">RELIC FOUND</div>
-      <div class="burst"><div class="rays"></div><div style="z-index:1;transform:scale(4)">${icon(r.icon, 'huge')}</div></div>
-      <h2>${r.name}</h2>
-      <p class="subtle">${r.desc} — permanent blessing${(S.relics[r.id] || 0) > 1 ? `, now x${S.relics[r.id]}` : ''}.</p>`;
-    openModal(box);
-    confetti(30);
   }
 
   /* ================= quests tab ================= */
@@ -2399,6 +2376,7 @@ const UI = (() => {
 
   /* ================= global ================= */
   function renderAll() {
+    applyBuddyTheme();
     renderHud();
     renderScene();
     renderBattleStats();
@@ -2425,7 +2403,7 @@ const UI = (() => {
     renderMerge, mergeSpawnFx, mergeFuseFx, showMap,
     renderBeasts, renderCollection, showCreature, showFeedPicker,
     renderFarm, waterGarden, showMealModal, showKcalTargetModal, renderFood,
-    renderSummon, playWish, showSummonReveal, showRelicReveal,
+    renderSummon, playWish, showSummonReveal,
     renderQuests, renderRituals, markQuestDot, maybeShowLogin,
     showTimerModal, updateTimerModal, showAddCustomModal,
     showSettings, showPlanEditor, showOnboarding, showWelcomeBack,

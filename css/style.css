@@ -1496,3 +1496,51 @@ body, button { letter-spacing: 0; }
 @media (prefers-reduced-motion: reduce) {
   .pixbtn.primary:not(:disabled) { animation: none; }
 }
+
+/* ============================================================
+   BUDDY ACCENT — --buddy is set from your lead party member's element
+   (js/util.js applyBuddyTheme), so the whole interface shifts hue with
+   whoever you are leading with.
+   ============================================================ */
+:root { --buddy: var(--gold); --buddy-dim: #2a3457; --buddy-glow: rgba(255,194,71,.34); }
+
+#tabbar button.active { color: var(--buddy); box-shadow: inset 0 3px 0 var(--buddy); }
+.card-head, .panel-head { color: var(--buddy); }
+.card-head { border-bottom-color: var(--buddy-dim); }
+.focus { outline-color: var(--buddy) !important; }
+.focus .f-label { color: var(--buddy); }
+.pixbtn.primary {
+  background: var(--buddy-dim);
+  outline-color: var(--buddy);
+  box-shadow: 0 4px 0 var(--ink), 0 0 18px var(--buddy-glow);
+}
+#hero-glow { background: radial-gradient(circle, var(--buddy-glow), transparent 68%); }
+.hero-rank, #hero-ladder-txt { color: var(--buddy); }
+.pixbar.gold > i, .pixbar.ult > i { background: var(--buddy); }
+.level-chip { outline-color: var(--buddy); }
+#stage-plate { border-color: var(--buddy-dim); }
+.tab-title { color: var(--buddy); }
+#today-hero { box-shadow: 0 var(--px) 0 var(--buddy-dim); }
+.lu-row.unlock { border-color: var(--buddy); }
+.sring .fill { stroke: var(--buddy); }
+.sring .glow { stroke: var(--buddy-glow); }
+/* the accent changing is itself a transition, not a jump */
+#tabbar button, .card-head, .panel-head, .pixbtn.primary, .focus,
+.hero-rank, .tab-title, .sring .fill {
+  transition: color var(--t-slow) var(--ease), background var(--t-slow) var(--ease),
+              outline-color var(--t-slow) var(--ease), stroke var(--t-slow) var(--ease),
+              box-shadow var(--t-slow) var(--ease), border-color var(--t-slow) var(--ease);
+}
+
+/* ---- element badges now carry your element art ---- */
+.typebadge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px 3px 5px;
+}
+.typebadge .elem { width: 16px; height: 16px; background-size: 144px auto; vertical-align: -3px; }
+
+/* ---- spell art inside skill rows and the cooldown strip ---- */
+.skillrow .sicon { display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.skillrow .sicon .spell { width: 30px; height: 30px; background-size: 240px auto; }
+.cdrow .spell { width: 18px; height: 18px; background-size: 144px auto; flex: none; vertical-align: -4px; }
+.dfilter .elem { width: 18px; height: 18px; background-size: 162px auto; vertical-align: -4px; }

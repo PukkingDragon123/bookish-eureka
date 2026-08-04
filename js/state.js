@@ -44,16 +44,6 @@ const STARTERS = {
   create:    ['17_02', '17_06'],   // Kindlekit line, Duskit line
 };
 
-const RELICS = [
-  { id: 'goldring',  icon: 'relic',   name: 'Gilded Ring',   stat: 'gold', per: 0.10, desc: '+10% gold' },
-  { id: 'tome',      icon: 'book',    name: 'Worn Tome',     stat: 'xp',   per: 0.10, desc: '+10% XP' },
-  { id: 'chalice',   icon: 'crown',   name: 'Moon Chalice',  stat: 'mana', per: 0.10, desc: '+10% mana' },
-  { id: 'warhorn',   icon: 'sword',   name: 'Warhorn',       stat: 'dmg',  per: 0.08, desc: '+8% damage' },
-  { id: 'hourglass', icon: 'timer',   name: 'Sand of Hours', stat: 'idle', per: 0.15, desc: '+15% idle time' },
-  { id: 'talisman',  icon: 'shield',  name: 'Ward Talisman', stat: 'hp',   per: 0.12, desc: '+12% party HP' },
-  { id: 'feather',   icon: 'walk',    name: 'Zephyr Quill',  stat: 'spd',  per: 0.08, desc: '+8% attack speed' },
-  { id: 'prism',     icon: 'essence', name: 'Star Prism',    stat: 'ess',  per: 0.20, desc: '+20% essence' },
-];
 
 const MANA_MAX_BASE = 200;
 
@@ -68,7 +58,6 @@ function defaultState() {
     beasts: {},          // cid -> {level, xp}
     party: [],           // [cid]
     dex: {},             // cid -> 'seen' | 'owned'
-    relics: {},          // relicId -> count
     stage: { tier: 0, area: 0, num: 1, wave: 1, farm: false }, // farm = boss failed, farming
     kills: 0,
     bossKills: 0,
@@ -156,13 +145,9 @@ function hardReset() {
 
 /* ---------- derived values ---------- */
 function manaMax() { return MANA_MAX_BASE + (S.player.level - 1) * 10; }
-function relicBonusStat(stat) {
-  let b = 0;
-  for (const r of RELICS) {
-    if (r.stat === stat && S.relics[r.id]) b += r.per * S.relics[r.id];
-  }
-  return b;
-}
+/* Relics are gone. Kept as a zero so every bonus formula that referenced them
+   still reads cleanly rather than being rewritten at a dozen call sites. */
+function relicBonusStat() { return 0; }
 
 function xpForLevel(lvl) { return Math.floor(90 * Math.pow(1.38, lvl - 1)); }
 

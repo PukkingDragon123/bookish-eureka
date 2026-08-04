@@ -4,6 +4,7 @@
 (function main() {
   const hadSave = load();
   Sound.setEnabled(S.settings.sound);
+  applyBuddyTheme();
   VFX.attach(document.getElementById('vfx'));
 
   /* ---- static wiring ---- */

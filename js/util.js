@@ -96,9 +96,50 @@ function typeMult(atkTypes, defType) {
 
 function typeBadges(types) {
   return types.map(t =>
-    `<span class="typebadge" style="background:${TYPE_COLORS[t] || '#888'}">${t}</span>`).join('');
+    `<span class="typebadge" style="background:${TYPE_COLORS[t] || '#888'}">` +
+    `<i class="elem el-${t.toLowerCase()}"></i>${t}</span>`).join('');
+}
+function elemIcon(t, cls) { return `<i class="elem ${cls || ''} el-${String(t).toLowerCase()}"></i>`; }
+
+/* Deterministic skill artwork: same creature and slot always gets the same
+   icon, drawn from the bank for that skill's element. */
+function skillIcon(type, seed, cls) {
+  const bank = (window.SKILL_ICONS || {})[type] || (window.SKILL_ICONS || {}).Ultimate;
+  if (!bank || !bank.length) return '';
+  let h = 0;
+  const str = String(seed);
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+  return `<i class="spell ${cls || ''} sp-${bank[h % bank.length]}"></i>`;
 }
 function icon(key, cls) { return `<i class="ico ${cls || ''} ico-${key}"></i>`; }
+
+/* ---------- the interface takes its accent from your lead buddy ----------
+   Everything warm in the UI is one variable, so the whole app shifts hue with
+   whoever is at the front of your party. */
+function applyBuddyTheme() {
+  const cid = (typeof S !== 'undefined' && S.party && S.party[0]) || null;
+  const type = cid && C_BY_ID[cid] ? C_BY_ID[cid].types[0] : null;
+  const c = (type && TYPE_COLORS[type]) || '#ffc247';
+  const r = document.documentElement;
+  r.style.setProperty('--buddy', c);
+  r.style.setProperty('--buddy-dim', mixHex(c, '#101529', 0.55));
+  r.style.setProperty('--buddy-glow', hexAlpha(c, 0.34));
+  r.dataset.buddyType = type || '';
+}
+function mixHex(a, b, t) {
+  const pa = hex3(a), pb = hex3(b);
+  const m = pa.map((v, i) => Math.round(v + (pb[i] - v) * t));
+  return '#' + m.map(v => v.toString(16).padStart(2, '0')).join('');
+}
+function hexAlpha(h, a) {
+  const p = hex3(h);
+  return `rgba(${p[0]},${p[1]},${p[2]},${a})`;
+}
+function hex3(h) {
+  h = String(h).replace('#', '');
+  if (h.length === 3) h = h.split('').map(x => x + x).join('');
+  return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16) || 0);
+}
 
 /* ---------- toasts ---------- */
 function toast(msg, kind) {
