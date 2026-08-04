@@ -123,6 +123,17 @@ def main():
         text = re.sub(r'url\((\.\./assets/[^)]+\.png)\)', inline_css_url, text)
         total_css += len(text)
         css_parts.append(text)
+    # guard: a sheet inlined many times means its url() is repeated across keyed
+    # rules, which silently multiplied the bundle by ~1.8MB once already
+    joined = '\n'.join(css_parts)
+    for path, uri in ui_cache.items():
+        hits = joined.count(uri)
+        if hits > 3:
+            raise SystemExit(
+                f'ERROR: {os.path.basename(path)} inlined {hits}x '
+                f'(+{hits * len(uri) / 1e6:.2f}MB). Group the shared url() in the '
+                f'generator instead of repeating it per rule.')
+
     inlined_bytes = sum(len(v) for v in ui_cache.values())
     print(f'{len(sheets)} stylesheets inlined, {len(ui_cache)} css images '
           f'({inlined_bytes/1000:.1f}KB base64)')

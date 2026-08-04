@@ -126,7 +126,7 @@ const UI = (() => {
       card.innerHTML = `
         <div class="f-label">Session in progress</div>
         <div class="f-task">${Dream.todaysTask()}</div>
-        <div class="f-meta">${icon('timer')} ${fmtTime(sessionRemaining() / 1000)} left</div>
+        <div class="f-meta"> ${fmtTime(sessionRemaining() / 1000)} left</div>
         <div class="f-actions"></div>`;
       const back = el('button', 'pixbtn huge primary', '<b>Back to session</b>');
       back.onclick = () => openSessionOverlay();
@@ -139,8 +139,7 @@ const UI = (() => {
       card.innerHTML = `
         <div class="f-label">Rest day</div>
         <div class="f-task">Today is not a ${d.name.toLowerCase()} day.</div>
-        <div class="f-rest">Rest is part of the plan — your streak is safe.
-          But if you feel like it, nothing is stopping you.</div>
+        <div class="f-rest">Rest day. Your streak is safe.</div>
         <div class="f-actions"></div>`;
       const go = el('button', 'pixbtn huge ghost', `<b>Practise anyway</b><span>${S.dream.mins} min</span>`);
       go.onclick = () => showSessionSetup();
@@ -152,9 +151,8 @@ const UI = (() => {
     if (done) {
       card.innerHTML = `
         <div class="f-label">Today · complete</div>
-        <div class="f-done">${icon('check', 'big')} ${mins} minutes of ${d.unit} logged</div>
-        <div class="f-rest">That is the whole job. Anything more today is a bonus —
-          and your beasts will take every minute of it.</div>
+        <div class="f-done"> ${mins} minutes of ${d.unit} logged</div>
+        <div class="f-rest">That's the job done. Anything else is bonus.</div>
         <div class="f-actions"></div>`;
       const more = el('button', 'pixbtn huge good', '<b>One more session</b>');
       more.onclick = () => showSessionSetup();
@@ -167,9 +165,9 @@ const UI = (() => {
       <div class="f-label">Today's focus</div>
       <div class="f-task">${Dream.todaysTask()}</div>
       <div class="f-meta">
-        <span>${icon('timer')} ${S.dream.mins} min</span>
+        <span> ${S.dream.mins} min</span>
         <span>${icon('mana')} ~${Math.round(S.dream.mins * 2.2)} mana</span>
-        <span>${icon('star')} ~${Math.round(S.dream.mins * 3.5)} XP</span>
+        <span> ~${Math.round(S.dream.mins * 3.5)} XP</span>
       </div>
       <div class="f-actions"></div>`;
     const acts = card.querySelector('.f-actions');
@@ -237,7 +235,7 @@ const UI = (() => {
     const log = S.dream.log || [];
     if (!log.length) {
       list.appendChild(el('div', 'jempty',
-        'Nothing yet. Finish one session and it lands here — proof you turned up.'));
+        'Finish a session and it lands here.'));
       return;
     }
     for (const e of log.slice(0, 12)) {
@@ -322,8 +320,7 @@ const UI = (() => {
           <span><i class="ico ico-gold"></i> earned <b id="sb-gold">0</b></span>
         </div>
       </div>
-      <div class="s-hint">The clock keeps running if you close this — it is real time,
-        not screen time. Put the phone down and go do the thing.</div>
+      <div class="s-hint">Real time, not screen time. Put the phone down.</div>
       <div class="s-btns"></div>`;
     if (cid) fitSprite(o.querySelector('.sring-beast'), cid, 56);
     const btns = o.querySelector('.s-btns');
@@ -441,7 +438,7 @@ const UI = (() => {
     box.innerHTML = `
       <div class="snew">${early && mins < planned ? 'SESSION LOGGED' : 'SESSION COMPLETE'}</div>
       <h2>${mins} minutes of ${d.unit}</h2>
-      <p class="subtle" style="margin-top:2px">Write one line about it — future you likes reading these.</p>
+      <p class="subtle" style="margin-top:2px">One line about it?</p>
       <input type="text" id="s-note" maxlength="110" placeholder="e.g. finally got the chord change clean">
       <div class="s-rewards" id="s-rewards"></div>
       <div class="mrow"></div>`;
@@ -455,7 +452,7 @@ const UI = (() => {
     };
     box.querySelector('.mrow').appendChild(ok);
     const pre = box.querySelector('#s-rewards');
-    pre.innerHTML = `${icon('mana')} mana &nbsp; ${icon('star')} XP &nbsp; ${icon('essence')} essence
+    pre.innerHTML = `${icon('mana')} mana &nbsp;  XP &nbsp; ${icon('essence')} essence
       &nbsp; ${icon('seed')} seeds &nbsp; ${icon('flask')} lab pts`;
     openModal(box, { noClose: true });
     setTimeout(() => { const i = box.querySelector('#s-note'); if (i) i.focus(); }, 80);
@@ -470,7 +467,7 @@ const UI = (() => {
       ${cid ? `<div class="burst"><div class="rays"></div><img src="${sprite(cid)}"></div>` : ''}
       <div class="cstats" style="margin-top:8px">
         <div class="cstat"><span>${icon('mana')} Mana</span><b>+${fmt(r.mana)}</b></div>
-        <div class="cstat"><span>${icon('star')} XP</span><b>+${fmt(r.xp)}</b></div>
+        <div class="cstat"><span> XP</span><b>+${fmt(r.xp)}</b></div>
         <div class="cstat"><span>${icon('essence')} Essence</span><b>+${fmt(r.ess)}</b></div>
         <div class="cstat"><span>${icon('seed')} Seeds</span><b>+${fmt(r.seeds)}</b></div>
       </div>
@@ -860,7 +857,7 @@ const UI = (() => {
       html += `<div class="qlog-row focus-row"><span class="hob h-${Dream.def().art}"></span> <b>Today's focus:</b> ${Dream.todaysTask()}</div>`;
     }
     if (!S.challenge.done) {
-      html += `<div class="qlog-row">${icon('star')} <b>${ch.name}</b></div>`;
+      html += `<div class="qlog-row"> <b>${ch.name}</b></div>`;
     }
     for (const q of open) {
       const done = q.progress >= q.target;
@@ -868,7 +865,7 @@ const UI = (() => {
         <span class="pixbar good"><i style="width:${100 * Math.min(1, q.progress / q.target)}%"></i></span>
         <b>${q.progress}/${q.target}</b></div>`;
     }
-    if (!html) html = `<div class="qlog-row">${icon('check')} Everything today is done. Legend.</div>`;
+    if (!html) html = `<div class="qlog-row"> Everything today is done. Legend.</div>`;
     w.innerHTML = html;
   }
 
@@ -956,7 +953,7 @@ const UI = (() => {
     });
     const t = Merge.totals();
     $('#merge-bonuses').innerHTML =
-      `${icon('sword')}<b>+${t.dmg.toFixed(0)}%</b> ${icon('shield')}<b>+${t.hp.toFixed(0)}%</b> ${icon('gold')}<b>+${t.gold.toFixed(0)}%</b>`;
+      `${icon('sword')}<b>+${t.dmg.toFixed(0)}%</b> <b>+${t.hp.toFixed(0)}%</b> ${icon('gold')}<b>+${t.gold.toFixed(0)}%</b>`;
     $('#portal-energy').textContent = `${S.merge.energy}/${Merge.ENERGY_MAX}`;
     $('#portal-gold-cost').textContent = fmt(Merge.spawnGoldCost());
   }
@@ -1046,7 +1043,7 @@ const UI = (() => {
       const d = el('div', 'regioncard' + (cur ? ' current' : '') + (unlocked ? '' : ' lockedr'));
       d.style.backgroundImage = `url(${assetUrl(a.bg)})`;
       const prog = i === S.stage.area ? S.stage.num : (S.regionProgress[i] || (unlocked ? 1 : 0));
-      d.innerHTML = `${unlocked ? '' : `<span class="rlock">${icon('lock')}</span>`}
+      d.innerHTML = `${unlocked ? '' : `<span class="rlock"></span>`}
         <span class="rlabel"><span>${a.name}</span><b>${unlocked ? 'Stage ' + prog : '???'}</b></span>`;
       d.onclick = () => {
         if (!unlocked) { toast('Clear the previous region to unlock'); return; }
@@ -1074,11 +1071,11 @@ const UI = (() => {
           <img src="${sprite(cid)}" alt=""><span class="pname">${c.name}</span><span class="plvl">Lv.${st.lvl}</span>`;
         d.onclick = () => showCreature(cid);
       } else if (i < partySlots()) {
-        d = el('div', 'pslot empty', icon('plus', 'big'));
+        d = el('div', 'pslot empty', '<span class="glyph-plus big"></span>');
         d.onclick = () => toast('Pick a beast from your dex below');
       } else {
         const need = i === 1 ? 3 : i === 2 ? 6 : 12;
-        d = el('div', 'pslot locked', `${icon('lock', 'big')}<span class="pname">Lv.${need}</span>`);
+        d = el('div', 'pslot locked', `<span class="pname">Lv.${need}</span>`);
       }
       slots.appendChild(d);
     }
@@ -1203,9 +1200,9 @@ const UI = (() => {
         <i style="width:${Math.min(100, 100 * inst.xp / beastXpNeed(lvl))}%"></i></div>`
       : '<p class="subtle" style="margin-top:6px">Not yet bonded — summon or evolve to recruit.</p>'}
       <div class="sectitle">${icon('sword')} Skills</div>${skills}${graftHtml}
-      <div class="sectitle">${icon('star')} Ultimate</div>${ultHtml}
-      <div class="sectitle">${icon('shield')} Passives</div>${passes}
-      ${evoHtml ? `<div class="sectitle">${icon('paw')} Evolution line</div>${evoHtml}` : ''}
+      <div class="sectitle"> Ultimate</div>${ultHtml}
+      <div class="sectitle"> Passives</div>${passes}
+      ${evoHtml ? `<div class="sectitle"> Evolution line</div>${evoHtml}` : ''}
       <div class="mrow" id="cd-actions"></div>`;
 
     const img = box.querySelector('.cimg-wrap img');
@@ -1408,7 +1405,7 @@ const UI = (() => {
     }
     $('#pantry-count').textContent = total;
     if (!total) pan.appendChild(el('p', 'pantry-empty',
-      'Nothing harvested yet. Crops grow in real time — even while you are away.'));
+      'Nothing harvested yet. Crops grow in real time.'));
     renderFood();
   }
 
@@ -1477,7 +1474,7 @@ const UI = (() => {
       <input type="text" id="meal-name" maxlength="40" placeholder="e.g. Chicken salad">
       <label>Calories</label>
       <input type="number" id="meal-kcal" min="0" max="5000" placeholder="e.g. 450">
-      <label class="photo-label" id="photo-lab">${icon('camera')} <span id="photo-txt">Add a photo (+1 seed)</span>
+      <label class="photo-label" id="photo-lab"> <span id="photo-txt">Add a photo (+1 seed)</span>
         <input type="file" id="meal-photo" accept="image/*" capture="environment" style="display:none"></label>
       <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--txt)">
         <input type="checkbox" id="meal-healthy" ${healthyDefault ? 'checked' : ''} style="width:18px;height:18px"> This was a healthy choice
@@ -1579,7 +1576,7 @@ const UI = (() => {
       card.innerHTML = `
         <div class="bname">${icon(b.icon)} ${b.name}</div>
         <div class="bsub">${b.sub}</div>
-        <div class="bstars">${icon('star')}${icon('star')}</div>
+        <div class="bstars"></div>
         <div class="bshow"><img src="${assetUrl('assets/creatures/' + C_BY_ID[art.cid].file)}"></div>
         <div class="bbtns"></div>`;
       fitSprite(card.querySelector('.bshow img'), art.cid, 104);
@@ -1830,7 +1827,7 @@ const UI = (() => {
     if (ch.link) {
       const a = el('a', 'pixbtn gem tiny');
       a.href = ch.link; a.target = '_blank'; a.rel = 'noopener';
-      a.innerHTML = `${icon('globe')} Open`;
+      a.innerHTML = ` Open`;
       btns.appendChild(a);
     }
     if (!done) {
@@ -1862,10 +1859,10 @@ const UI = (() => {
       : '';
     let rewardTxt;
     if (def.kind === 'timer') {
-      rewardTxt = `${icon('timer')} real timer &nbsp; ${icon('mana')} ~${Math.round((def.manaPerMin || 1) * 15)} / 15min` +
+      rewardTxt = ` real timer &nbsp; ${icon('mana')} ~${Math.round((def.manaPerMin || 1) * 15)} / 15min` +
         (def.boost ? ` &nbsp; ${icon('bolt')} x3 idle boost` : '');
     } else {
-      rewardTxt = `${icon('mana')} +${def.mana} &nbsp; ${icon('star')} +${def.xp} XP` +
+      rewardTxt = `${icon('mana')} +${def.mana} &nbsp;  +${def.xp} XP` +
         (def.ess ? ` &nbsp; ${icon('essence')} +${def.ess}` : '');
     }
     card.innerHTML = `
@@ -1957,7 +1954,7 @@ const UI = (() => {
   function showAddCustomModal() {
     const box = el('div');
     const icons = ['star', 'book', 'scroll', 'water', 'sunrise', 'palette', 'crown', 'paw', 'relic', 'check'];
-    box.innerHTML = `<h3>${icon('plus')} Create a habit</h3>
+    box.innerHTML = `<h3>Create a habit</h3>
       <label>Name it</label>
       <input type="text" id="cr-name" maxlength="28" placeholder="e.g. Read 10 pages">
       <label>Pick an icon</label>
@@ -2064,7 +2061,7 @@ const UI = (() => {
     function drawDream() {
       box.innerHTML = steps() + `
         <h2>What do you want to get good at?</h2>
-        <p>Pick the one that makes you feel something.</p>
+        <p>Pick the one that pulls at you.</p>
         <div class="dream-grid"></div>`;
       const grid = box.querySelector('.dream-grid');
       for (const [key, d] of Object.entries(Dream.DREAMS)) {
@@ -2088,7 +2085,7 @@ const UI = (() => {
       const d = Dream.DREAMS[draft.key];
       box.innerHTML = steps() + `
         <h2>How far in are you?</h2>
-        <p>Be honest — it only changes which tasks you get.</p>
+        <p>Only changes which tasks you get.</p>
         <div class="lvl-list"></div>`;
       const list = box.querySelector('.lvl-list');
       Dream.LEVELS.forEach(l => {
@@ -2113,7 +2110,7 @@ const UI = (() => {
     function drawRhythm() {
       box.innerHTML = steps() + `
         <h2>Build the rhythm</h2>
-        <p>Small and repeatable beats big and abandoned.</p>
+        <p>Small and repeatable wins.</p>
         <label style="text-align:left;margin-top:10px">Minutes per session</label>
         <div class="preset-row" id="ob-mins"></div>
         <label style="text-align:left;margin-top:10px">Which days?</label>
@@ -2159,7 +2156,7 @@ const UI = (() => {
       const d = Dream.DREAMS[draft.key];
       box.innerHTML = steps() + `
         <h2>Why this one?</h2>
-        <p>One line. On the days you do not feel like it,<br>this is what you will read.</p>
+        <p>On the days you don't feel like it, you'll read this.</p>
         <input type="text" id="ob-why" maxlength="150" placeholder="e.g. so I can play at my sister's wedding">
         <p class="subtle" style="margin-top:8px">Optional — skip it if you like.</p>`;
       const inp = box.querySelector('#ob-why');
