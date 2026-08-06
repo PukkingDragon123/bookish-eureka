@@ -69,10 +69,6 @@ const TYPE_COLORS = {
   Fire: '#ff7043', Water: '#42a5f5', Nature: '#66bb6a', Electric: '#ffd740',
   Ice: '#80deea', Earth: '#bc8a5f', Shadow: '#9575cd', Mystic: '#f48fb1', Metal: '#90a4ae',
 };
-const TYPE_ICONS = {
-  Fire: 'streak', Water: 'water', Nature: 'leaf', Electric: 'bolt',
-  Ice: 'snow', Earth: 'rock', Shadow: 'skull', Mystic: 'essence', Metal: 'gear',
-};
 /* attacker type -> {defender type: multiplier} */
 const TYPE_CHART = {
   Fire:     { Nature: 1.5, Ice: 1.5, Water: 0.67, Earth: 0.67 },

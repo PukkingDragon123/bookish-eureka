@@ -698,12 +698,20 @@ const UI = (() => {
     if (!strip) return;
     strip.innerHTML = '';
     cdCards = [];
-    for (const p of Battle.cooldownState()) {
+    const state = Battle.cooldownState();
+    if (state.length) {
+      const head = el('div', 'cd-head');
+      head.innerHTML = `<i class="ico ico-sword"></i> Skills
+        <span class="cd-note">fire automatically when ready</span>`;
+      strip.appendChild(head);
+    }
+    for (const p of state) {
       const c = C_BY_ID[p.cid];
       if (!c) continue;
       const card = el('div', 'cdcard');
       const img = el('img');
       img.src = sprite(p.cid);
+      img.alt = c.name;
       card.appendChild(img);
       const bars = el('div', 'cdbars');
       const meters = [];
@@ -735,6 +743,7 @@ const UI = (() => {
         if (!sk) return;
         m.firstChild.style.width = (sk.frac * 100) + '%';
         m.classList.toggle('rdy', sk.frac >= 1);
+        if (m.parentNode) m.parentNode.classList.toggle('ready', sk.frac >= 1);
       });
     }
   }
@@ -1576,6 +1585,10 @@ const UI = (() => {
     wild: { cid: '02_00', from: '#3a5a2a', to: '#243a17' },
     element: null,
     radiant: { cid: '13_08', from: '#7a5a1e', to: '#4a3010' },
+    novice: { cid: '17_02', from: '#3c4a6a', to: '#1e2740', tag: 'CHEAP' },
+    duo: null,
+    ascend: { cid: '14_43', from: '#5a2a8a', to: '#2a1048', tag: 'BEST ODDS' },
+    harvest: { cid: '04_13', from: '#7a4a2a', to: '#3e2412' },
   };
   const ELEM_BANNER_ART = {
     Fire: { cid: '17_03', from: '#8a3a1e', to: '#4a1a0c' },
@@ -1593,22 +1606,32 @@ const UI = (() => {
     const rail = $('#banner-rail');
     rail.innerHTML = '';
     for (const b of Summon.banners()) {
-      const art = b.id === 'element' ? (ELEM_BANNER_ART[b.elem] || BANNER_ART.radiant) : BANNER_ART[b.id];
+      let art = BANNER_ART[b.id];
+      if (b.id === 'element') art = ELEM_BANNER_ART[b.elem] || BANNER_ART.radiant;
+      if (b.id === 'duo') art = ELEM_BANNER_ART[b.elems[0]] || BANNER_ART.radiant;
+      if (!art) art = BANNER_ART.radiant;
       const card = el('div', 'banner');
       card.style.background = `linear-gradient(150deg, ${art.from}, ${art.to})`;
+      const tag = art.tag ? `<span class="btag">${art.tag}</span>` : '';
+      const extra = b.elems ? b.elems.map(e => elemIcon(e)).join('') : '';
+      // element banners wear their own element art, not a stand-in ui icon
+      const head = b.elem ? elemIcon(b.elem)
+        : b.elems ? elemIcon(b.elems[0]) : icon(b.icon);
       card.innerHTML = `
-        <div class="bname">${icon(b.icon)} ${b.name}</div>
-        <div class="bsub">${b.sub}</div>
+        <div class="bname">${head} ${b.name}${tag}</div>
+        <div class="bsub">${extra} ${b.sub}</div>
         <div class="bstars"></div>
         <div class="bshow"><img src="${assetUrl('assets/creatures/' + C_BY_ID[art.cid].file)}"></div>
         <div class="bbtns"></div>`;
       fitSprite(card.querySelector('.bshow img'), art.cid, 104);
       const btns = card.querySelector('.bbtns');
-      const one = el('button', 'pixbtn sm ' + (b.cur === 'mana' ? 'primary' : 'gem'));
-      one.innerHTML = `<b>Pull</b><span>${icon(b.cur === 'mana' ? 'mana' : 'gem')} ${b.cost}</span>`;
+      const curIcon = b.cur === 'mana' ? 'mana' : b.cur === 'essence' ? 'essence' : 'gem';
+      const btnKind = b.cur === 'mana' ? 'primary' : b.cur === 'essence' ? 'good' : 'gem';
+      const one = el('button', 'pixbtn sm ' + btnKind);
+      one.innerHTML = `<b>Pull</b><span>${icon(curIcon)} ${b.cost}</span>`;
       one.onclick = () => Summon.doSummon(b.id, 1);
       const ten = el('button', 'pixbtn sm gold');
-      ten.innerHTML = `<b>x10</b><span>${icon(b.cur === 'mana' ? 'mana' : 'gem')} ${b.cost * 9}</span>`;
+      ten.innerHTML = `<b>x10</b><span>${icon(curIcon)} ${b.cost * 9}</span>`;
       ten.onclick = () => Summon.doSummon(b.id, 10);
       btns.appendChild(one);
       btns.appendChild(ten);

@@ -6,11 +6,12 @@ v2 pipeline — every icon is cut ONE BY ONE, content-aware:
   * The whole sheet is keyed at once. Bright-key sheets (magenta / pink)
     get true chroma-key alpha unmixing with despill, so anti-aliased edges
     keep a soft 8-bit alpha and zero key-colour fringe. Dark painterly
-    sheets are flood-filled from the border (their art legitimately
-    contains bg-ish darks, so distance keying alone would punch holes).
-  * Icons are then found as connected components and assigned to grid
-    cells by centroid — no blind grid chopping, no inset shaving, so art
-    that drifts across a gridline is never cut flat.
+    sheets are flood-filled from the border with a tolerance measured
+    from the sheet's own border noise, so black outlines survive.
+  * NO grid division anywhere. The sheet is segmented by its own
+    projection profiles, so every boundary sits in genuine whitespace,
+    and each icon's extents come from its own pixels (all its blobs,
+    sparkles included) — art can never be cut flat or go missing.
   * Cells stay big (128px) all the way through; resizing is premultiplied
     LANCZOS, alpha is never binarised, colours are never snapped.
 
@@ -159,31 +160,39 @@ def _bg_of(a):
 
 
 def key_sheet(img):
-    """Key a WHOLE sheet -> float alpha (H,W in 0..1) + despilled rgb.
+    """Key a WHOLE sheet -> RGBA with soft alpha and despilled rgb.
 
-    Bright keys (magenta / pink, high channel spread) use pure colour
-    distance with a soft alpha ramp and despill — the art never contains
-    the key colour, so enclosed pockets die automatically and blended
-    edge pixels keep clean colours.  Dark painterly backgrounds keep the
-    flood-fill approach (their art contains bg-ish darks) but with a soft
-    1px edge so cuts aren't jagged.
+    The tolerance is MEASURED from the sheet's own border ring rather than
+    guessed. These sheets have near-perfect flat backgrounds (ring spread
+    <= ~11), while a pure-black outline pixel sits 54-71 away from a navy
+    background — so a fixed generous threshold silently classified every
+    black outline as background and flood-filled it away. That is what ate
+    the gem's outline (and every outline on every dark sheet).
+
+    Bright keys (magenta / pink) additionally get alpha unmixing and
+    despill, so anti-aliased edges keep a soft alpha and no key fringe.
     """
     a = np.asarray(img.convert('RGB')).astype(np.float64)
     h, w = a.shape[:2]
     bg = _bg_of(a)
-    bright_key = (bg.max() - bg.min()) > 70 and bg.max() > 150
+
+    # how noisy is the background itself? tolerance follows from that.
+    ring = np.concatenate([a[:3].reshape(-1, 3), a[-3:].reshape(-1, 3),
+                           a[:, :3].reshape(-1, 3), a[:, -3:].reshape(-1, 3)])
+    noise = float(np.percentile(np.abs(ring - bg).sum(1), 99.5))
     d = np.abs(a - bg).sum(2)
+    bright_key = (bg.max() - bg.min()) > 70 and bg.max() > 150
 
     if bright_key:
-        # soft chroma ramp: fully bg below t0, fully art above t1
-        t0, t1 = 70.0, 210.0
+        # soft chroma ramp; t0 clears bg noise by a wide margin but stays
+        # far below any real art colour on a saturated key
+        t0 = max(40.0, noise * 3)
+        t1 = max(t0 + 90.0, 200.0)
         alpha = np.clip((d - t0) / (t1 - t0), 0, 1)
-        # despill: unmix the bg out of semi-transparent pixels
         mix = (alpha > 0) & (alpha < 1)
         if mix.any():
             am = alpha[mix][:, None]
             a[mix] = np.clip((a[mix] - (1 - am) * bg) / np.maximum(am, 1e-3), 0, 255)
-        # any leftover key-tinted opaque pixel (noise in the key) -> despill too
         spill = (alpha >= 1) & (d < 340)
         if bg[0] > 150 and bg[2] > 100 and bg[1] < 120:      # magenta / pink family
             r_, g_, b_ = a[..., 0], a[..., 1], a[..., 2]
@@ -191,7 +200,10 @@ def key_sheet(img):
             a[spill, 0] = np.minimum(r_[spill], g_[spill] + 60)
             a[spill, 2] = np.minimum(b_[spill], g_[spill] + 60)
     else:
-        near = d < 150
+        # dark flat background: tight tolerance so black outlines survive,
+        # then flood fill from the border to take enclosed bg pockets too
+        tol = min(max(16.0, noise * 2.2), 34.0)
+        near = d < tol
         lab, n = ndimage.label(near)
         keep = np.ones((h, w), bool)
         if n:
@@ -203,55 +215,116 @@ def key_sheet(img):
                     if (i + 1) in border or sizes[i] > 0.002 * h * w]
             if drop:
                 keep = ~np.isin(lab, drop)
-        alpha = keep.astype(np.float64)
-        # soften the cut edge by half a pixel so it isn't stair-stepped
-        alpha = ndimage.uniform_filter(alpha, 2)
-        alpha[keep & (ndimage.uniform_filter(keep.astype(float), 3) > 0.99)] = 1.0
+        # anti-alias the cut by one pixel instead of a hard stair-step
+        soft = ndimage.uniform_filter(keep.astype(np.float64), 3)
+        alpha = np.where(keep, 1.0, np.clip(soft * 1.4 - 0.25, 0, 1))
 
     rgba = np.dstack([a, alpha * 255]).astype(np.uint8)
     return rgba
 
 
-def sheet_cells(path, cols, rows, min_px=None):
-    """Key a sheet, then cut every icon out ONE BY ONE.
+def _bands(profile, n_want, min_gap):
+    """Content bands from a projection profile, reconciled to n_want.
 
-    Connected components are assigned to grid cells by centroid, so an
-    icon is always taken whole — even the sparkles around it — and a
-    neighbour's overhang never bleeds in, without shaving cell edges.
-    Returns a rows x cols matrix of RGBA images (content-cropped).
+    Boundaries land in genuine empty space, so an icon is never cut. If the
+    profile yields too many bands the closest neighbours are merged; too
+    few and the widest band is split at its quietest interior column.
+    """
+    on = profile > 0
+    n = len(on)
+    out, i = [], 0
+    while i < n:
+        if on[i]:
+            j = i
+            while j < n:
+                if on[j]:
+                    j += 1
+                    continue
+                k = j
+                while k < n and not on[k]:
+                    k += 1
+                if k - j >= min_gap or k >= n:
+                    break
+                j = k
+            out.append([i, min(j, n)])
+            i = j
+        else:
+            i += 1
+    if not out:
+        return [[0, n]]
+
+    while len(out) > n_want:                     # merge the tightest gap
+        gaps = [(out[i + 1][0] - out[i][1], i) for i in range(len(out) - 1)]
+        _, i = min(gaps)
+        out[i] = [out[i][0], out[i + 1][1]]
+        del out[i + 1]
+    while len(out) < n_want:                     # split the widest band
+        i = max(range(len(out)), key=lambda i: out[i][1] - out[i][0])
+        s, e = out[i]
+        mid = s + (e - s) // 4
+        seg = profile[s + (e - s) // 4: e - (e - s) // 4]
+        if len(seg) == 0:
+            break
+        cut = mid + int(np.argmin(seg))
+        out[i] = [s, cut]
+        out.insert(i + 1, [cut, e])
+    return out
+
+
+def sheet_cells(path, cols, rows, min_px=None):
+    """Cut every icon out of a sheet ONE BY ONE — no grid division.
+
+    The sheet is keyed, then split by its own projection profiles: rows are
+    found from the horizontal profile, and each row's columns are found from
+    that row's own vertical profile (so a row that drifts or has wider art
+    is segmented on its own terms). Every boundary sits in real whitespace,
+    which is why nothing clips and nothing goes missing.
     """
     img = Image.open(os.path.join(SRC, path))
     rgba = key_sheet(img)
     h, w = rgba.shape[:2]
-    ch, cw = h / rows, w / cols
-    if min_px is None:
-        min_px = max(4, int(0.00002 * h * w))        # drop key-noise specks
-
     solid = rgba[..., 3] > 100
+    if min_px is None:
+        min_px = max(6, int(0.000004 * h * w))
+
+    # drop isolated key-noise specks, and "webs": faint sub-threshold halo
+    # pixels can form one sparse structure spanning the entire sheet, which
+    # would otherwise swallow whichever region its centroid landed in.
     lab, n = ndimage.label(solid, structure=np.ones((3, 3)))
-    cells = [[[] for _ in range(cols)] for _ in range(rows)]
     if n:
         sizes = ndimage.sum(solid, lab, range(1, n + 1))
-        cys, cxs = zip(*ndimage.center_of_mass(solid, lab, range(1, n + 1)))
-        for i in range(n):
-            if sizes[i] < min_px:
-                continue
-            r = min(rows - 1, int(cys[i] / ch))
-            c = min(cols - 1, int(cxs[i] / cw))
-            cells[r][c].append(i + 1)
+        junk = []
+        for i, sl in enumerate(ndimage.find_objects(lab)):
+            bh, bw = sl[0].stop - sl[0].start, sl[1].stop - sl[1].start
+            spans = max(bh / h, bw / w) > 0.45
+            if sizes[i] < min_px or (spans and sizes[i] < 0.12 * bh * bw):
+                junk.append(i + 1)
+        if junk:
+            solid = solid & ~np.isin(lab, junk)
 
-    out = [[None] * cols for _ in range(rows)]
-    for r in range(rows):
-        for c in range(cols):
-            ids = cells[r][c]
+    # relabel the cleaned mask, and note where each blob's centre of mass is
+    lab, n = ndimage.label(solid, structure=np.ones((3, 3)))
+    coms = ndimage.center_of_mass(solid, lab, range(1, n + 1)) if n else []
+
+    rb = _bands(solid.sum(1), rows, max(3, int(0.004 * h)))
+    out = [[Image.new('RGBA', (8, 8)) for _ in range(cols)] for _ in range(rows)]
+    for r, (y0, y1) in enumerate(rb):
+        strip = solid[y0:y1]
+        cb = _bands(strip.sum(0), cols, max(3, int(0.004 * w)))
+        for c, (x0, x1) in enumerate(cb):
+            # every blob whose centre falls in this region belongs to this icon
+            ids = [i + 1 for i, (cy, cx) in enumerate(coms)
+                   if y0 <= cy < y1 and x0 <= cx < x1]
             if not ids:
-                out[r][c] = Image.new('RGBA', (8, 8))
                 continue
-            m = np.isin(lab, ids)
-            ys, xs = np.where(m)
-            y0, y1, x0, x1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
-            piece = rgba[y0:y1, x0:x1].copy()
-            piece[..., 3] = np.where(m[y0:y1, x0:x1], piece[..., 3], 0)
+            msk = np.isin(lab, ids)
+            # grow slightly to re-include the soft anti-aliased rim
+            grown = ndimage.binary_dilation(msk, np.ones((3, 3), bool), iterations=2)
+            ys, xs = np.where(grown)
+            # extents come from the ART, not from the region -> never clipped
+            piece = rgba[ys.min():ys.max() + 1, xs.min():xs.max() + 1].copy()
+            sub = grown[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+            piece[..., 3] = np.where(sub, piece[..., 3], 0)
             out[r][c] = Image.fromarray(piece, 'RGBA')
     return out
 
