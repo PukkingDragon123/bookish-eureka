@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bundle Ritual Beasts into one self-contained HTML file.
+"""Bundle Hourling into one self-contained HTML file.
 
 Inlines the stylesheet, every script, and all 350 image assets as data URIs so
 the game runs from a single file with no server and no network access.
@@ -12,7 +12,7 @@ import base64, io, os, re, sys
 from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'dist', 'ritual-beasts.html')
+OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'dist', 'hourling.html')
 SPRITE_COLORS = 64
 
 
@@ -143,14 +143,51 @@ def main():
     body = html.split('<body>', 1)[1].split('</body>', 1)[0]
     body = re.sub(r'\s*<script src="[^"]+"></script>', '', body)
 
-    parts = ['<title>Dreamkeep — chase the thing you actually want</title>',
+    def _inline_img(m):
+        p = os.path.join(ROOT, m.group(1))
+        if not os.path.exists(p):
+            return m.group(0)
+        return 'src="' + data_uri(open(p, 'rb').read(), 'image/png') + '"'
+
+    # markup image refs (the boot splash) are not covered by the CSS or JS
+    # asset maps, so they would 404 in the single-file build
+    body = re.sub(r'src="(assets/[^"]+\.png)"', _inline_img, body)
+
+    # ---- a real document, not a fragment ----
+    # The previous build emitted a headless fragment starting at <title>: no
+    # doctype, no charset, no viewport. Phones therefore rendered the bundle at
+    # desktop fallback width and mojibaked its own em-dash, and every mobile
+    # meta tag added to index.html never reached the shipped file.
+    head = html.split('<head>', 1)[1].split('</head>', 1)[0]
+    # stylesheet links are inlined below; local icon links become data URIs
+    head = re.sub(r'\s*<link rel="stylesheet"[^>]*>', '', head)
+
+    def _inline_icon(m):
+        href = m.group(2)
+        p = os.path.join(ROOT, href)
+        if not os.path.exists(p):
+            return m.group(0)
+        uri = data_uri(open(p, 'rb').read(), 'image/png')
+        return f'<link rel="{m.group(1)}" href="{uri}">'
+
+    head = re.sub(r'<link rel="(apple-touch-icon|icon)" href="([^"]+)">',
+                  _inline_icon, head)
+
+    parts = ['<!DOCTYPE html>', '<html lang="en">', '<head>',
+             head.strip(),
              '<style>\n' + '\n'.join(css_parts) + '\n</style>',
+             '</head>', '<body>',
              body.strip(),
              '<script>window.ASSETS = ' + repr(assets).replace("'", '"') + ';</script>']
     for s in scripts:
         parts.append('<script>\n' + open(os.path.join(ROOT, s)).read() + '\n</script>')
+    parts += ['</body>', '</html>']
 
     out = '\n'.join(parts)
+    # the two things that actually broke mobile rendering
+    assert 'charset' in out, 'bundle lost its charset'
+    assert 'name="viewport"' in out, 'bundle lost its viewport'
+    assert out.startswith('<!DOCTYPE html>'), 'bundle is not a document'
     open(OUT, 'w').write(out)
     print(f'wrote {OUT}  ({os.path.getsize(OUT)/1e6:.2f} MB)')
 

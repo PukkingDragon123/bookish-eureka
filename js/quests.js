@@ -1,4 +1,4 @@
-/* ============ Ritual Beasts — quests v3 ============
+/* ============ Hourling — quests v3 ============
    Daily quests generated from the player's goals, a 7-day login chest row,
    and one hand-authored "challenge of the day" — a real thing to go do,
    online or outside, with a link where one helps.                           */

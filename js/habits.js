@@ -1,4 +1,4 @@
-/* ============ Ritual Beasts — real-life daily quests (habit engine) ============ */
+/* ============ Hourling — real-life daily quests (habit engine) ============ */
 'use strict';
 
 const Habits = (() => {

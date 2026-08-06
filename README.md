@@ -1,16 +1,45 @@
-# Dreamkeep
+# Hourling
 
-**Chase the thing you have always meant to get good at — and an idle RPG grows out of the
-hours you actually put in.** Pick one dream on first launch (music, drawing, writing,
-fitness, a language, code, cooking, calm, craft, photography, a subject, dance). Dreamkeep
-turns it into a plan: one concrete task a day, a weekly rhythm you choose, and a 10-rung
-ladder measured in real practised hours. Every minute you log becomes mana, XP and evolution
-essence for a world of 297 collectible pixel beasts, each with its own dex entry, skills,
-passives and ultimate.
+**The hours you actually put in grow into something alive.** Pick one thing you have always
+meant to get good at (music, drawing, writing, fitness, a language, code, cooking, calm,
+craft, photography, a subject, dance) and Hourling turns it into a plan: one concrete task a
+day, a weekly rhythm you choose, and a 10-rung ladder measured in real practised hours.
+Every minute you log becomes mana, XP and evolution essence for a world of 291 collectible
+pixel beasts, each with its own dex entry, skills, signature move and ultimate.
 
 No installs, no build step, no server. Open `index.html`, or grab the single-file build in
-`dist/ritual-beasts.html` and open that anywhere — it has every asset inlined and needs no
-network at all.
+`dist/hourling.html` and open that anywhere — every asset is inlined and it makes no network
+requests at all.
+
+### Install it on a phone
+
+* **iOS** — open it in Safari and *Add to Home Screen*. You get a real standalone launch
+  with the app icon and no browser chrome, via the `apple-*` meta tags.
+* **Android** — Chrome will show the name and icon, but a fully installed WebAPK and offline
+  launch need a service worker, and a service worker cannot be registered from a single
+  self-contained file. So treat Android as a bookmark, not an install.
+* Either way there is no offline cache: each cold start re-downloads the bundle.
+
+### Accounts, backup and sync
+
+* **Profiles are local.** Up to four named saves live side by side in one browser. They
+  never leave the device.
+* **A backup code is the only way progress travels** — your save, gzipped and base64'd
+  (about 1.3KB of text), which you paste into another browser.
+* **Google sign-in is identity only, and it is off until you supply your own OAuth client
+  ID.** There is no shared client ID to ship and Google requires the exact serving origin to
+  be registered. Even once it works, with no backend the ID token cannot be verified, so it
+  proves nothing, gates nothing and syncs nothing — it can show your name and that is all.
+  Real cross-device sync would need a server this app does not have.
+
+### About the "free rewards"
+
+There are **no adverts in this app and nothing costs money**. The reward offers are served
+by Hourling itself: a fifteen-second practice tip, a daily double-up, and a reflection
+prompt that pays gems for one honest line about your practice. The tip card is labelled
+*not an ad* in its own markup, its timer only advances while the card is actually on screen,
+and skipping forfeits the reward. Real ad inventory is impossible here (no ad account, no
+controlled domain) and faking a sponsor would be dishonest, so neither is done.
 
 | Today | Session timer | Onboarding |
 |---|---|---|
@@ -23,6 +52,17 @@ network at all.
 | 10-pull | Quests + login | Region map | Beast page |
 |---|---|---|---|
 | ![Pulls](docs/screenshots/pulls.png) | ![Quests](docs/screenshots/quests.png) | ![Map](docs/screenshots/map.png) | ![Creature](docs/screenshots/creature.png) |
+
+**v5 — Hourling.** Renamed, and shipped as an actual mobile app: the single-file build now
+emits a real HTML document (it previously started at `<title>` with no doctype, charset or
+viewport, so phones rendered a 3.4MB bundle at desktop width), plus a runtime web-app
+manifest, an opaque app icon set, a branded boot splash, safe-area insets and haptics. New
+typography — Plus Jakarta Sans for text, Gabarito for headings and every counter, both
+variable, both with real tabular figures. The Forge replaces the fusion camp: gear now has
+rarity that multiplies its whole contribution, and gems buy board slots, the tier ceiling,
+spawn luck, wheel charge and the **rarity ceiling** itself, while scrapping junk yields
+shards that push a chosen piece's tier or rarity. Local profiles, gzipped backup codes and
+an honest Google sign-in setup card. And a free-rewards slot that is genuinely free.
 
 **v4.1 — the uploaded art is in.** Six tiered equipment sheets, ten crop
 sheets and thirty hobby icons were cut up by `tools/extract-new-art.py` and
@@ -149,7 +189,7 @@ background flood-fill and connected-component slicer, then audited sprite-by-spr
 python3 -m http.server 8000     # then open http://localhost:8000
 ```
 
-Or open `dist/ritual-beasts.html` directly — one file, no server. Progress saves to
+Or open `dist/hourling.html` directly — one file, no server. Progress saves to
 `localStorage` per browser.
 
 Everything except the supplied sprite sheets is generated in-repo by the scripts in

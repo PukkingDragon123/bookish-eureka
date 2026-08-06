@@ -1,4 +1,4 @@
-/* ============ Ritual Beasts — utilities ============ */
+/* ============ Hourling — utilities ============ */
 'use strict';
 
 const $ = (sel, root) => (root || document).querySelector(sel);
@@ -137,7 +137,7 @@ function applyBuddyTheme() {
   r.style.setProperty('--buddy', c);
   r.style.setProperty('--buddy-dim', mixHex(c, '#101529', 0.55));
   r.style.setProperty('--buddy-glow', hexAlpha(c, 0.34));
-  r.style.setProperty('--buddy-soft', mixHex(c, '#101529', 0.82));
+  r.style.setProperty('--buddy-soft', mixHex(c, '#101529', 0.94));
   r.style.setProperty('--buddy-hi', mixHex(c, '#ffffff', 0.4));
   r.dataset.buddyType = type || '';
 }
@@ -160,6 +160,7 @@ function hex3(h) {
 function toast(msg, kind) {
   const root = $('#toast-root');
   const t = el('div', 'toast' + (kind ? ' ' + kind : ''), msg);
+  t.setAttribute('role', 'status');
   root.appendChild(t);
   while (root.children.length > 4) root.firstChild.remove();
   setTimeout(() => t.remove(), 2800);

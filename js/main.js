@@ -1,9 +1,10 @@
-/* ============ Dreamkeep — bootstrap & main loop ============ */
+/* ============ Hourling — bootstrap & main loop ============ */
 'use strict';
 
 (function main() {
   const hadSave = load();
   Sound.setEnabled(S.settings.sound);
+  PWA.init();
   applyBuddyTheme();
   VFX.attach(document.getElementById('vfx'));
 
@@ -46,6 +47,7 @@
     }
   }
   UI.renderAll();
+  PWA.hideBoot();
 
   /* ---- loops ---- */
   setInterval(() => Battle.tick(), Battle.TICK_MS);
@@ -62,7 +64,7 @@
     UI.renderHud();
     Merge.regen();
     const pe = $('#portal-energy');
-    if (pe) pe.textContent = `${S.merge.energy}/${Merge.ENERGY_MAX}`;
+    if (pe) pe.textContent = `${S.merge.energy}/${Merge.energyMax()}`;
     if (UI.currentTab() === 'quests' && S.exTimer) UI.renderRituals();
     // garden countdowns tick once per 3s while visible
     if (++slowTick % 3 === 0 && UI.currentTab() === 'farm') UI.renderFarm();

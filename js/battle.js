@@ -1,4 +1,4 @@
-/* ============ Ritual Beasts — battle engine v3 ============
+/* ============ Hourling — battle engine v3 ============
    Packs of 1-3 enemies walk in from the right; the party advances between
    waves; skills and ultimates land as travelling attack tweens with typed
    pixel VFX. Boss waves are timed. Wipes show a defeat screen with a way

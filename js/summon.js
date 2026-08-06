@@ -1,4 +1,4 @@
-/* ============ Ritual Beasts — summon banners v4 ============
+/* ============ Hourling — summon banners v4 ============
    Seven banners: the mana-fed Wild Circle, a daily element banner, the gem
    Radiant banner, a cheap Novice circle biased toward beasts you lack, a
    weekly two-element banner, the high-roll Ascendant banner, and a Harvest

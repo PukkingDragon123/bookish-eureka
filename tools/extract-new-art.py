@@ -89,7 +89,9 @@ UI_ICONS = {
     'meal':    ('8BE17875-FC46-4DC8-ACAB-48F4C582B28D.png', 5, 2, 4),   # salad
     'essence': ('8BE17875-FC46-4DC8-ACAB-48F4C582B28D.png', 5, 2, 3),   # red potion
     'chest':   ('8BE17875-FC46-4DC8-ACAB-48F4C582B28D.png', 5, 2, 6),   # chest
-    'portal':  ('8BE17875-FC46-4DC8-ACAB-48F4C582B28D.png', 5, 2, 7),   # magic circle
+    # the magic wheel: a proper runed circle with a glowing core, from the
+    # Mystic move sheet. The old ceremonial-disc icon read as a flat plate.
+    'portal':  ('moves/Mystic_Attack_Moves.png', 5, 2, 1),   # Rune Burst wheel
     'skull':   ('8BE17875-FC46-4DC8-ACAB-48F4C582B28D.png', 5, 2, 9),   # skull
     'gold':    (CURRENCY[0], 4, 1, 0),     # coin
     'gem':     (CURRENCY[0], 4, 1, 1),     # crystal

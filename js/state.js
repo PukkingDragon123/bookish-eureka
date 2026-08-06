@@ -1,7 +1,13 @@
-/* ============ Ritual Beasts — game state, save/load, economy ============ */
+/* ============ Hourling — game state, save/load, economy ============ */
 'use strict';
 
+/* The default save slot. Kept as dreamkeep-save-v4 deliberately: renaming it
+   during the rebrand would orphan every existing player's progress. Profiles
+   (js/account.js) point at their own keys through saveKeyFor(). */
 const SAVE_KEY = 'dreamkeep-save-v4';
+function saveKeyFor() {
+  return (typeof Account !== 'undefined' && Account.saveKey) ? Account.saveKey() : SAVE_KEY;
+}
 
 /* ---------- static lookups ---------- */
 const C_BY_ID = {};
@@ -79,11 +85,19 @@ function defaultState() {
     starterCid: null,
     /* --- v3 --- */
     upgrades: { dmg: 0, spd: 0, crit: 0, gold: 0, hp: 0, ult: 0 },
-    merge: { board: Array(12).fill(null), energy: 6, lastEnergy: Date.now() },
+    merge: {
+      board: Array(12).fill(null), energy: 6, lastEnergy: Date.now(),
+      shards: 0,
+      /* gem-funded forge upgrades, each a level index into MERGE_UPGRADES */
+      up: { slots: 0, tier: 0, luck: 0, energy: 0, rarity: 0 },
+      forgeTarget: null,        // slot index being fed shards
+    },
     farm: { plots: [{}, {}, {}, {}, {}, {}, {}, {}, {}], seeds: 3, food: {} },
     lab: { points: 5, serums: 0, rolls: 0 },
     login: { cycle: 0, lastDay: null },
     challenge: { day: null, idx: 0, done: false },
+    /* in-app reward offers: daily caps + tip-card cooldown */
+    offers: { day: null, used: {}, lastTip: 0, insured: false },
     regionProgress: {},
     losses: 0,
     /* --- v4: the dream you are pursuing --- */
@@ -99,11 +113,11 @@ let S = defaultState();
 /* ---------- save / load ---------- */
 function save() {
   S.lastSeen = Date.now();
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {}
+  try { localStorage.setItem(saveKeyFor(), JSON.stringify(S)); } catch (e) {}
 }
 function load() {
   try {
-    const raw = localStorage.getItem(SAVE_KEY);
+    const raw = localStorage.getItem(saveKeyFor());
     if (!raw) return false;
     const data = JSON.parse(raw);
     S = Object.assign(defaultState(), data);
@@ -122,16 +136,35 @@ function sanitize() {
   if (!S.party.length && Object.keys(S.beasts).length) S.party = [Object.keys(S.beasts)[0]];
   if (S.starterCid && !C_BY_ID[S.starterCid]) S.starterCid = null;
   const d = defaultState();
-  for (const k of ['upgrades', 'merge', 'farm', 'lab', 'login', 'challenge', 'regionProgress', 'dream']) {
+  for (const k of ['upgrades', 'merge', 'farm', 'lab', 'login', 'challenge', 'regionProgress', 'dream', 'offers']) {
     if (typeof S[k] !== 'object' || S[k] === null) S[k] = d[k];
   }
-  if (!Array.isArray(S.merge.board) || S.merge.board.length !== 12) S.merge.board = Array(12).fill(null);
+  if (typeof S.merge.up !== 'object' || S.merge.up === null) S.merge.up = { slots: 0, tier: 0, luck: 0, energy: 0, rarity: 0 };
+  for (const k of Object.keys(MERGE_UPGRADES)) {
+    S.merge.up[k] = clamp(S.merge.up[k] | 0, 0, MERGE_UPGRADES[k].max);
+  }
+  S.merge.shards = Math.max(0, S.merge.shards | 0);
+  if (!Array.isArray(S.merge.board)) S.merge.board = [];
+  // the board grows with the slots upgrade, so resize instead of resetting
+  const want = mergeSlots();
+  while (S.merge.board.length < want) S.merge.board.push(null);
+  if (S.merge.board.length > want) {
+    const spill = S.merge.board.slice(want).filter(Boolean);
+    S.merge.board = S.merge.board.slice(0, want);
+    for (const it of spill) {
+      const i = S.merge.board.indexOf(null);
+      if (i >= 0) S.merge.board[i] = it;      // never silently destroy gear
+    }
+  }
   S.merge.board = S.merge.board.map(it => {
     if (!it || !MERGE_CATS[it.cat]) return null;
     const n = MERGE_CATS[it.cat].variants.length;
     return { cat: it.cat, variant: clamp(it.variant | 0, 0, n - 1),
-             tier: clamp(it.tier | 0, 1, MERGE_MAX_TIER) };
+             tier: clamp(it.tier | 0, 1, mergeMaxTier()),
+             r: clamp(it.r | 0, 0, GEAR_MAX_R) };
   });
+  if (typeof S.merge.forgeTarget !== 'number' ||
+      S.merge.forgeTarget < 0 || S.merge.forgeTarget >= want) S.merge.forgeTarget = null;
   if (!Array.isArray(S.farm.plots)) S.farm.plots = [];
   while (S.farm.plots.length < 9) S.farm.plots.push({});
   S.farm.plots = S.farm.plots.slice(0, 9);
@@ -139,7 +172,7 @@ function sanitize() {
 }
 
 function hardReset() {
-  localStorage.removeItem(SAVE_KEY);
+  localStorage.removeItem(saveKeyFor());
   location.reload();
 }
 
@@ -205,11 +238,57 @@ function mergeVariant(it) {
   const vs = MERGE_CATS[it.cat].variants;
   return vs[Math.min(it.variant, vs.length - 1)];
 }
-const MERGE_MAX_TIER = 9;
+const MERGE_TIER_BASE = 9;
+
+/* ---------- gear rarity ----------
+   Rarity is rolled on spawn and multiplies the piece's whole contribution, so
+   a lucky legendary tier-4 can beat an unlucky tier-6. It is also the thing
+   gems and shards buy, which gives the board a progression of its own. */
+const GEAR_RARITY = [
+  { key: 'common',    name: 'Common',    mult: 1.0,  col: '#8f9bb8', w: 62 },
+  { key: 'rare',      name: 'Rare',      mult: 1.45, col: '#45a6ff', w: 25 },
+  { key: 'epic',      name: 'Epic',      mult: 2.1,  col: '#b47cff', w: 10 },
+  { key: 'legendary', name: 'Legendary', mult: 3.2,  col: '#ffc247', w: 3 },
+];
+const GEAR_MAX_R = GEAR_RARITY.length - 1;
+
+/* Forge upgrades bought with gems. Costs are tuned against a gem income of
+   roughly 25-45/day from quests and bosses, so each step is a real goal
+   rather than pocket change. */
+const MERGE_UPGRADES = {
+  slots:  { name: 'Board slots', icon: 'portal', max: 6, per: 1,
+            note: 'One more slot to work with',
+            cost: n => Math.round(55 * Math.pow(1.55, n)) },
+  tier:   { name: 'Tier ceiling', icon: 'sword', max: 3, per: 1,
+            note: 'Fuse one tier higher',
+            cost: n => Math.round(140 * Math.pow(2.0, n)) },
+  luck:   { name: 'Forge luck', icon: 'gem', max: 5, per: 1,
+            note: 'Better rarity when the wheel spawns gear',
+            cost: n => Math.round(45 * Math.pow(1.7, n)) },
+  energy: { name: 'Wheel charge', icon: 'bolt', max: 6, per: 1,
+            note: '+1 max charge, faster recharge',
+            cost: n => Math.round(40 * Math.pow(1.5, n)) },
+  /* the rarity ceiling. Level 0 caps gear at Rare, so Epic and Legendary are
+     things you buy the right to own, not just things you wait for. */
+  rarity: { name: 'Rarity ceiling', icon: 'relic', max: 2, per: 1,
+            note: 'Unlock Epic, then Legendary gear',
+            cost: n => Math.round(220 * Math.pow(2.4, n)) },
+};
+function mergeUpLevel(k) { return (S.merge.up && S.merge.up[k]) | 0; }
+function mergeSlots() { return 12 + mergeUpLevel('slots'); }
+/* highest rarity index the forge may produce or refine to */
+function mergeMaxRarity() { return Math.min(GEAR_MAX_R, 1 + mergeUpLevel('rarity')); }
+function mergeMaxTier() { return MERGE_TIER_BASE + mergeUpLevel('tier'); }
+function gearRarity(it) { return GEAR_RARITY[clamp((it && it.r) | 0, 0, GEAR_MAX_R)]; }
+
+/* A piece's stat contribution: doubles per tier, scaled by rarity. */
+function gearPoints(it) {
+  return Math.pow(2, it.tier - 1) * gearRarity(it).mult;
+}
 function mergeBonus(stat) {
   let pts = 0;
   for (const it of S.merge.board) {
-    if (it && MERGE_CATS[it.cat].stat === stat) pts += Math.pow(2, it.tier - 1);
+    if (it && MERGE_CATS[it.cat] && MERGE_CATS[it.cat].stat === stat) pts += gearPoints(it);
   }
   const per = stat === 'hp' ? 2.5 : 2.0;
   return pts * per / 100;

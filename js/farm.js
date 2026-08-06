@@ -1,4 +1,4 @@
-/* ============ Ritual Beasts — the farm ============
+/* ============ Hourling — the farm ============
    Six plots grow element foods in real time. Seeds come from logging real
    meals (detail pays: calories +1, photo +1). Finishing any quest or work
    timer waters the whole field, cutting the remaining grow time.

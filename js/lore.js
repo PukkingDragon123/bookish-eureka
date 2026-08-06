@@ -1,4 +1,4 @@
-/* ============ Ritual Beasts — skills, passives, ultimates, dex lore ============
+/* ============ Hourling — skills, passives, ultimates, dex lore ============
    Everything here is derived deterministically from a creature's id, so the
    full 336-strong roster gets its own kit without shipping a giant data blob.
    Same creature -> same skills, every session, forever.                       */

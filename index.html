@@ -2,10 +2,21 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#2a1d12">
-<title>Dreamkeep — chase the thing you actually want</title>
-<link rel="icon" href="assets/creatures/s02_00.png">
+<!-- viewport-fit=cover so the app can paint under a notch; zoom left ON,
+     because disabling it is an accessibility failure, not a polish win -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#101529">
+<meta name="description" content="Hourling turns the hours you actually practise into a living party of beasts. Pick one thing to get good at, put in real minutes, and watch them grow.">
+<title>Hourling — the hours you put in grow into something alive</title>
+
+<!-- installed-app behaviour on iOS: real standalone launch, dark status bar -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hourling">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="assets/ui/app-180.png">
+<link rel="icon" href="assets/ui/app-192.png">
+
 <link rel="stylesheet" href="css/font.css">
 <link rel="stylesheet" href="css/ui-icons.css">
 <link rel="stylesheet" href="css/elements.css">
@@ -15,6 +26,11 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+<div id="boot">
+  <img src="assets/ui/app-192.png" alt="">
+  <b>Hourling</b>
+  <span>the hours you put in grow into something alive</span>
+</div>
 <div id="app">
 
   <!-- ======================= HUD ======================= -->
@@ -27,7 +43,7 @@
       <div class="hud-chip streak-chip" title="Day streak"><i class="ico ico-streak"></i><b id="hud-streak">0</b></div>
       <div class="hud-chip gold-chip"><i class="ico ico-gold"></i><b id="hud-gold">0</b></div>
       <div class="hud-chip gem-chip"><i class="ico ico-gem"></i><b id="hud-gems">0</b></div>
-      <button id="btn-settings" class="hud-chip icon-btn" title="Settings"><span class="glyph-dots"></span></button>
+      <button id="btn-settings" class="hud-chip icon-btn" title="Settings" aria-label="Settings"><span class="glyph-dots"></span></button>
     </div>
     <div class="hud-row">
       <div class="hud-chip mana-chip" title="Mana — earned by real practice">
@@ -77,6 +93,8 @@
 
       <div id="today-challenge"></div>
 
+      <div id="offers-card" class="card"></div>
+
       <div id="journal-card" class="card">
         <div class="card-head"><i class="ico ico-book"></i> Practice journal</div>
         <div id="journal-list"></div>
@@ -93,7 +111,7 @@
           <span id="stage-area">Dewy Meadow</span>
           <span id="stage-num">Stage 1-1</span>
         </div>
-        <button id="btn-map" class="pixbtn tiny" title="Region map"><i class="ico ico-map"></i></button>
+        <button id="btn-map" class="pixbtn tiny" title="Region map" aria-label="Region map"><i class="ico ico-map"></i></button>
         <div id="wave-pips"></div>
         <div id="boost-badge" class="hidden"><i class="ico ico-bolt"></i> x3 <b id="boost-time"></b></div>
         <div id="enemy-row"></div>
@@ -123,13 +141,14 @@
           <div id="upgrade-strip"></div>
         </div>
         <div id="merge-panel" class="card panel collapsed">
-          <button class="panel-head" data-panel="fusion"><i class="ico ico-portal"></i> Fusion camp
+          <button class="panel-head" data-panel="fusion"><i class="ico ico-portal"></i> Forge
             <span id="merge-bonuses"></span><i class="chev"></i></button>
           <div id="merge-board"></div>
           <div id="merge-foot">
-            <button id="btn-portal" class="pixbtn primary sm"><i class="ico ico-portal"></i> Summon gear <b id="portal-energy"></b></button>
+            <button id="btn-portal" class="pixbtn primary sm"><i class="ico ico-portal"></i> Spin the wheel <b id="portal-energy"></b></button>
             <button id="btn-portal-gold" class="pixbtn gold sm"><i class="ico ico-gold"></i> <b id="portal-gold-cost">25</b></button>
           </div>
+          <div id="forge-strip"></div>
         </div>
       </div>
     </section>
@@ -221,12 +240,13 @@
 <div id="session-overlay" class="hidden"></div>
 <div id="wish-overlay" class="hidden"></div>
 <div id="modal-root"></div>
-<div id="toast-root"></div>
+<div id="toast-root" aria-live="polite" aria-atomic="false"></div>
 
 <script src="js/creatures-data.js"></script>
 <script src="js/skill-icons.js"></script>
 <script src="js/move-data.js"></script>
 <script src="js/util.js"></script>
+<script src="js/account.js"></script>
 <script src="js/sound.js"></script>
 <script src="js/lore.js"></script>
 <script src="js/state.js"></script>
@@ -238,8 +258,10 @@
 <script src="js/battle.js"></script>
 <script src="js/habits.js"></script>
 <script src="js/quests.js"></script>
+<script src="js/offers.js"></script>
 <script src="js/summon.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/pwa.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

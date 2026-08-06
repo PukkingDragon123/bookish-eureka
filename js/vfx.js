@@ -1,4 +1,4 @@
-/* ============ Dreamkeep — VFX 2.0 ============
+/* ============ Hourling — VFX 2.0 ============
    Two-pass renderer: a normal pass for solid pixels and an additive pass for
    glow, so effects bloom against the scene without washing sprites out.
    Everything still snaps to a virtual pixel grid — it is bloom on pixel art,

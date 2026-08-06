@@ -1,4 +1,4 @@
-/* ============ Dreamkeep — the dream you are chasing ============
+/* ============ Hourling — the dream you are chasing ============
    The whole app hangs off one answer: what are you trying to become good at?
    Everything below turns that answer into a concrete plan — today's focus,
    a weekly rhythm, a milestone ladder measured in real practised hours — and

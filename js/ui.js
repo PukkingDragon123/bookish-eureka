@@ -1,4 +1,4 @@
-/* ============ Dreamkeep — UI v4 ============
+/* ============ Hourling — UI v4 ============
    Today is the home screen: your dream, one concrete task, a real timer.
    Everything else (battle, garden, beasts) is the reward layer that the
    real practice feeds.                                                     */
@@ -72,7 +72,110 @@ const UI = (() => {
     renderRhythm();
     renderTodayQuests();
     renderChallengeInto($('#today-challenge'));
+    renderOffers();
     renderJournal();
+  }
+
+  /* ================= free rewards (in-app offers) ================= */
+  function renderOffers() {
+    const wrap = $('#offers-card');
+    if (!wrap) return;
+    const ready = Offers.readyCount();
+    const rows = Offers.list().map(o => {
+      const state = o.ready ? 'ready'
+        : o.left <= 0 ? 'done'
+        : o.cooling > 0 ? 'cool' : 'done';
+      const right = state === 'ready' ? '<span class="off-go">Claim</span>'
+        : state === 'cool' ? `<span class="off-wait">${fmtTime(o.cooling / 1000)}</span>`
+        : '<span class="off-wait">tomorrow</span>';
+      return `<button class="offrow ${state}" data-off="${o.key}" ${state === 'ready' ? '' : 'disabled'}>
+          <span class="off-ic">${icon(o.icon)}</span>
+          <span class="off-txt"><b>${o.name}</b><span>${o.blurb}</span></span>
+          ${right}
+        </button>`;
+    }).join('');
+    const ins = Offers.isInsured();
+    wrap.innerHTML = `
+      <div class="card-head"><i class="ico ico-chest"></i> Free rewards
+        ${ready ? `<span class="off-badge">${ready}</span>` : ''}</div>
+      <p class="off-note">These are from Hourling itself — there are no adverts
+        in this app and nothing costs money. Each one asks for fifteen seconds
+        or one honest line.</p>
+      ${rows}
+      <button class="offrow ${ins ? 'done' : 'sink'}" data-off="insure" ${ins ? 'disabled' : ''}>
+        <span class="off-ic">${icon('streak')}</span>
+        <span class="off-txt"><b>Protect the streak</b><span>${ins ? 'Protected for today' : 'One missed day will not break it'}</span></span>
+        ${ins ? '<span class="off-wait">active</span>' : `<span class="off-go gemcost">${icon('gem')}${Offers.INSURE_COST}</span>`}
+      </button>`;
+    $$('#offers-card [data-off]', wrap).forEach(b => {
+      b.onclick = () => {
+        const k = b.dataset.off;
+        if (k === 'insure') Offers.insureStreak();
+        else Offers.start(k);
+      };
+    });
+  }
+
+  /* the fifteen-second tip card: a real tip, a ring that fills, and a claim
+     button that only arms when it finishes. Skipping forfeits the reward. */
+  function showTipCard(key, tip, ms, done) {
+    const box = el('div', 'tipcard');
+    box.innerHTML = `
+      <div class="tip-kicker">Hourling tip · not an ad</div>
+      <div class="tip-ring">
+        <svg viewBox="0 0 80 80"><circle class="track" cx="40" cy="40" r="34"/>
+          <circle class="fill" cx="40" cy="40" r="34"/></svg>
+        <b class="tip-count">${Math.round(ms / 1000)}</b>
+      </div>
+      <h3>${tip[0]}</h3>
+      <p>${tip[1]}</p>
+      <div class="mrow"></div>`;
+    const row = box.querySelector('.mrow');
+    const claim = el('button', 'pixbtn primary', '<b>Collect</b>');
+    claim.disabled = true;
+    const skip = el('button', 'pixbtn ghost sm', 'Skip');
+    row.appendChild(skip); row.appendChild(claim);
+    const back = openModal(box, { noClose: true });
+    const arc = box.querySelector('.fill');
+    const count = box.querySelector('.tip-count');
+    const len = 2 * Math.PI * 34;
+    arc.style.strokeDasharray = len;
+    // elapsed only accumulates while the card is visible: backgrounding the
+    // tab pauses it, so the fifteen seconds are fifteen real seconds
+    let elapsed = 0, last = Date.now();
+    const iv = setInterval(() => {
+      const now = Date.now();
+      if (document.visibilityState === 'visible') elapsed += now - last;
+      last = now;
+      const f = Math.min(1, elapsed / ms);
+      arc.style.strokeDashoffset = len * (1 - f);
+      count.textContent = Math.ceil((1 - f) * ms / 1000);
+      if (f >= 1) {
+        clearInterval(iv);
+        count.textContent = '✓';
+        claim.disabled = false;
+        claim.classList.add('ready');
+      }
+    }, 100);
+    const stop = () => { clearInterval(iv); closeModal(back); };
+    skip.onclick = () => { stop(); toast('Skipped — no reward'); };
+    claim.onclick = () => { if (elapsed >= ms) { stop(); done(); } };
+  }
+
+  function showReflectOffer() {
+    const box = el('div');
+    box.innerHTML = `<h3>${icon('scroll')} One honest line</h3>
+      <p class="subtle" style="text-align:center">What was practice actually like today?
+        Bad days count — write it anyway.</p>
+      <textarea class="reflect-in" rows="3" maxlength="120"
+        placeholder="Fumbled the same bar ten times, got it on the eleventh."></textarea>
+      <div class="mrow"></div>`;
+    const ta = box.querySelector('textarea');
+    const ok = el('button', 'pixbtn primary', `<b>Log it</b><span>${icon('gem')}8</span>`);
+    const back = openModal(box);
+    box.querySelector('.mrow').appendChild(ok);
+    setTimeout(() => ta.focus(), 60);
+    ok.onclick = () => { if (Offers.submitReflection(ta.value)) closeModal(back); };
   }
 
   function renderHero() {
@@ -963,35 +1066,103 @@ const UI = (() => {
     S.merge.board.forEach((it, i) => {
       const slot = el('div', 'mslot');
       slot.dataset.i = i;
+      if (S.merge.forgeTarget === i) slot.classList.add('picked');
       if (it) {
-        const item = el('div', `mitem t-${it.cat}` + (it.tier >= 5 ? ' hi-tier' : ''));
+        const rar = gearRarity(it);
+        const item = el('div', `mitem t-${it.cat} r-${rar.key}`);
         item.dataset.v = it.variant;
-        item.innerHTML = `<span class="var-dot"></span>` +
-          `<span class="gear big g-${mergeVariant(it).gear} t${it.tier}"></span>` +
-          `<span class="tier">T${it.tier}</span>`;
+        item.style.setProperty('--rar', rar.col);
+        const maxed = it.tier >= mergeMaxTier();
+        item.innerHTML =
+          `<span class="gear big g-${mergeVariant(it).gear} t${Math.min(it.tier, 9)}"></span>` +
+          `<span class="tier${maxed ? ' maxed' : ''}">${it.tier}</span>` +
+          (rar.key === 'common' ? '' : `<span class="rpip"></span>`);
         item.title = Merge.itemName(it);
         attachDrag(item, i);
         slot.appendChild(item);
+      } else {
+        slot.classList.add('empty');
       }
       slot.onclick = () => tapSlot(i);
       board.appendChild(slot);
     });
+    // one honest headline number, then the three passive bonuses
     const t = Merge.totals();
     $('#merge-bonuses').innerHTML =
-      `${icon('sword')}<b>+${t.dmg.toFixed(0)}%</b> <b>+${t.hp.toFixed(0)}%</b> ${icon('gold')}<b>+${t.gold.toFixed(0)}%</b>`;
-    $('#portal-energy').textContent = `${S.merge.energy}/${Merge.ENERGY_MAX}`;
+      `<span class="mb-pow">${fmt(Merge.boardPower())}</span>` +
+      `<span class="mb-stat">${icon('sword')}+${t.dmg.toFixed(0)}%</span>` +
+      `<span class="mb-stat">+${t.hp.toFixed(0)}% HP</span>` +
+      `<span class="mb-stat">${icon('gold')}+${t.gold.toFixed(0)}%</span>`;
+    $('#portal-energy').textContent = `${S.merge.energy}/${Merge.energyMax()}`;
     $('#portal-gold-cost').textContent = fmt(Merge.spawnGoldCost());
+    renderForge();
+  }
+
+  /* the forge strip: shard bank, what the selected piece can become, and the
+     gem upgrade shop. Kept under the board so the whole loop is one screen. */
+  function renderForge() {
+    const wrap = $('#forge-strip');
+    if (!wrap) return;
+    const sel = S.merge.forgeTarget;
+    const it = (typeof sel === 'number') ? S.merge.board[sel] : null;
+    let html = `<div class="forge-head">
+        <span class="shardbank">${icon('gem')}<b>${fmt(S.merge.shards)}</b> shards</span>
+        <span class="subtle">${it ? Merge.itemName(it) : 'tap a piece to select it'}</span>
+      </div>`;
+
+    if (it) {
+      const tc = Merge.tierCost(it), rc = Merge.rarityCost(it);
+      const tMax = it.tier >= mergeMaxTier(), rMax = (it.r | 0) >= mergeMaxRarity();
+      html += `<div class="forge-acts">
+        <button class="pixbtn sm" data-act="tier" ${tMax || S.merge.shards < tc ? 'disabled' : ''}>
+          <b>${tMax ? 'Max tier' : 'Tier up'}</b><span>${tMax ? '—' : tc + ' shards'}</span></button>
+        <button class="pixbtn sm gem" data-act="rarity" ${rMax || S.merge.shards < rc ? 'disabled' : ''}>
+          <b>${rMax ? (it.r | 0) >= GEAR_MAX_R ? 'Legendary' : 'Capped' : 'Rarity up'}</b><span>${rMax ? '—' : rc + ' shards'}</span></button>
+        <button class="pixbtn sm danger" data-act="scrap">
+          <b>Scrap</b><span>+${Merge.scrapValue(it)}</span></button>
+      </div>`;
+    }
+
+    html += `<div class="forge-ups">` + Object.keys(MERGE_UPGRADES).map(k => {
+      const u = MERGE_UPGRADES[k], lv = mergeUpLevel(k), cost = Merge.upCost(k);
+      const can = cost !== null && S.player.gems >= cost;
+      return `<button class="upcard${cost === null ? ' maxed' : ''}${can ? ' can' : ''}"
+          data-up="${k}" ${cost === null ? 'disabled' : ''}>
+        <span class="upname">${icon(u.icon)} ${u.name}</span>
+        <span class="uplv">${lv}/${u.max}</span>
+        <span class="upnote">${u.note}</span>
+        <span class="upcost">${cost === null ? 'MAX' : icon('gem') + cost}</span>
+      </button>`;
+    }).join('') + `</div>`;
+
+    wrap.innerHTML = html;
+    $$('#forge-strip [data-act]', wrap).forEach(b => {
+      b.onclick = e => {
+        e.stopPropagation();
+        const a = b.dataset.act;
+        if (a === 'tier') Merge.forgeTier(sel);
+        else if (a === 'rarity') Merge.forgeRarity(sel);
+        else if (a === 'scrap') Merge.scrap(sel);
+      };
+    });
+    $$('#forge-strip [data-up]', wrap).forEach(b => {
+      b.onclick = e => { e.stopPropagation(); Merge.buyUpgrade(b.dataset.up); };
+    });
   }
 
   function tapSlot(i) {
     const it = S.merge.board[i];
     if (selSlot === null) {
-      if (it) { selSlot = i; markSel(); }
+      // first tap picks a piece up AND targets it in the forge, so the
+      // shard actions always act on whatever you last touched
+      if (it) { selSlot = i; S.merge.forgeTarget = i; markSel(); renderForge(); }
       return;
     }
     if (selSlot === i) { selSlot = null; markSel(); return; }
     Merge.drop(selSlot, i);
     selSlot = null;
+    if (S.merge.board[i]) S.merge.forgeTarget = i;
+    renderForge();
   }
   function markSel() {
     $$('#merge-board .mslot').forEach((s, i) =>
@@ -1045,10 +1216,17 @@ const UI = (() => {
     document.body.appendChild(f);
     setTimeout(() => f.remove(), 800);
   }
-  function mergeFuseFx(i, tier) {
+  function mergeFuseFx(i, tier, rarityUp) {
     const p = slotPoint(i);
     if (!p) return;
     confetti(8 + tier * 3);
+    const slot = $$('#merge-board .mslot')[i];
+    if (slot) {
+      slot.classList.remove('fused', 'rarity-up');
+      void slot.offsetWidth;                        // restart the keyframes
+      slot.classList.add(rarityUp ? 'rarity-up' : 'fused');
+      setTimeout(() => slot.classList.remove('fused', 'rarity-up'), 700);
+    }
     const f = el('div', 'dmg-float crit', 'T' + tier + '!');
     f.style.position = 'fixed'; f.style.left = (p.x - 10) + 'px'; f.style.top = (p.y - 16) + 'px'; f.style.zIndex = 300;
     document.body.appendChild(f);
@@ -2035,7 +2213,7 @@ const UI = (() => {
     /* 0 — what this is */
     function drawIntro() {
       box.innerHTML = steps() + `
-        <h2>Dreamkeep</h2>
+        <h2>Hourling</h2>
         <p>There is something you have always meant to get good at.<br>
         This is the app that actually makes you do it.</p>
         <p style="margin-top:10px">You will pick one dream. Every day it gives you
@@ -2260,6 +2438,133 @@ const UI = (() => {
   }
 
   /* ================= settings / welcome ================= */
+  /* ================= account, profiles, backup, sign-in ================= */
+  let accountBack = null;
+  function showAccount() {
+    const box = el('div', 'account');
+    accountBack = openModal(box);
+    renderAccount();
+  }
+
+  function renderAccount() {
+    const box = $('#modal-root .account');
+    if (!box) return;
+    const g = Account.googleUser();
+    const cid = Account.clientId();
+    const list = Account.profiles();
+    const act = Account.activeId();
+
+    box.innerHTML = `<h3>${icon('book')} Account</h3>
+
+      <div class="acc-sec">
+        <div class="acc-h">Profiles <span class="subtle">on this device</span></div>
+        <div class="acc-profiles">${list.map(p => `
+          <button class="accrow${p.id === act ? ' on' : ''}" data-prof="${p.id}">
+            <span class="acc-name">${p.name}</span>
+            <span class="acc-tag">${p.id === act ? 'playing' : 'switch'}</span>
+          </button>`).join('')}</div>
+        <div class="acc-btns">
+          <button class="pixbtn ghost sm" data-act="new">New profile</button>
+          <button class="pixbtn ghost sm" data-act="rename">Rename</button>
+          <button class="pixbtn ghost sm danger" data-act="del">Delete</button>
+        </div>
+      </div>
+
+      <div class="acc-sec">
+        <div class="acc-h">Backup code</div>
+        <p class="acc-note">Your whole save as text. Paste it into another
+          browser to carry your progress across — there is no server here, so
+          this is the only way it travels.</p>
+        <div class="acc-btns">
+          <button class="pixbtn sm" data-act="export">Copy my code</button>
+          <button class="pixbtn sm ghost" data-act="import">Paste a code</button>
+        </div>
+      </div>
+
+      <div class="acc-sec">
+        <div class="acc-h">Google sign-in</div>
+        ${g ? `<p class="acc-note">Signed in as <b>${g.name || g.email}</b>.
+             This shows your name here and nothing else — see below.</p>
+           <div class="acc-btns"><button class="pixbtn ghost sm" data-act="signout">Sign out</button></div>`
+          : `<div class="gbtn-host"></div>
+             ${cid ? '' : `<p class="acc-note">Sign-in is dormant until you add
+               your own Google client ID. It takes three steps:</p>
+               <ol class="acc-steps">
+                 <li>Open Google Cloud Console → APIs &amp; Services → Credentials.</li>
+                 <li>Create an <b>OAuth client ID</b> of type “Web application”, and add
+                     <code>${/^https?:$/.test(location.protocol) ? location.origin
+                       : 'the https address you open this from'}</code>
+                     to Authorised JavaScript origins.</li>
+                 <li>Paste the client ID below.</li>
+               </ol>
+               <input class="acc-in" type="text" placeholder="…apps.googleusercontent.com" value="">
+               <div class="acc-btns"><button class="pixbtn sm" data-act="setcid">Save client ID</button></div>`}`}
+        <p class="acc-note warn">Being straight with you: with no server behind
+          this app, signing in proves nothing and syncs nothing. It can show
+          your name, and that is all — your save still lives in this browser.
+          Real cross-device sync needs a backend this app does not have.</p>
+      </div>`;
+
+    $$('#modal-root [data-prof]', box).forEach(b => {
+      b.onclick = () => Account.switchTo(b.dataset.prof);
+    });
+    $$('#modal-root [data-act]', box).forEach(b => {
+      b.onclick = async () => {
+        const a = b.dataset.act;
+        if (a === 'new') {
+          const n = prompt('Name this profile');
+          if (n && Account.create(n)) renderAccount();
+        } else if (a === 'rename') {
+          const n = prompt('New name', Account.active().name);
+          if (n && Account.rename(Account.activeId(), n)) renderAccount();
+        } else if (a === 'del') {
+          if (confirm('Delete this profile and its save?')) Account.remove(Account.activeId());
+        } else if (a === 'export') {
+          const code = await Account.exportCode();
+          showCodeSheet(code);
+        } else if (a === 'import') {
+          const code = prompt('Paste your backup code');
+          if (code && await Account.importCode(code)) location.reload();
+        } else if (a === 'signout') {
+          Account.signOut(); renderAccount();
+        } else if (a === 'setcid') {
+          const inp = box.querySelector('.acc-in');
+          if (Account.setClientId(inp ? inp.value : '')) { toast('Client ID saved'); renderAccount(); }
+        }
+      };
+    });
+
+    const host = box.querySelector('.gbtn-host');
+    if (host) {
+      Account.mountButton(host).then(res => {
+        if (res === 'ok') return;
+        const why = res === 'no-client' ? '' :
+          res === 'file' ? 'Google will not run sign-in on a file:// page — open this over http(s).' :
+          res === 'blocked' ? 'Could not reach Google’s sign-in script from this network.' :
+          'Google’s sign-in script rejected this origin.';
+        if (why) host.innerHTML = `<p class="acc-note warn">${why}</p>`;
+      });
+    }
+  }
+
+  function showCodeSheet(code) {
+    const box = el('div');
+    box.innerHTML = `<h3>Backup code</h3>
+      <p class="subtle" style="text-align:center">Keep this somewhere safe.
+        ${(code.length / 1000).toFixed(1)}KB of text.</p>
+      <textarea class="acc-code" rows="5" readonly>${code}</textarea>
+      <div class="mrow"></div>`;
+    const ta = box.querySelector('textarea');
+    const cp = el('button', 'pixbtn primary sm', '<b>Copy</b>');
+    cp.onclick = () => {
+      ta.select();
+      try { navigator.clipboard.writeText(code); } catch (e) { document.execCommand('copy'); }
+      toast('Copied');
+    };
+    box.querySelector('.mrow').appendChild(cp);
+    openModal(box);
+  }
+
   function showSettings() {
     const box = el('div');
     box.innerHTML = `<h3>Settings</h3><div class="mrow" style="flex-direction:column;align-items:stretch"></div>`;
@@ -2272,6 +2577,16 @@ const UI = (() => {
       save();
     };
     row.appendChild(snd);
+    const hap = el('button', 'pixbtn ghost sm', (Sound.hapticsOn() ? 'Vibration: ON' : 'Vibration: OFF'));
+    hap.onclick = () => {
+      const on = Sound.setHaptics(!Sound.hapticsOn());
+      hap.textContent = on ? 'Vibration: ON' : 'Vibration: OFF';
+      save();
+    };
+    row.appendChild(hap);
+    const acct = el('button', 'pixbtn ghost sm', 'Account & backup');
+    acct.onclick = () => { closeAllModals(); showAccount(); };
+    row.appendChild(acct);
     const plan = el('button', 'pixbtn ghost sm', 'Change my plan');
     plan.onclick = () => { closeAllModals(); showPlanEditor(); };
     row.appendChild(plan);
@@ -2281,7 +2596,7 @@ const UI = (() => {
     const about = el('p', 'subtle');
     about.style.textAlign = 'center';
     about.style.marginTop = '10px';
-    about.innerHTML = 'Dreamkeep — the hours you really put in power a whole world.<br>' +
+    about.innerHTML = 'Hourling — the hours you really put in power a whole world.<br>' +
       'Be kind to yourself. Missing a day is part of the journey.';
     box.appendChild(about);
     openModal(box);
@@ -2413,6 +2728,8 @@ const UI = (() => {
     showDefeat, hideDefeat, showEncounter, renderQuestLog, renderUpgrades,
     renderCooldowns, tickCooldowns, renderPanels, togglePanel,
     renderMerge, mergeSpawnFx, mergeFuseFx, showMap,
+    renderOffers, showTipCard, showReflectOffer,
+    showAccount, renderAccount,
     renderBeasts, renderCollection, showCreature, showFeedPicker,
     renderFarm, waterGarden, showMealModal, showKcalTargetModal, renderFood,
     renderSummon, playWish, showSummonReveal,
