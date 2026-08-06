@@ -1649,13 +1649,23 @@ const UI = (() => {
       const ri = r.c ? RARITY_ORDER.indexOf(r.c.rarity) : 2;
       return Math.max(m, ri);
     }, 0);
-    const color = best >= 4 ? '#ffc247' : best >= 3 ? '#b47cff' : best >= 2 ? '#45a6ff' : '#aab4d8';
+    const color = RARITY_TINT[RARITY_ORDER[best]] || '#7ea6ff';
     const els = ['fire', 'water', 'nature', 'electric', 'ice', 'earth', 'shadow', 'mystic', 'metal'];
+    const motes = Array.from({ length: 9 }, (_, i) =>
+      `<i class="rune-mote" style="--i:${i};--dx:${(i - 4) * 17}px"></i>`).join('');
     o.innerHTML = `
       <div class="rune-stage" style="--rune:${color}">
-        <div class="rune-ring">${els.map((e, i) =>
+        <div class="rune-halo"></div>
+        <div class="rune-rays"></div>
+        <div class="rune-band b2"></div>
+        <div class="rune-band b1"></div>
+        <div class="rune-band b3"></div>
+        <div class="rune-disc"></div>
+        ${motes}
+        <div class="rune-orbit">${els.map((e, i) =>
           `<i class="elem huge el-${e}" style="--i:${i}"></i>`).join('')}</div>
         <div class="rune-core"><i class="ico huge ico-portal"></i></div>
+        <div class="rune-beam"></div>
         <div class="rune-flash"></div>
       </div>
       <div class="wish-tap">tap to skip</div>`;
@@ -1670,13 +1680,17 @@ const UI = (() => {
     };
     o.onclick = finish;
     // converge, flash, reveal — timed to the CSS keyframes
-    setTimeout(() => { const st = o.querySelector('.rune-stage'); if (st) st.classList.add('converge'); }, 900);
+    setTimeout(() => {
+      const st = o.querySelector('.rune-stage');
+      if (st) st.classList.add('converge');
+      Sound.click();
+    }, 1150);
     setTimeout(() => {
       const st = o.querySelector('.rune-stage');
       if (st) st.classList.add('flashing');
-      VFX.kick(6, 260);
-    }, 1650);
-    setTimeout(finish, 2050);
+      VFX.kick(7, 300);
+    }, 1950);
+    setTimeout(finish, 2400);
   }
 
   function showPullResults(banner, results) {
@@ -1702,6 +1716,7 @@ const UI = (() => {
 
   function showSummonReveal(c, isNew, dup, banner) {
     const box = el('div', 'sreveal');
+    box.style.setProperty('--rare', RARITY_TINT[c.rarity] || '#ffd15c');
     box.innerHTML = `
       ${isNew ? '<div class="snew">NEW COMPANION</div>' : ''}
       <div class="burst"><div class="rays"></div><img src="${assetUrl('assets/creatures/' + c.file)}"></div>

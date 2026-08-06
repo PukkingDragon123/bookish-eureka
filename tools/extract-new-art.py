@@ -325,11 +325,58 @@ def sheet_cells(path, cols, rows, min_px=None):
             piece = rgba[ys.min():ys.max() + 1, xs.min():xs.max() + 1].copy()
             sub = grown[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
             piece[..., 3] = np.where(sub, piece[..., 3], 0)
-            out[r][c] = Image.fromarray(piece, 'RGBA')
+            out[r][c] = strip_plate(Image.fromarray(piece, 'RGBA'))
     return out
 
 
 # ---------------------------------------------------------------- fitting
+def strip_plate(im):
+    """Remove a flat colour plate baked around a single icon.
+
+    Some sheets give each icon its own tile whose colour differs slightly
+    from the sheet's outer border, so a tolerance tight enough to protect
+    black outlines leaves the tile behind — the magic-circle, skull and
+    chest icons all shipped sitting on a dark navy square. Re-key the cut
+    against its OWN border colour, border-connected only.
+    """
+    a = np.asarray(im.convert('RGBA')).astype(np.float64)
+    if a.shape[0] < 6 or a.shape[1] < 6:
+        return im
+    al = a[..., 3]
+    if (al > 60).mean() < 0.55:            # already a clean cutout
+        return im
+    rgb = a[..., :3]
+    # sample two pixels in: the trimmed edge itself is transparent
+    k = 2
+    ring = np.concatenate([rgb[k], rgb[-1 - k], rgb[:, k], rgb[:, -1 - k]])
+    ringa = np.concatenate([al[k], al[-1 - k], al[:, k], al[:, -1 - k]])
+    ring = ring[ringa > 60]
+    if len(ring) < 8:
+        return im
+    bg = np.median(ring, axis=0)
+    if np.abs(ring - bg).sum(1).mean() > 26:   # border is not one flat colour
+        return im
+    near = (np.abs(rgb - bg).sum(2) < 40) & (al > 0)
+    lab, n = ndimage.label(near)
+    if not n:
+        return im
+    sizes = ndimage.sum(near, lab, range(1, n + 1))
+    total = a.shape[0] * a.shape[1]
+    # the plate is the dominant flat-colour region; an icon's own details are
+    # never one flat colour spanning this much of the cut
+    ids = [i + 1 for i in range(n) if sizes[i] > 0.15 * total]
+    if not ids:
+        return im
+    plate = np.isin(lab, ids)
+    if plate.mean() < 0.10:
+        return im
+    out = a.copy()
+    out[plate, 3] = 0
+    im = Image.fromarray(out.astype(np.uint8), 'RGBA')
+    bb = im.split()[3].getbbox()
+    return im.crop(bb) if bb else im
+
+
 def fit(im, size, k=None, anchor='center', pad=4):
     """Fit into a size x size box with premultiplied LANCZOS — soft alpha
     survives, no colour snapping, no jaggies. Pass k for a shared scale

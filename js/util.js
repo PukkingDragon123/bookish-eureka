@@ -65,6 +65,12 @@ function weightedPick(items, weightFn) {
   return items[items.length - 1];
 }
 
+/* rarity accent colours — used by the summon circle and the reveal card so
+   a legendary pull does not look like a common one */
+const RARITY_TINT = {
+  common: '#7ea6ff', uncommon: '#4ade80', rare: '#45a6ff',
+  epic: '#b47cff', legendary: '#ffc247',
+};
 const TYPE_COLORS = {
   Fire: '#ff7043', Water: '#42a5f5', Nature: '#66bb6a', Electric: '#ffd740',
   Ice: '#80deea', Earth: '#bc8a5f', Shadow: '#9575cd', Mystic: '#f48fb1', Metal: '#90a4ae',
@@ -120,13 +126,19 @@ function icon(key, cls) { return `<i class="ico ${cls || ''} ico-${key}"></i>`; 
    Everything warm in the UI is one variable, so the whole app shifts hue with
    whoever is at the front of your party. */
 function applyBuddyTheme() {
-  const cid = (typeof S !== 'undefined' && S.party && S.party[0]) || null;
+  // The starter you chose owns the theme. Keying off party slot 1 meant the
+  // whole UI changed colour the moment a summon reshuffled the party, which
+  // is not what picking a starter is supposed to mean.
+  const cid = (typeof S !== 'undefined' &&
+    (S.starterCid || (S.party && S.party[0]))) || null;
   const type = cid && C_BY_ID[cid] ? C_BY_ID[cid].types[0] : null;
   const c = (type && TYPE_COLORS[type]) || '#ffc247';
   const r = document.documentElement;
   r.style.setProperty('--buddy', c);
   r.style.setProperty('--buddy-dim', mixHex(c, '#101529', 0.55));
   r.style.setProperty('--buddy-glow', hexAlpha(c, 0.34));
+  r.style.setProperty('--buddy-soft', mixHex(c, '#101529', 0.82));
+  r.style.setProperty('--buddy-hi', mixHex(c, '#ffffff', 0.4));
   r.dataset.buddyType = type || '';
 }
 function mixHex(a, b, t) {

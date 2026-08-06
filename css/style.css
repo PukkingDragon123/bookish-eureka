@@ -1258,16 +1258,23 @@ button.hud-chip:active { transform: translateY(2px); }
 .sreveal img { animation: summonpop .35s steps(5); z-index: 1; }
 @keyframes summonpop { from { transform: scale(.2); } }
 .sreveal .rays {
-  position: absolute; width: 210px; height: 210px;
-  background: conic-gradient(from 0deg, transparent 0 18deg, rgba(255,209,92,.16) 18deg 36deg,
-    transparent 36deg 54deg, rgba(255,209,92,.16) 54deg 72deg, transparent 72deg 90deg,
-    rgba(255,209,92,.16) 90deg 108deg, transparent 108deg 126deg, rgba(255,209,92,.16) 126deg 144deg,
-    transparent 144deg 162deg, rgba(255,209,92,.16) 162deg 180deg, transparent 180deg 198deg,
-    rgba(255,209,92,.16) 198deg 216deg, transparent 216deg 234deg, rgba(255,209,92,.16) 234deg 252deg,
-    transparent 252deg 270deg, rgba(255,209,92,.16) 270deg 288deg, transparent 288deg 306deg,
-    rgba(255,209,92,.16) 306deg 324deg, transparent 324deg 342deg, rgba(255,209,92,.16) 342deg 360deg);
-  animation: spin 8s steps(32) infinite;
+  position: absolute; width: 230px; height: 230px;
+  /* rays wear the rarity's colour — flat grey behind a legendary pull
+     made every reveal look the same */
+  background: repeating-conic-gradient(from 0deg,
+    color-mix(in srgb, var(--rare, #ffd15c) 26%, transparent) 0deg 9deg,
+    transparent 9deg 22.5deg);
+  mask-image: radial-gradient(circle, #000 18%, #000 52%, transparent 78%);
+  filter: drop-shadow(0 0 12px color-mix(in srgb, var(--rare, #ffd15c) 45%, transparent));
+  animation: spin 8s linear infinite;
 }
+.sreveal .burst::after {
+  content: ''; position: absolute; width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--rare, #ffd15c) 34%, transparent), transparent 68%);
+  animation: halobreathe 2s var(--ease) infinite;
+}
+/* summon-circle core: the centrepiece, not a thumbnail */
+.rune-core .ico { width: 104px; height: 104px; vertical-align: 0; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .sreveal h2 { font-size: 20px; margin-top: 4px; }
 .sreveal .snew { color: var(--gold); font-size: 14.5px; letter-spacing: 2px; }
@@ -1563,6 +1570,23 @@ body, button { letter-spacing: 0; }
 .lu-row.unlock { border-color: var(--buddy); }
 .sring .fill { stroke: var(--buddy); }
 .sring .glow { stroke: var(--buddy-glow); }
+/* carry the starter's colour far enough that it reads as the app's colour,
+   not a stray highlight */
+body { background: var(--buddy-soft, var(--bg0)); }
+#hud { border-bottom-color: var(--buddy-dim); }
+#hud, #tabbar { background: linear-gradient(180deg, var(--buddy-soft, var(--bg1)), var(--bg1)); }
+#tabbar { border-top-color: var(--buddy-dim); }
+.card, .panel { border-color: var(--buddy-dim); }
+.cd-head { color: var(--buddy); }
+.cdcard { border-color: var(--buddy-dim); }
+.cdmeter.rdy i { background: linear-gradient(180deg, var(--buddy-hi, #7dffb0), var(--buddy)); }
+.cdmeter.rdy i { box-shadow: 0 0 8px var(--buddy-glow); }
+#ult-wrap .ult-label { color: var(--buddy); }
+.bstat-inline b { color: var(--buddy-hi, var(--gem)); }
+h2.tab-title .subtle { color: var(--buddy-dim); }
+.modal { border-color: var(--buddy-dim); }
+.pixbar.xp > i { background: var(--buddy); }
+#view::-webkit-scrollbar-thumb { background: var(--buddy-dim); }
 /* the accent changing is itself a transition, not a jump */
 #tabbar button, .card-head, .panel-head, .pixbtn.primary, .focus,
 .hero-rank, .tab-title, .sring .fill {
@@ -1598,39 +1622,119 @@ body, button { letter-spacing: 0; }
 @keyframes chestpop { 30% { transform: scale(2.1); } 100% { transform: scale(1.7); } }
 
 /* ---- rune-circle summon ---- */
+/* ---- summoning circle ---- */
 .rune-stage {
-  position: absolute; inset: 0;
+  position: absolute; inset: 0; overflow: hidden;
   display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 50% 52%,
+    color-mix(in srgb, var(--rune) 22%, transparent) 0%,
+    rgba(4, 6, 14, .92) 58%, #04060e 100%);
 }
-.rune-ring {
+/* breathing glow behind everything */
+.rune-halo {
+  position: absolute; width: 340px; height: 340px; border-radius: 50%;
+  background: radial-gradient(circle, var(--rune) 0%, transparent 66%);
+  opacity: .34; filter: blur(14px);
+  animation: halobreathe 1.5s var(--ease) infinite;
+}
+/* light rays sweeping out of the circle */
+.rune-rays {
+  position: absolute; width: 520px; height: 520px; border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg,
+    color-mix(in srgb, var(--rune) 30%, transparent) 0deg 1.6deg,
+    transparent 1.6deg 15deg);
+  opacity: .3;
+  mask-image: radial-gradient(circle, transparent 26%, #000 46%, transparent 74%);
+  animation: runespin 14s linear infinite;
+}
+/* the ground disc: a flat ellipse, NOT spun — rotating an ellipse in 2D
+   reads as a wobbling egg rather than a circle seen in perspective */
+.rune-disc {
+  position: absolute; width: 250px; height: 82px;
+  transform: translateY(96px);
+  border: 2px solid var(--rune); border-radius: 50%;
+  box-shadow: 0 0 22px var(--rune), inset 0 0 26px color-mix(in srgb, var(--rune) 45%, transparent);
+  opacity: .8;
+  animation: discpulse 2.2s var(--ease) infinite;
+}
+.rune-band {
+  position: absolute; border-radius: 50%; border: 2px dashed var(--rune);
+  opacity: .72; box-shadow: 0 0 16px color-mix(in srgb, var(--rune) 55%, transparent);
+}
+.rune-band.b1 { width: 208px; height: 208px; animation: runespin 5s linear infinite; }
+.rune-band.b2 {
+  width: 272px; height: 272px; border-style: dotted; border-width: 3px; opacity: .5;
+  animation: runespin 7s linear infinite reverse;
+}
+.rune-band.b3 {
+  width: 150px; height: 150px; border-style: solid; opacity: .9;
+  animation: runespin 3.2s linear infinite reverse;
+}
+/* the nine element runes orbiting the circle */
+.rune-orbit {
   position: absolute; width: 0; height: 0;
-  animation: runespin 2.4s linear infinite;
+  animation: runespin 6s linear infinite;
 }
-.rune-ring .elem {
-  position: absolute; left: -22px; top: -22px;
-  transform: rotate(calc(var(--i) * 40deg)) translateY(-118px) rotate(calc(var(--i) * -40deg));
-  filter: drop-shadow(0 0 6px var(--rune));
-  animation: runepulse 1.2s var(--ease) infinite;
-  animation-delay: calc(var(--i) * .09s);
+.rune-orbit .elem {
+  position: absolute; left: -23px; top: -23px;
+  transform: rotate(calc(var(--i) * 40deg)) translateY(-124px) rotate(calc(var(--i) * -40deg));
+  filter: drop-shadow(0 0 7px var(--rune));
+  animation: runepulse 1.4s var(--ease) infinite;
+  animation-delay: calc(var(--i) * .08s);
 }
-.rune-stage.converge .rune-ring { animation: runespin .9s linear infinite, runeshrink .75s var(--ease) forwards; }
 .rune-core {
   position: absolute;
-  animation: corepulse 1s var(--ease) infinite;
-  filter: drop-shadow(0 0 12px var(--rune));
+  animation: corepulse 1.1s var(--ease) infinite;
+  filter: drop-shadow(0 0 14px var(--rune)) drop-shadow(0 0 30px var(--rune));
+}
+/* pillar of light on release */
+.rune-beam {
+  position: absolute; width: 74px; top: -10%; bottom: 18%;
+  background: linear-gradient(180deg, transparent, var(--rune) 30%, #fff 88%);
+  filter: blur(5px); opacity: 0; transform: scaleX(.2);
+  mask-image: linear-gradient(180deg, transparent, #000 25%, #000 88%, transparent);
 }
 .rune-flash {
   position: absolute; inset: 0; background: var(--rune);
   opacity: 0; pointer-events: none;
 }
-.rune-stage.flashing .rune-flash { animation: runeflash .4s var(--ease) forwards; }
-.rune-stage.flashing .rune-core { animation: corepop .4s var(--pop) forwards; }
+/* rising motes */
+.rune-mote {
+  position: absolute; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--rune); box-shadow: 0 0 8px var(--rune);
+  bottom: 34%; left: 50%; opacity: 0;
+  animation: moterise 1.9s var(--ease) infinite;
+  animation-delay: calc(var(--i) * .17s);
+}
+
+/* phase 2 — everything pulls into the core */
+.rune-stage.converge .rune-orbit { animation: runespin 1.1s linear infinite, runeshrink .8s var(--ease) forwards; }
+.rune-stage.converge .rune-band { animation-duration: 1.1s; }
+.rune-stage.converge .rune-halo { animation-duration: .5s; }
+.rune-stage.converge .rune-disc { animation-duration: .55s; }
+.rune-stage.flashing .rune-disc { animation: discburst .45s var(--ease) forwards; }
+/* phase 3 — release */
+.rune-stage.flashing .rune-flash { animation: runeflash .45s var(--ease) forwards; }
+.rune-stage.flashing .rune-core { animation: corepop .45s var(--pop) forwards; }
+.rune-stage.flashing .rune-beam { animation: beamup .5s var(--ease) forwards; }
+.rune-stage.flashing .rune-band { animation: bandburst .45s var(--ease) forwards; }
+
 @keyframes runespin { to { transform: rotate(360deg); } }
-@keyframes runeshrink { to { transform: scale(.12); } }
-@keyframes runepulse { 50% { filter: drop-shadow(0 0 14px var(--rune)) brightness(1.35); } }
-@keyframes corepulse { 50% { transform: scale(1.18); } }
-@keyframes corepop { to { transform: scale(3.2); opacity: 0; } }
-@keyframes runeflash { 0% { opacity: 0; } 45% { opacity: .95; } 100% { opacity: 0; } }
+@keyframes discpulse { 50% { transform: translateY(96px) scale(1.06); opacity: 1; } }
+@keyframes runeshrink { to { transform: scale(.1); } }
+@keyframes runepulse { 50% { filter: drop-shadow(0 0 16px var(--rune)) brightness(1.4); } }
+@keyframes corepulse { 50% { transform: scale(1.2); } }
+@keyframes corepop { to { transform: scale(3.4); opacity: 0; } }
+@keyframes runeflash { 0% { opacity: 0; } 40% { opacity: .95; } 100% { opacity: 0; } }
+@keyframes halobreathe { 50% { opacity: .6; transform: scale(1.12); } }
+@keyframes beamup { 35% { opacity: 1; transform: scaleX(1.5); } 100% { opacity: 0; transform: scaleX(2.6); } }
+@keyframes bandburst { to { transform: scale(2.1); opacity: 0; } }
+@keyframes discburst { to { transform: translateY(96px) scale(1.9); opacity: 0; } }
+@keyframes moterise {
+  0% { opacity: 0; transform: translate(var(--dx, 0), 0) scale(.6); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx, 0), -190px) scale(.2); }
+}
 
 /* ---- signature move rows ---- */
 .mvtag {
