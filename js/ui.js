@@ -1169,31 +1169,79 @@ const UI = (() => {
       s.classList.toggle('drop-ok', i === selSlot));
   }
 
+  /* Drag on the board, without eating the page scroll.
+
+     The board fills most of the screen, so grabbing a pointer the instant a
+     finger lands on it meant a swipe that started on the forge scrolled
+     nothing at all — the commonest way a merge board breaks on a phone.
+     A finger therefore has to rest for a moment before it becomes a drag:
+     move first and the browser scrolls as usual, hold still and you pick the
+     piece up. A mouse still drags immediately, and tapping two slots works
+     everywhere regardless. */
+  const HOLD_MS = 160;
+  const SLOP = 10;
   function attachDrag(item, from) {
     item.addEventListener('pointerdown', ev => {
-      ev.preventDefault();
-      dragFrom = from;
-      item.classList.add('dragging');
-      ghost = el('div', 'merge-ghost mitem t-' + S.merge.board[from].cat);
-      ghost.innerHTML = item.innerHTML;
-      document.body.appendChild(ghost);
-      moveGhost(ev);
-      const move = e => moveGhost(e);
-      const up = e => {
+      if (ev.button > 0) return;
+      const touch = ev.pointerType === 'touch';
+      const sx = ev.clientX, sy = ev.clientY;
+      let started = false, timer = null;
+
+      const begin = e => {
+        if (started || !S.merge.board[from]) return;
+        started = true;
+        dragFrom = from;
+        item.classList.add('dragging');
+        try { item.setPointerCapture(ev.pointerId); } catch (_) {}
+        ghost = el('div', 'merge-ghost mitem t-' + S.merge.board[from].cat);
+        ghost.style.setProperty('--rar', gearRarity(S.merge.board[from]).col);
+        ghost.innerHTML = item.innerHTML;
+        document.body.appendChild(ghost);
+        moveGhost(e);
+        if (touch) Sound.click();
+      };
+
+      const cleanup = () => {
+        clearTimeout(timer);
         document.removeEventListener('pointermove', move);
         document.removeEventListener('pointerup', up);
+        document.removeEventListener('pointercancel', cancel);
         item.classList.remove('dragging');
         if (ghost) { ghost.remove(); ghost = null; }
+      };
+
+      const move = e => {
+        if (!started) {
+          // moved before the hold elapsed: this is a scroll, not a drag
+          if (Math.abs(e.clientX - sx) > SLOP || Math.abs(e.clientY - sy) > SLOP) cleanup();
+          return;
+        }
+        e.preventDefault();
+        moveGhost(e);
+      };
+
+      const up = e => {
+        const wasDragging = started;
+        cleanup();
+        if (!wasDragging || dragFrom === null) { dragFrom = null; return; }
         const elAt = document.elementFromPoint(e.clientX, e.clientY);
         const slot = elAt && elAt.closest('.mslot');
-        if (slot && dragFrom !== null) {
+        if (slot) {
           const to = parseInt(slot.dataset.i, 10);
           if (to !== dragFrom) { Merge.drop(dragFrom, to); selSlot = null; }
         }
         dragFrom = null;
       };
+
+      // the browser taking the gesture over for scrolling cancels the drag
+      const cancel = () => { cleanup(); dragFrom = null; };
+
       document.addEventListener('pointermove', move);
       document.addEventListener('pointerup', up);
+      document.addEventListener('pointercancel', cancel);
+
+      if (touch) timer = setTimeout(() => begin(ev), HOLD_MS);
+      else { ev.preventDefault(); begin(ev); }
     });
   }
   function moveGhost(e) {

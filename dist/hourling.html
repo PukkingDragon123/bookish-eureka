@@ -813,8 +813,27 @@ button.hud-chip:active { transform: translateY(2px); }
   position: fixed; inset: 0; z-index: 260;
   background: radial-gradient(circle at 50% 40%, #202a52 0%, #070a14 80%);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 4px; padding: 20px;
+  gap: 4px;
+  /* the timer is taller than a short phone: let it scroll and respect the
+     notch, rather than pushing the task title and Finish button off-screen */
+  padding: calc(16px + env(safe-area-inset-top)) 20px calc(16px + env(safe-area-inset-bottom));
+  overflow-y: auto; overscroll-behavior: contain;
   animation: fadein .25s steps(4);
+}
+/* short screens: shrink the ring rather than clip the controls */
+@media (max-height: 700px) {
+  .sring { width: 168px; height: 168px; margin: 2px 0; }
+  #session-overlay .s-task { font-size: 15px; margin-bottom: 2px; }
+  #session-overlay .s-hint { margin-top: 6px; }
+  #session-overlay .s-btns { margin-top: 8px; }
+  #session-overlay .s-hint { display: none; }
+  .sb-scene { height: 58px; }
+}
+@media (max-height: 600px) {
+  .sring { width: 132px; height: 132px; }
+  #session-overlay { justify-content: flex-start; }
+  #session-overlay .s-dream { display: none; }
+  .sb-scene { height: 50px; }
 }
 #session-overlay .s-dream { font-size: 13.5px; color: var(--brass); letter-spacing: 1.6px; text-transform: uppercase; }
 #session-overlay .s-task { font-size: 16.5px; text-align: center; max-width: 300px; line-height: 1.5; margin-bottom: 6px; }
@@ -1206,7 +1225,7 @@ button.hud-chip:active { transform: translateY(2px); }
   box-shadow: inset 0 1px 0 rgba(255,255,255,.06), inset 0 -8px 14px rgba(0,0,0,.35);
   position: relative;
   display: flex; align-items: center; justify-content: center;
-  touch-action: none;
+  touch-action: pan-y;
   transition: transform var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
 }
 /* an empty slot should read as an invitation, not a hole */
@@ -2401,6 +2420,44 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
   resize: none; user-select: all; word-break: break-all;
 }
 .gbtn-host { display: flex; justify-content: center; margin: 4px 0 8px; min-height: 4px; }
+
+/* ============================================================
+   TOUCH TARGETS — nothing you are meant to hit with a thumb is
+   allowed under 44px. Apple's floor is 44, Android's is 48dp; the
+   app had controls as small as 34x15.
+   ============================================================ */
+.pixbtn, .linkbtn, .hud-chip, .icon-btn, .dfilter, .offrow, .upcard,
+.accrow, #hero-edit, #btn-water, .qclaim, .food-chip, .panel-head, .tab-title .linkbtn {
+  min-height: 44px;
+}
+.pixbtn.tiny, .pixbtn.sm { min-height: 44px; }
+#hud .hud-chip { min-height: 40px; }          /* the HUD is display, not a control */
+#hud .icon-btn { min-width: 44px; min-height: 44px; }
+#hero-edit { padding: 12px 14px; min-width: 88px; display: inline-flex;
+  align-items: center; justify-content: center; }
+.linkbtn { padding: 12px 10px; display: inline-flex; align-items: center; }
+.dfilter { min-width: 44px; padding: 10px 12px; }
+.food-chip { padding: 11px 12px; }
+#tabbar button { min-height: 52px; }
+/* a real pressed state on everything that is actually pressable */
+.pixbtn:active:not(:disabled), .offrow:active:not(:disabled),
+.upcard:active:not(:disabled), .accrow:active, .dfilter:active,
+.food-chip:active, .linkbtn:active { transform: scale(.97); }
+
+/* short screens: shrink the ring rather than clip the controls */
+@media (max-height: 700px) {
+  .sring { width: 168px; height: 168px; margin: 2px 0; }
+  #session-overlay .s-task { font-size: 15px; margin-bottom: 2px; }
+  #session-overlay .s-hint { display: none; }
+  .sb-scene { height: 58px; }
+  #session-overlay .s-btns { margin-top: 8px; }
+}
+@media (max-height: 600px) {
+  .sring { width: 132px; height: 132px; }
+  #session-overlay { justify-content: flex-start; }
+  #session-overlay .s-dream { display: none; }
+  .sb-scene { height: 50px; }
+}
 
 </style>
 </head>
@@ -7664,31 +7721,79 @@ const UI = (() => {
       s.classList.toggle('drop-ok', i === selSlot));
   }
 
+  /* Drag on the board, without eating the page scroll.
+
+     The board fills most of the screen, so grabbing a pointer the instant a
+     finger lands on it meant a swipe that started on the forge scrolled
+     nothing at all — the commonest way a merge board breaks on a phone.
+     A finger therefore has to rest for a moment before it becomes a drag:
+     move first and the browser scrolls as usual, hold still and you pick the
+     piece up. A mouse still drags immediately, and tapping two slots works
+     everywhere regardless. */
+  const HOLD_MS = 160;
+  const SLOP = 10;
   function attachDrag(item, from) {
     item.addEventListener('pointerdown', ev => {
-      ev.preventDefault();
-      dragFrom = from;
-      item.classList.add('dragging');
-      ghost = el('div', 'merge-ghost mitem t-' + S.merge.board[from].cat);
-      ghost.innerHTML = item.innerHTML;
-      document.body.appendChild(ghost);
-      moveGhost(ev);
-      const move = e => moveGhost(e);
-      const up = e => {
+      if (ev.button > 0) return;
+      const touch = ev.pointerType === 'touch';
+      const sx = ev.clientX, sy = ev.clientY;
+      let started = false, timer = null;
+
+      const begin = e => {
+        if (started || !S.merge.board[from]) return;
+        started = true;
+        dragFrom = from;
+        item.classList.add('dragging');
+        try { item.setPointerCapture(ev.pointerId); } catch (_) {}
+        ghost = el('div', 'merge-ghost mitem t-' + S.merge.board[from].cat);
+        ghost.style.setProperty('--rar', gearRarity(S.merge.board[from]).col);
+        ghost.innerHTML = item.innerHTML;
+        document.body.appendChild(ghost);
+        moveGhost(e);
+        if (touch) Sound.click();
+      };
+
+      const cleanup = () => {
+        clearTimeout(timer);
         document.removeEventListener('pointermove', move);
         document.removeEventListener('pointerup', up);
+        document.removeEventListener('pointercancel', cancel);
         item.classList.remove('dragging');
         if (ghost) { ghost.remove(); ghost = null; }
+      };
+
+      const move = e => {
+        if (!started) {
+          // moved before the hold elapsed: this is a scroll, not a drag
+          if (Math.abs(e.clientX - sx) > SLOP || Math.abs(e.clientY - sy) > SLOP) cleanup();
+          return;
+        }
+        e.preventDefault();
+        moveGhost(e);
+      };
+
+      const up = e => {
+        const wasDragging = started;
+        cleanup();
+        if (!wasDragging || dragFrom === null) { dragFrom = null; return; }
         const elAt = document.elementFromPoint(e.clientX, e.clientY);
         const slot = elAt && elAt.closest('.mslot');
-        if (slot && dragFrom !== null) {
+        if (slot) {
           const to = parseInt(slot.dataset.i, 10);
           if (to !== dragFrom) { Merge.drop(dragFrom, to); selSlot = null; }
         }
         dragFrom = null;
       };
+
+      // the browser taking the gesture over for scrolling cancels the drag
+      const cancel = () => { cleanup(); dragFrom = null; };
+
       document.addEventListener('pointermove', move);
       document.addEventListener('pointerup', up);
+      document.addEventListener('pointercancel', cancel);
+
+      if (touch) timer = setTimeout(() => begin(ev), HOLD_MS);
+      else { ev.preventDefault(); begin(ev); }
     });
   }
   function moveGhost(e) {
