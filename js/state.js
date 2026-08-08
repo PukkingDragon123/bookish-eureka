@@ -75,7 +75,7 @@ function defaultState() {
     kcalTarget: 2000,
     kcalBonusDay: null,  // last day the within-target bonus was granted for
     custom: [],          // [{id, name, icon}]
-    boosts: { exerciseUntil: 0, blessingUntil: 0 },
+    boosts: { exerciseUntil: 0, blessingUntil: 0, hasteUntil: 0 },
     exTimer: null,       // {kind:'exercise'|'walk'|'create', mins, startedAt}
     quests: { day: null, list: [] },
     summons: { total: 0, sinceRare: 0 },
@@ -96,6 +96,8 @@ function defaultState() {
     lab: { points: 5, serums: 0, rolls: 0 },
     login: { cycle: 0, lastDay: null },
     challenge: { day: null, idx: 0, done: false },
+    /* arena: local rating, rivals added by code, tournament in progress */
+    arena: { rating: 1000, wins: 0, losses: 0, rivals: [], tourney: null, day: null, fights: 0 },
     /* in-app reward offers: daily caps + tip-card cooldown */
     offers: { day: null, used: {}, lastTip: 0, insured: false },
     regionProgress: {},
@@ -136,7 +138,7 @@ function sanitize() {
   if (!S.party.length && Object.keys(S.beasts).length) S.party = [Object.keys(S.beasts)[0]];
   if (S.starterCid && !C_BY_ID[S.starterCid]) S.starterCid = null;
   const d = defaultState();
-  for (const k of ['upgrades', 'merge', 'farm', 'lab', 'login', 'challenge', 'regionProgress', 'dream', 'offers']) {
+  for (const k of ['upgrades', 'merge', 'farm', 'lab', 'login', 'challenge', 'regionProgress', 'dream', 'offers', 'arena']) {
     if (typeof S[k] !== 'object' || S[k] === null) S[k] = d[k];
   }
   if (typeof S.merge.up !== 'object' || S.merge.up === null) S.merge.up = { slots: 0, tier: 0, luck: 0, energy: 0, rarity: 0 };
@@ -441,6 +443,24 @@ function grantBeastXp(n) {
 
 /* ---------- boosts ---------- */
 function isExerciseBoost() { return Date.now() < S.boosts.exerciseUntil; }
+/* Haste: combat runs slowly by default, and gems buy five minutes of triple
+   speed for when you want to push a stage now rather than idle through it. */
+const HASTE_MS = 5 * 60 * 1000;
+const HASTE_COST = 25;
+function isHasted() { return Date.now() < (S.boosts.hasteUntil || 0); }
+function hasteLeft() { return Math.max(0, (S.boosts.hasteUntil || 0) - Date.now()); }
+function buyHaste() {
+  if (S.player.gems < HASTE_COST) { toast(`Need ${HASTE_COST} gems`); return false; }
+  S.player.gems -= HASTE_COST;
+  // buying again while it runs extends rather than restarts
+  S.boosts.hasteUntil = Math.max(Date.now(), S.boosts.hasteUntil || 0) + HASTE_MS;
+  Sound.levelup();
+  toast('Haste — combat runs 3x for 5 minutes', 'gold');
+  save();
+  UI.renderHud();
+  UI.renderBoost();
+  return true;
+}
 function isBlessed() { return Date.now() < S.boosts.blessingUntil; }
 function rewardMult() { return isExerciseBoost() ? 3 : 1; }
 

@@ -7,6 +7,16 @@
 
 const Battle = (() => {
   const TICK_MS = 300;
+  /* Combat runs at a deliberately unhurried pace: a wave should feel like
+     something you glance at, not a slot machine. Everything on a clock —
+     light attacks, skill cooldowns, enemy swings, the boss timer, walking
+     between packs — reads the same multiplier, so Haste speeds the whole
+     fight up rather than desyncing parts of it. */
+  const BASE_SPEED = 0.45;
+  const HASTE_MULT = 3;
+  function speedMult() {
+    return BASE_SPEED * (isHasted() ? HASTE_MULT : 1);
+  }
   let enemies = [];            // [{cid,name,hp,hpMax,boss,defType,gold,xp,slot,dying}]
   let partyHp = 1;
   let resting = 0;
@@ -231,18 +241,18 @@ const Battle = (() => {
   /* ----- main tick ----- */
   function tick() {
     if (!S.onboarded || S.party.length === 0) return;
-    const dt = TICK_MS / 1000;
+    const dt = (TICK_MS / 1000) * speedMult();
 
     if (resting > 0) {
       resting--;
-      partyHp = Math.min(1, partyHp + 0.09);
+      partyHp = Math.min(1, partyHp + 0.09 * speedMult() / BASE_SPEED);
       UI.renderPartyHp(partyHp);
       if (resting === 0) spawnWave();
       return;
     }
     if (advancing > 0) {
       advancing--;
-      partyHp = Math.min(1, partyHp + 0.02);     // catch your breath between waves
+      partyHp = Math.min(1, partyHp + 0.02 * speedMult() / BASE_SPEED);  // catch your breath
       UI.renderPartyHp(partyHp);
       if (advancing === 0) spawnWave();
       return;
@@ -314,7 +324,7 @@ const Battle = (() => {
       setTimeout(() => UI.showEncounter(), 700);
     }
     enemies = [];
-    advancing = Math.floor(1400 / TICK_MS);   // walk to the next pack
+    advancing = Math.ceil(1400 / TICK_MS / speedMult());   // walk to the next pack
     UI.startAdvance();
     UI.renderScene();
     save();
@@ -325,7 +335,7 @@ const Battle = (() => {
     Sound.fail();
     S.stage.wave = 1;
     S.stage.farm = false;
-    resting = Math.floor(5200 / TICK_MS);
+    resting = Math.ceil(5200 / TICK_MS / speedMult());
     enemies = [];
     UI.showDefeat();
     UI.renderScene();
@@ -337,7 +347,7 @@ const Battle = (() => {
     S.stage.farm = true;
     S.stage.wave = WAVES_PER_STAGE - 1;
     enemies = [];
-    advancing = Math.floor(900 / TICK_MS);
+    advancing = Math.ceil(900 / TICK_MS / speedMult());
     UI.renderScene();
   }
 
@@ -416,6 +426,7 @@ const Battle = (() => {
   return {
     tick, spawnWave, challengeBoss, currentDpsEstimate, offlineGains, travel,
     regionUnlocked, skillListFor, cooldownState, partyHpMax, combatPower, TICK_MS,
+    speedMult, BASE_SPEED, HASTE_MULT,
     get enemies() { return enemies; },
     get partyHp() { return partyHp; },
     get ultCharge() { return ultCharge; },

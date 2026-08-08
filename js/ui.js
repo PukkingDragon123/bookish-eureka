@@ -857,6 +857,19 @@ const UI = (() => {
       b.classList.remove('hidden');
       $('#boost-time').textContent = fmtTime((S.boosts.exerciseUntil - Date.now()) / 1000);
     } else b.classList.add('hidden');
+    renderHaste();
+  }
+
+  /* the Haste button doubles as its own countdown while it runs */
+  function renderHaste() {
+    const h = $('#haste-btn');
+    if (!h) return;
+    const on = isHasted();
+    h.classList.toggle('on', on);
+    document.documentElement.dataset.haste = on ? '1' : '';
+    h.innerHTML = on
+      ? `${icon('bolt')} <b>3x</b> <span>${fmtTime(hasteLeft() / 1000)}</span>`
+      : `${icon('bolt')} <b>Speed up</b> <span>${icon('gem')}${HASTE_COST}</span>`;
   }
 
   function renderBattleStats() {
@@ -939,38 +952,78 @@ const UI = (() => {
 
   /* ----- a chest simply drops; tap it (or wait) to open ----- */
   let chestTimer = null;
+  /* A chest is the one moment in an idle game where the player is asked to
+     look. So it earns a beat: it lands, it rattles, and when it opens the
+     rewards come out one at a time with their own icons rather than as a
+     line of text. A rare haul flashes gold. */
   function showEncounter() {
     const o = $('#encounter-overlay');
     if (!o.classList.contains('hidden')) return;
     o.classList.remove('hidden');
     o.innerHTML = `
       <div class="chestdrop">
-        <i class="ico huge ico-chest"></i>
-        <div class="chest-tap">A chest! Tap to open</div>
+        <div class="chest-rays"></div>
+        <div class="chest-body"><i class="ico huge ico-chest"></i></div>
+        <div class="chest-loot"></div>
+        <div class="chest-tap">Tap to open</div>
       </div>`;
+    const box = o.querySelector('.chestdrop');
     let opened = false;
+
     const open = () => {
       if (opened) return;
       opened = true;
       clearTimeout(chestTimer);
-      const box = o.querySelector('.chestdrop');
+
+      // roll the haul first, so the reveal can pace itself to what came out
+      const stage = globalStage();
+      const gold = grantGold(Math.floor(rnd(60, 140) * Math.pow(1.2, stage)));
+      const loot = [{ icon: 'gold', txt: '+' + fmt(gold) }];
+      if (Math.random() < 0.6) { grantSeeds(1); loot.push({ icon: 'seed', txt: '+1' }); }
+      if (Math.random() < 0.35) { grantGems(3); loot.push({ icon: 'gem', txt: '+3' }); }
+      const lucky = Math.random() < 0.14;
+      if (lucky) { grantGems(12); loot.push({ icon: 'gem', txt: '+12', big: true }); }
+
       const r = box.getBoundingClientRect();
       const sr = $('#scene').getBoundingClientRect();
-      VFX.anim('sparkring', r.left - sr.left + r.width / 2,
-               r.top - sr.top + r.height / 2, { scale: 1.6, fps: 16 });
-      coinBurst(box, 8);
-      Sound.quest();
-      const gold = grantGold(Math.floor(rnd(60, 140) * Math.pow(1.2, globalStage())));
-      const bits = [`+${fmt(gold)} gold`];
-      if (Math.random() < 0.6) { grantSeeds(1); bits.push('+1 seed'); }
-      if (Math.random() < 0.35) { grantGems(3); bits.push('+3 gems'); }
-      box.classList.add('opened');
-      box.querySelector('.chest-tap').textContent = bits.join('  ·  ');
-      setTimeout(() => { o.classList.add('hidden'); renderHud(); }, 1100);
+      box.classList.add('opening');
+      Sound.click();
+      Sound.buzzOpen && Sound.buzzOpen();
+
+      // the lid gives way a beat after the tap
+      setTimeout(() => {
+        box.classList.add('opened');
+        if (lucky) box.classList.add('lucky');
+        VFX.anim('sparkring', r.left - sr.left + r.width / 2,
+                 r.top - sr.top + r.height / 2, { scale: lucky ? 2.1 : 1.6, fps: 16 });
+        VFX.kick(lucky ? 6 : 3, 220);
+        Sound.quest();
+        if (lucky) { confetti(30); Sound.levelup(); }
+
+        const bag = box.querySelector('.chest-loot');
+        loot.forEach((l, i) => {
+          setTimeout(() => {
+            const chip = el('div', 'loot-chip' + (l.big ? ' big' : ''),
+              `${icon(l.icon)}<b>${l.txt}</b>`);
+            chip.style.setProperty('--n', i - (loot.length - 1) / 2);
+            bag.appendChild(chip);
+            Sound.coin();
+          }, 90 + i * 160);
+        });
+        coinBurst(box, lucky ? 10 : 6);
+        box.querySelector('.chest-tap').textContent = lucky ? 'Lucky chest!' : '';
+      }, 260);
+
+      const wait = 900 + loot.length * 160 + (lucky ? 500 : 0);
+      setTimeout(() => {
+        box.classList.add('leaving');
+        setTimeout(() => { o.classList.add('hidden'); renderHud(); }, 260);
+      }, wait);
     };
+
     o.onclick = open;
     clearTimeout(chestTimer);
-    chestTimer = setTimeout(open, 5000);       // opens itself if ignored
+    chestTimer = setTimeout(open, 6000);       // opens itself if ignored
   }
 
   /* ----- quest log on the battle screen ----- */
@@ -2196,6 +2249,11 @@ const UI = (() => {
 
   /* ================= login modal on new day ================= */
   function maybeShowLogin() {
+    // never interrupt the professor: the guide owns the screen while it runs
+    if (typeof Tutor !== 'undefined' && Tutor.isActive()) {
+      setTimeout(maybeShowLogin, 1500);
+      return;
+    }
     if (!S.onboarded) return;
     const idx = Quests.loginClaimable();
     if (idx < 0) return;
@@ -2426,8 +2484,8 @@ const UI = (() => {
       renderAll();
       const d = Dream.DREAMS[draft.key];
       toast(`${C_BY_ID[draft.starter].name} joins you. ${d.name} starts today.`, 'gold');
-      setTimeout(maybeShowLogin, 1000);
-      setTimeout(() => toast('Tap "Start" on the focus card when you are ready', 'mana'), 3600);
+      // the professor takes it from here — the login sheet can wait
+      setTimeout(() => Tutor.start(false), 900);
     }
 
     draw();
@@ -2486,6 +2544,183 @@ const UI = (() => {
   }
 
   /* ================= settings / welcome ================= */
+  /* ================= arena ================= */
+  function showArena() {
+    const box = el('div', 'arena');
+    openModal(box);
+    renderArena();
+  }
+
+  function renderArena() {
+    const box = $('#modal-root .arena');
+    if (!box) return;
+    const a = Arena.st();
+    const rk = Arena.rank();
+    const t = Arena.tourney();
+
+    box.innerHTML = `<h3>${icon('sword')} Arena</h3>
+      <div class="ar-top">
+        <div class="ar-rank" style="--rk:${rk.col}">
+          <b>${rk.name}</b><span>${a.rating} rating</span>
+        </div>
+        <div class="ar-rec">
+          <span>${a.wins}W ${a.losses}L</span>
+          <span class="subtle">${Arena.fightsLeft()}/${Arena.DAILY_FIGHTS} duels left today</span>
+        </div>
+      </div>
+
+      <p class="ar-honest">No server, so no live matchmaking: you trade
+        <b>rival codes</b> with friends and fight the team their code carries.
+        Everyone else here is a challenger this app generates.</p>
+
+      <div class="acc-btns">
+        <button class="pixbtn sm" data-ar="mycode">Copy my rival code</button>
+        <button class="pixbtn sm ghost" data-ar="addrival">Add a friend's code</button>
+      </div>
+
+      ${t && !t.done ? `<div class="ar-sec">
+        <div class="acc-h">Tournament — round ${t.round + 1} of 3</div>
+        <div class="ar-bracket">${(t.alive || []).map(id => {
+          const e = t.entrants.find(x => x.id === id);
+          return `<span class="ar-chip${e && e.me ? ' me' : ''}">${e ? e.name : '?'}</span>`;
+        }).join('')}</div>
+        <div class="acc-btns"><button class="pixbtn primary sm" data-ar="tround"><b>Fight round ${t.round + 1}</b></button>
+          <button class="pixbtn ghost sm" data-ar="tquit">Withdraw</button></div>
+      </div>` : `<div class="ar-sec">
+        <div class="acc-h">Tournament</div>
+        <p class="acc-note">Eight entrants, three rounds, one winner. Placing pays
+          gems whether or not you take it.</p>
+        <div class="acc-btns"><button class="pixbtn gold sm" data-ar="tstart"><b>Enter tournament</b></button></div>
+      </div>`}
+
+      <div class="ar-sec">
+        <div class="acc-h">Challengers</div>
+        <div class="ar-list">${Arena.opponents().map(o => `
+          <button class="ar-row" data-fight="${o.id}">
+            <img class="ar-face" src="${o.members && o.members[0] ? sprite(o.members[0].cid) : ''}" alt="">
+            <span class="ar-info">
+              <b>${o.name}${o.rival ? ' <i class="ar-tag">friend</i>' : ''}</b>
+              <span>${o.blurb || (o.members.length + ' beast' + (o.members.length > 1 ? 's' : '') + ' · Lv.' + o.lvl)}</span>
+            </span>
+            <span class="ar-pow">${fmt(o.power)}</span>
+          </button>`).join('')}</div>
+      </div>
+
+      ${a.rivals.length ? `<div class="ar-sec">
+        <div class="acc-h">Your rivals</div>
+        <div class="ar-list">${a.rivals.map(r => `
+          <div class="ar-row static">
+            <span class="ar-info"><b>${r.name}</b><span>power ${fmt(r.power)}</span></span>
+            <button class="pixbtn ghost tiny" data-drop="${r.id}">Remove</button>
+          </div>`).join('')}</div>
+      </div>` : ''}`;
+
+    $$('#modal-root [data-fight]', box).forEach(b => {
+      b.onclick = () => {
+        const res = Arena.fight(b.dataset.fight);
+        if (res) showDuel(res);
+      };
+    });
+    $$('#modal-root [data-drop]', box).forEach(b => {
+      b.onclick = () => { Arena.removeRival(b.dataset.drop); renderArena(); };
+    });
+    $$('#modal-root [data-ar]', box).forEach(b => {
+      b.onclick = async () => {
+        const k = b.dataset.ar;
+        if (k === 'mycode') {
+          const code = Arena.exportCode();
+          try { await navigator.clipboard.writeText(code); } catch (e) {}
+          showCodeSheet(code);
+        } else if (k === 'addrival') {
+          const c = prompt("Paste your friend's rival code");
+          if (c && Arena.addRival(c)) renderArena();
+        } else if (k === 'tstart') {
+          Arena.startTournament(); renderArena();
+        } else if (k === 'tquit') {
+          Arena.clearTournament(); renderArena();
+        } else if (k === 'tround') {
+          const r = Arena.tourneyRound();
+          if (r) showTourneyRound(r);
+        }
+      };
+    });
+  }
+
+  /* a duel plays out rather than resolving into a number */
+  function showDuel(res) {
+    const box = el('div', 'duel');
+    const me = res.mine, them = res.opp;
+    box.innerHTML = `
+      <div class="duel-head">
+        <span class="duel-side"><b>${me.name}</b><span>${fmt(me.power)}</span></span>
+        <span class="duel-vs">vs</span>
+        <span class="duel-side right"><b>${them.name}</b><span>${fmt(them.power)}</span></span>
+      </div>
+      <div class="duel-bars">
+        <span class="pixbar hp"><i class="duel-a" style="width:100%"></i></span>
+        <span class="pixbar hp"><i class="duel-b" style="width:100%"></i></span>
+      </div>
+      <div class="duel-log"></div>
+      <div class="mrow"></div>`;
+    const back = openModal(box, { noClose: true });
+    const logEl = box.querySelector('.duel-log');
+    const A = box.querySelector('.duel-a'), B = box.querySelector('.duel-b');
+    let i = 0;
+    const step = () => {
+      if (i >= res.log.length) return finishDuel();
+      const r = res.log[i++];
+      A.style.width = r.ah + '%';
+      B.style.width = r.bh + '%';
+      const line = el('div', 'duel-line',
+        `<b>Round ${r.round}</b> you hit ${r.aHit}${r.bHit ? ` · they hit ${r.bHit}` : ''}`);
+      logEl.appendChild(line);
+      logEl.scrollTop = logEl.scrollHeight;
+      Sound.hit();
+      setTimeout(step, 420);
+    };
+    const finishDuel = () => {
+      const won = res.won;
+      const tag = el('div', 'duel-result ' + (won ? 'win' : 'lose'),
+        won ? 'VICTORY' : 'DEFEAT');
+      box.insertBefore(tag, logEl);
+      const d = res.delta;
+      logEl.appendChild(el('div', 'duel-line reward',
+        `${d >= 0 ? '+' : ''}${d} rating · ${icon('gem')}+${res.reward.gems} · ${icon('gold')}+${fmt(res.reward.gold)}`));
+      if (won) { confetti(24); Sound.levelup(); } else Sound.fail();
+      const ok = el('button', 'pixbtn primary sm', '<b>Back to the arena</b>');
+      ok.onclick = () => { closeModal(back); renderHud(); showArena(); };
+      box.querySelector('.mrow').appendChild(ok);
+    };
+    setTimeout(step, 350);
+  }
+
+  function showTourneyRound(r) {
+    const box = el('div', 'sreveal');
+    const mine = r.results.find(x => x.mine);
+    box.innerHTML = `<h2>${r.done ? (r.won ? 'Tournament won' : 'Knocked out') : 'Round ' + r.round}</h2>
+      <div class="tr-list">${r.results.map(m => m.bye
+        ? `<div class="tr-row"><span>${m.x.name}</span><span class="subtle">bye</span></div>`
+        : `<div class="tr-row${m.mine ? ' mine' : ''}">
+             <span class="${m.winner === m.x ? 'won' : 'out'}">${m.x.name}</span>
+             <span class="subtle">vs</span>
+             <span class="${m.winner === m.y ? 'won' : 'out'}">${m.y.name}</span>
+           </div>`).join('')}</div>
+      ${r.done && r.payout ? `<p class="subtle" style="text-align:center;margin-top:8px">
+        ${icon('gem')}+${r.payout.gems} · ${icon('gold')}+${fmt(r.payout.gold)}</p>` : ''}
+      <div class="mrow"></div>`;
+    const back = openModal(box);
+    const ok = el('button', 'pixbtn primary sm', `<b>${r.done ? 'Done' : 'Next round'}</b>`);
+    ok.onclick = () => {
+      closeModal(back);
+      if (r.done) Arena.clearTournament();
+      renderHud(); showArena();
+    };
+    box.querySelector('.mrow').appendChild(ok);
+    if (r.won) { confetti(50); Sound.levelup(); }
+    else if (mine && !mine.iWon) Sound.fail();
+    else Sound.quest();
+  }
+
   /* ================= account, profiles, backup, sign-in ================= */
   let accountBack = null;
   function showAccount() {
@@ -2632,6 +2867,9 @@ const UI = (() => {
       save();
     };
     row.appendChild(hap);
+    const tut = el('button', 'pixbtn ghost sm', 'Replay the tutorial');
+    tut.onclick = () => { closeAllModals(); Tutor.start(true); };
+    row.appendChild(tut);
     const acct = el('button', 'pixbtn ghost sm', 'Account & backup');
     acct.onclick = () => { closeAllModals(); showAccount(); };
     row.appendChild(acct);
@@ -2771,13 +3009,13 @@ const UI = (() => {
     startSession, openSessionOverlay, tickSession, showSessionSetup,
     renderSessionBattle,
     renderEnemies, renderEnemyHp, renderBossTimer, renderPartyHp, renderParty,
-    renderBattleStats, renderBoost, showHit, showKillRewards, attackTween,
+    renderBattleStats, renderBoost, renderHaste, showHit, showKillRewards, attackTween,
     enemyLunge, showPartyHit, lightAttack, chargeAttack, startAdvance, renderUltMeter, showUltimateCast, skillFlash,
     showDefeat, hideDefeat, showEncounter, renderQuestLog, renderUpgrades,
     renderCooldowns, tickCooldowns, renderPanels, togglePanel,
     renderMerge, mergeSpawnFx, mergeFuseFx, showMap,
     renderOffers, showTipCard, showReflectOffer,
-    showAccount, renderAccount,
+    showAccount, renderAccount, showArena, renderArena,
     renderBeasts, renderCollection, showCreature, showFeedPicker,
     renderFarm, waterGarden, showMealModal, showKcalTargetModal, renderFood,
     renderSummon, playWish, showSummonReveal,

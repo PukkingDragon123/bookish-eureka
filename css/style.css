@@ -1752,15 +1752,76 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
 
 /* ---- chest drop (replaces the timing minigame) ---- */
 .chestdrop {
-  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
   animation: chestin .5s var(--pop);
 }
-.chestdrop .ico { transform: scale(1.6); animation: chestwob 1.1s var(--ease) infinite; }
-.chestdrop.opened .ico { animation: chestpop .5s var(--pop); }
-.chest-tap { font-size: 14px; color: var(--gold); text-shadow: 1px 1px 0 var(--ink); }
-@keyframes chestin { from { opacity: 0; transform: translateY(-40px) scale(.6); } }
+.chestdrop.leaving { animation: chestout .26s var(--ease) forwards; }
+@keyframes chestout { to { opacity: 0; transform: translateY(-16px) scale(.9); } }
+
+/* light spilling out from under the lid */
+.chest-rays {
+  position: absolute; left: 50%; top: 44%; width: 190px; height: 190px;
+  transform: translate(-50%, -50%) scale(.2); opacity: 0;
+  background: conic-gradient(from 0deg,
+    transparent 0 8deg, rgba(255,209,92,.55) 8deg 11deg, transparent 11deg 26deg);
+  mask-image: radial-gradient(circle, #000 20%, transparent 68%);
+  pointer-events: none;
+}
+.chestdrop.opened .chest-rays { animation: chestrays .9s var(--ease) forwards, runespin 5s linear infinite; }
+@keyframes chestrays {
+  0% { opacity: 0; transform: translate(-50%,-50%) scale(.2); }
+  35% { opacity: 1; transform: translate(-50%,-50%) scale(1.05); }
+  100% { opacity: .55; transform: translate(-50%,-50%) scale(1); }
+}
+.chestdrop.lucky .chest-rays { background: conic-gradient(from 0deg,
+  transparent 0 6deg, rgba(255,209,92,.85) 6deg 10deg, transparent 10deg 20deg); }
+
+.chest-body { position: relative; z-index: 1; }
+.chest-body .ico { transform: scale(1.6); animation: chestwob 1.1s var(--ease) infinite; }
+/* the tap lands, the chest tenses, then the lid goes */
+.chestdrop.opening .chest-body .ico { animation: chestbrace .26s var(--ease); }
+.chestdrop.opened .chest-body .ico { animation: chestpop .5s var(--pop) forwards; }
 @keyframes chestwob { 0%,100% { transform: scale(1.6) rotate(-3deg); } 50% { transform: scale(1.6) rotate(3deg); } }
-@keyframes chestpop { 30% { transform: scale(2.1); } 100% { transform: scale(1.7); } }
+@keyframes chestbrace { 60% { transform: scale(1.38) translateY(3px); } 100% { transform: scale(1.6); } }
+@keyframes chestpop {
+  0% { transform: scale(1.6); }
+  35% { transform: scale(2.2) translateY(-6px); }
+  100% { transform: scale(1.75) translateY(-2px); }
+}
+
+/* rewards arc out of the chest, one at a time */
+.chest-loot {
+  /* above the chest, not across it */
+  position: absolute; left: 50%; bottom: 100%; margin-bottom: 6px;
+  display: flex; gap: 8px; transform: translateX(-50%);
+  pointer-events: none; z-index: 2;
+}
+.loot-chip {
+  display: flex; align-items: center; gap: 4px;
+  padding: 5px 10px; border-radius: 999px;
+  background: rgba(10,14,28,.9); border: var(--px) solid var(--ink);
+  box-shadow: 0 0 0 1px var(--gold), 0 4px 12px rgba(0,0,0,.5);
+  font-family: var(--display); font-size: var(--fs-meta); color: var(--gold);
+  white-space: nowrap;
+  animation: lootout .8s var(--pop) forwards;
+}
+.loot-chip .ico { width: 18px; height: 18px; vertical-align: 0; }
+.loot-chip.big {
+  box-shadow: 0 0 0 2px var(--gold), 0 0 22px rgba(255,194,71,.75);
+  font-size: var(--fs-body);
+}
+@keyframes lootout {
+  0% { opacity: 0; transform: translate(0, 26px) scale(.5); }
+  55% { opacity: 1; transform: translate(calc(var(--n, 0) * 6px), -14px) scale(1.1); }
+  100% { opacity: 1; transform: translate(calc(var(--n, 0) * 6px), -22px) scale(1); }
+}
+.chest-tap {
+  font-size: var(--fs-body); color: var(--gold);
+  text-shadow: 1px 1px 0 var(--ink); min-height: 20px;
+}
+.chestdrop.lucky .chest-tap { animation: tagpulse 1s var(--ease) infinite; }
+@keyframes chestin { from { opacity: 0; transform: translateY(-40px) scale(.6); } }
 
 /* ---- rune-circle summon ---- */
 /* ---- summoning circle ---- */
@@ -2069,3 +2130,195 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
   #session-overlay .s-dream { display: none; }
   .sb-scene { height: 50px; }
 }
+
+/* ---- Haste: buy five minutes of fast combat ---- */
+#haste-btn {
+  position: absolute; right: 8px; bottom: 8px; z-index: 6;
+  display: flex; align-items: center; gap: 5px;
+  min-height: 40px; padding: 8px 12px;
+  background: rgba(12,16,32,.82); color: var(--txt);
+  border: var(--px) solid var(--ink); border-radius: 999px;
+  box-shadow: 0 0 0 1px var(--gem), 0 4px 14px rgba(0,0,0,.45);
+  font: inherit; font-size: var(--fs-meta); cursor: pointer;
+  backdrop-filter: blur(3px);
+}
+#haste-btn b { font-family: var(--display); font-size: var(--fs-body); }
+#haste-btn span { color: var(--gem); display: flex; align-items: center; gap: 2px;
+  font-variant-numeric: tabular-nums; }
+#haste-btn .ico { width: 18px; height: 18px; vertical-align: 0; }
+#haste-btn.on {
+  box-shadow: 0 0 0 1px var(--gold), 0 0 18px rgba(255,194,71,.45);
+  animation: hastepulse 1.1s var(--ease) infinite;
+}
+#haste-btn.on span { color: var(--gold); }
+@keyframes hastepulse { 50% { box-shadow: 0 0 0 2px var(--gold), 0 0 26px rgba(255,194,71,.6); } }
+#haste-btn:active { transform: scale(.96); }
+/* the whole scene reads faster while Haste runs */
+:root[data-haste="1"] #scene-bg { animation: hasteshift 2.6s linear infinite; }
+@keyframes hasteshift { to { filter: hue-rotate(6deg) brightness(1.04); } }
+
+/* ============================================================
+   PROFESSOR VALE — the guided first run
+   ============================================================ */
+.tut-root {
+  position: fixed; inset: 0; z-index: 320;
+  /* the guide must not swallow taps — a step that says "tap Battle" has to
+     let you actually tap Battle. Only the professor's own panel is clickable. */
+  pointer-events: none;
+}
+.tut-root.leaving { animation: fadeout .3s var(--ease) forwards; }
+@keyframes fadeout { to { opacity: 0; } }
+
+/* the veil is one huge box-shadow, so the hole is a real cutout that any
+   pointer event passes straight through */
+.tut-veil { position: absolute; inset: 0; pointer-events: none; }
+.tut-hole {
+  position: absolute; border-radius: 12px;
+  box-shadow: 0 0 0 9999px rgba(6, 9, 20, .82);
+  outline: 2px solid var(--buddy, var(--gold));
+  outline-offset: 2px;
+  transition: left var(--t-med) var(--ease), top var(--t-med) var(--ease),
+              width var(--t-med) var(--ease), height var(--t-med) var(--ease),
+              opacity var(--t-med) var(--ease);
+  animation: tutglow 1.8s var(--ease) infinite;
+}
+@keyframes tutglow {
+  50% { outline-color: var(--gold); box-shadow: 0 0 0 9999px rgba(6,9,20,.86); }
+}
+/* with nothing highlighted the veil still needs to darken the screen */
+.tut-hole[style*="opacity: 0"] { box-shadow: 0 0 0 9999px rgba(6, 9, 20, .82); }
+
+.tut-prof {
+  position: absolute; left: 0; right: 0;
+  pointer-events: auto;
+  display: flex; align-items: flex-end; gap: 6px;
+  padding: 12px;
+  pointer-events: auto;
+  animation: profin .38s var(--pop);
+}
+.tut-prof.at-bottom { bottom: calc(8px + env(safe-area-inset-bottom)); }
+.tut-prof.at-top { top: calc(8px + env(safe-area-inset-top)); }
+@keyframes profin { from { opacity: 0; transform: translateY(24px); } }
+
+.tut-sprite {
+  width: 92px; height: 92px; flex: none;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,.6));
+  animation: profbob 2.6s var(--ease) infinite;
+}
+@keyframes profbob { 50% { transform: translateY(-5px); } }
+
+.tut-bubble {
+  flex: 1; min-width: 0; position: relative;
+  background: var(--bg1);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--buddy, var(--gold)); outline-offset: calc(var(--px) * -2);
+  border-radius: 12px; padding: 11px 12px;
+  box-shadow: 0 10px 26px rgba(0,0,0,.55);
+}
+.tut-bubble::after {
+  content: ''; position: absolute; left: -7px; bottom: 22px;
+  border: 7px solid transparent; border-right-color: var(--bg1);
+}
+.tut-name {
+  font-family: var(--display); font-size: var(--fs-label);
+  letter-spacing: .08em; text-transform: uppercase; color: var(--buddy, var(--gold));
+  margin-bottom: 3px;
+}
+.tut-text { font-size: var(--fs-body); line-height: 1.5; min-height: 4.5em; }
+.tut-foot { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.tut-dots { display: flex; gap: 4px; flex: 1; }
+.tut-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
+.tut-dots i.on { background: var(--buddy, var(--gold)); transform: scale(1.3); }
+.tut-skip {
+  background: none; border: 0; color: var(--txt-dim);
+  font: inherit; font-size: var(--fs-meta); cursor: pointer;
+  min-height: 44px; padding: 0 8px;
+}
+.tut-next { min-height: 44px; }
+.tut-next.ghosted { opacity: .35; pointer-events: none; }
+
+@media (max-height: 700px) {
+  .tut-sprite { width: 68px; height: 68px; }
+  .tut-text { min-height: 3.6em; font-size: var(--fs-meta); }
+}
+
+/* ============================================================
+   ARENA — rivals by code, duels, tournaments
+   ============================================================ */
+#btn-arena { position: absolute; left: 8px; top: 92px; z-index: 6; }
+.arena { max-height: 76vh; overflow-y: auto; }
+.ar-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.ar-rank {
+  display: flex; flex-direction: column; padding: 8px 12px; border-radius: 10px;
+  background: var(--bg2); box-shadow: 0 0 0 1px var(--rk, var(--gold));
+}
+.ar-rank b { font-family: var(--display); font-size: var(--fs-title); color: var(--rk, var(--gold)); }
+.ar-rank span { font-size: var(--fs-label); color: var(--txt-dim); font-variant-numeric: tabular-nums; }
+.ar-rec { display: flex; flex-direction: column; gap: 2px; font-size: var(--fs-meta); }
+.ar-rec span:first-child { font-family: var(--display); font-size: var(--fs-lead); }
+.ar-honest {
+  font-size: var(--fs-meta); color: var(--parch-lo); line-height: 1.5;
+  background: rgba(255,194,71,.07); border-left: 3px solid var(--brass);
+  padding: 8px 10px; border-radius: 0 6px 6px 0; margin: 6px 0 10px;
+}
+.ar-sec { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.ar-list { display: flex; flex-direction: column; gap: 6px; }
+.ar-row {
+  display: flex; align-items: center; gap: 9px; width: 100%;
+  padding: 9px 11px; min-height: 56px;
+  background: var(--bg2); color: var(--txt); text-align: left;
+  border: var(--px) solid var(--ink); border-radius: 10px;
+  font: inherit; cursor: pointer;
+}
+.ar-row.static { cursor: default; }
+.ar-row:active:not(.static) { transform: scale(.98); }
+.ar-face { width: 38px; height: 38px; object-fit: contain; flex: none; image-rendering: pixelated; }
+.ar-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.ar-info b { font-size: var(--fs-body); }
+.ar-info span { font-size: var(--fs-label); color: var(--txt-dim); }
+.ar-tag {
+  font-style: normal; font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
+  background: var(--good); color: var(--ink); padding: 1px 5px; border-radius: 4px; margin-left: 4px;
+}
+.ar-pow {
+  font-family: var(--display); font-size: var(--fs-title); color: var(--gold);
+  font-variant-numeric: tabular-nums; flex: none;
+}
+.ar-bracket { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+.ar-chip {
+  font-size: var(--fs-label); padding: 5px 9px; border-radius: 999px;
+  background: var(--bg2); border: 1px solid var(--line);
+}
+.ar-chip.me { background: var(--buddy-dim); border-color: var(--buddy); color: var(--txt); }
+
+/* the duel */
+.duel-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.duel-side { flex: 1; display: flex; flex-direction: column; }
+.duel-side.right { text-align: right; }
+.duel-side b { font-family: var(--display); font-size: var(--fs-title); }
+.duel-side span { font-size: var(--fs-label); color: var(--txt-dim); font-variant-numeric: tabular-nums; }
+.duel-vs { font-size: var(--fs-label); color: var(--txt-dim); }
+.duel-bars { display: flex; gap: 8px; margin-bottom: 10px; }
+.duel-bars .pixbar { flex: 1; height: 12px; }
+.duel-bars i { display: block; height: 100%; background: var(--good); transition: width .35s var(--ease); }
+.duel-bars .pixbar:last-child i { background: var(--danger); }
+.duel-log { max-height: 34vh; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.duel-line { font-size: var(--fs-meta); color: var(--txt-dim); }
+.duel-line b { color: var(--txt); }
+.duel-line.reward { color: var(--gold); font-size: var(--fs-body); margin-top: 6px; }
+.duel-line.reward .ico { width: 16px; height: 16px; vertical-align: -3px; }
+.duel-result {
+  font-family: var(--display); font-size: 26px; text-align: center; margin: 6px 0;
+  animation: popin .4s var(--pop);
+}
+.duel-result.win { color: var(--gold); text-shadow: 0 0 14px rgba(255,194,71,.5); }
+.duel-result.lose { color: var(--danger); }
+.tr-list { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; }
+.tr-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 8px 10px; background: var(--bg2); border-radius: 8px; font-size: var(--fs-meta);
+}
+.tr-row.mine { box-shadow: 0 0 0 1px var(--buddy); }
+.tr-row .won { color: var(--good); font-weight: 600; }
+.tr-row .out { color: var(--txt-dim); text-decoration: line-through; }

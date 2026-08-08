@@ -90,7 +90,8 @@ def main():
 
     # sheets fetched from JS via assetUrl() (the VFX atlas) must be in the map too
     ui_dir = os.path.join(ROOT, 'assets', 'ui')
-    for name in ['vfx.png']:
+    # vfx atlas, the professor sprite and the app icons are referenced from JS
+    for name in ['vfx.png', 'npc.png', 'app-180.png', 'app-192.png', 'app-512.png']:
         p = os.path.join(ui_dir, name)
         if os.path.exists(p):
             with open(p, 'rb') as fh:

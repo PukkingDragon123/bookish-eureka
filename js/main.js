@@ -14,6 +14,8 @@
   $('#hud-level').onclick = () => toast(`${fmt(S.player.xp)} / ${fmt(xpForLevel(S.player.level))} XP to next level`);
   $('#btn-boss').onclick = () => { Battle.challengeBoss(); Sound.click(); };
   $('#btn-map').onclick = () => UI.showMap();
+  $('#btn-arena').onclick = () => UI.showArena();
+  $('#haste-btn').onclick = () => buyHaste();
   $('#btn-log-meal').onclick = () => UI.showMealModal(true);
   $('#btn-kcal-target').onclick = () => UI.showKcalTargetModal();
   $('#btn-add-custom').onclick = () => UI.showAddCustomModal();
@@ -40,14 +42,17 @@
       const gains = Battle.offlineGains(Math.min(away, idleCap));
       const mult = rewardMult();
       gains.gold *= mult; gains.xp *= mult;
-      if (gains.kills > 0) UI.showWelcomeBack(away, gains);
-      else setTimeout(UI.maybeShowLogin, 600);
-    } else {
+      // a first-time player meets the professor before anything else pops up
+      const firstRun = !Tutor.done();
+      if (gains.kills > 0 && !firstRun) UI.showWelcomeBack(away, gains);
+      else if (!firstRun) setTimeout(UI.maybeShowLogin, 600);
+    } else if (Tutor.done()) {
       setTimeout(UI.maybeShowLogin, 600);
     }
   }
   UI.renderAll();
   PWA.hideBoot();
+  if (hadSave && S.dream && S.dream.key) Tutor.maybeStart();
 
   /* ---- loops ---- */
   setInterval(() => Battle.tick(), Battle.TICK_MS);

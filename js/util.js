@@ -140,6 +140,7 @@ function applyBuddyTheme() {
   r.style.setProperty('--buddy-soft', mixHex(c, '#101529', 0.94));
   r.style.setProperty('--buddy-hi', mixHex(c, '#ffffff', 0.4));
   r.dataset.buddyType = type || '';
+  r.dataset.haste = (typeof isHasted === 'function' && isHasted()) ? '1' : '';
 }
 function mixHex(a, b, t) {
   const pa = hex3(a), pb = hex3(b);
