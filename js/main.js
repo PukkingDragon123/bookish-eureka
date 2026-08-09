@@ -27,8 +27,14 @@
   $('#hero-edit').onclick = () => UI.showPlanEditor();
   $$('.panel-head').forEach(b => b.onclick = () => UI.togglePanel(b.dataset.panel));
 
-  /* ---- first-run vs returning ---- */
-  if (!hadSave || !S.dream || !S.dream.key) {
+  /* ---- first-run vs returning ----
+     Offline gains are banked now, but nothing is allowed to pop until the
+     loading screen has handed over: a modal opening behind a full-screen
+     overlay and appearing later is exactly the sort of thing that reads as a
+     bug. `greet` is whatever should happen the moment the app is visible. */
+  const fresh = !hadSave || !S.dream || !S.dream.key;
+  let greet = null;
+  if (fresh) {
     UI.renderSceneBg();
   } else {
     Quests.generateToday();
@@ -36,26 +42,26 @@
     if (S.exTimer && Habits.timerRemaining() <= 0) Habits.finishTimer();
     if (S.session) UI.openSessionOverlay();
     const away = (Date.now() - S.lastSeen) / 1000;
+    const firstRun = !Tutor.done();
     if (away > 90 && S.party.length > 0) {
       const idleCap = 12 * 3600 * (1 + relicBonusStat('idle'));
       const gains = Battle.offlineGains(Math.min(away, idleCap));
       const mult = rewardMult();
       gains.gold *= mult; gains.xp *= mult;
       // a first-time player meets the professor before anything else pops up
-      const firstRun = !Tutor.done();
-      if (gains.kills > 0 && !firstRun) UI.showWelcomeBack(away, gains);
-      else if (!firstRun) setTimeout(UI.maybeShowLogin, 600);
-    } else if (Tutor.done()) {
-      setTimeout(UI.maybeShowLogin, 600);
+      if (gains.kills > 0 && !firstRun) greet = () => UI.showWelcomeBack(away, gains);
+      else if (!firstRun) greet = UI.maybeShowLogin;
+    } else if (!firstRun) {
+      greet = UI.maybeShowLogin;
     }
   }
   UI.renderAll();
 
-  /* loading screen, then the title. Only once the player taps through does
-     the first-run flow (onboarding or the professor) begin. */
+  /* loading, then sign-in if it is owed, then the game. No main menu. */
   Title.boot(() => {
-    if (!hadSave || !S.dream || !S.dream.key) UI.showOnboarding();
-    else Tutor.maybeStart();
+    if (fresh) return UI.showOnboarding();
+    Tutor.maybeStart();
+    if (greet) setTimeout(greet, 500);
   });
 
   /* ---- loops ---- */

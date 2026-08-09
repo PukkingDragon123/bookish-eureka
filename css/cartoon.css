@@ -20,7 +20,7 @@
 .foe img, .fighter img, #hero-beast, .sring-beast,
 .dexcard img, .cimg-wrap img, .evostep img, .pslot img,
 .cdcard > img, .sb-party img, .sb-foe img,
-.ts-beast img, .dlg-port img, .tut-sprite, .wish-beast img {
+.dlg-port img, .tut-sprite, .wish-beast img {
   filter:
     drop-shadow(var(--toon-line) 0 0 var(--toon-ink))
     drop-shadow(calc(var(--toon-line) * -1) 0 0 var(--toon-ink))
@@ -28,7 +28,7 @@
     drop-shadow(0 calc(var(--toon-line) * -1) 0 var(--toon-ink));
 }
 /* the two biggest sprites carry a heavier line and a cast shadow */
-#hero-beast, .cimg-wrap img, .ts-beast img, .wish-beast img {
+#hero-beast, .cimg-wrap img, .wish-beast img {
   --toon-line: var(--toon-line-big);
 }
 .foe img, .fighter img {

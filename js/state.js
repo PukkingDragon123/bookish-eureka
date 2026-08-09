@@ -79,7 +79,8 @@ function defaultState() {
     exTimer: null,       // {kind:'exercise'|'walk'|'create', mins, startedAt}
     quests: { day: null, list: [] },
     summons: { total: 0, sinceRare: 0 },
-    settings: { sound: true, panels: { upgrades: false, fusion: false } },
+    settings: { sound: true, panels: { upgrades: false, fusion: false },
+                signinSkipped: false, signinPaid: false, metArena: false },
     tutorial: {},
     lastSeen: Date.now(),
     starterCid: null,

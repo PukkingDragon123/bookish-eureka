@@ -2354,8 +2354,10 @@ const UI = (() => {
 
   /* ================= login modal on new day ================= */
   function maybeShowLogin() {
-    // never interrupt the professor: the guide owns the screen while it runs
-    if (typeof Tutor !== 'undefined' && Tutor.isActive()) {
+    // never interrupt the professor or the sign-in card: whatever owns the
+    // screen keeps it, and this waits its turn
+    if ((typeof Tutor !== 'undefined' && Tutor.isActive()) ||
+        document.querySelector('.signin') || document.getElementById('boot')) {
       setTimeout(maybeShowLogin, 1500);
       return;
     }
@@ -2916,8 +2918,7 @@ const UI = (() => {
           const code = await Account.exportCode();
           showCodeSheet(code);
         } else if (a === 'import') {
-          const code = prompt('Paste your backup code');
-          if (code && await Account.importCode(code)) location.reload();
+          showRestore();
         } else if (a === 'signout') {
           Account.signOut(); renderAccount();
         } else if (a === 'setcid') {
@@ -2956,6 +2957,29 @@ const UI = (() => {
     };
     box.querySelector('.mrow').appendChild(cp);
     openModal(box);
+  }
+
+  /* pasting a save back in. A prompt() box is a terrible place to paste 3KB on
+     a phone, so this is a real sheet with a real field. */
+  function showRestore() {
+    const box = el('div');
+    box.innerHTML = `<h3>Restore a save</h3>
+      <p class="subtle" style="text-align:center">Paste the backup code from your
+        other device. This replaces the save on this one.</p>
+      <textarea class="acc-code" rows="5" placeholder="HLZ1.…"></textarea>
+      <div class="mrow"></div>`;
+    const ta = box.querySelector('textarea');
+    const go = el('button', 'pixbtn primary sm', '<b>Restore</b>');
+    go.onclick = async () => {
+      const code = ta.value.trim();
+      if (!code) return toast('Paste a code first');
+      go.disabled = true;
+      if (await Account.importCode(code)) location.reload();
+      else go.disabled = false;
+    };
+    box.querySelector('.mrow').appendChild(go);
+    openModal(box);
+    setTimeout(() => ta.focus(), 80);
   }
 
   function showSettings() {
@@ -3124,7 +3148,7 @@ const UI = (() => {
     renderCooldowns, tickCooldowns, renderPanels, togglePanel,
     renderMerge, mergeSpawnFx, mergeFuseFx, showMap,
     renderOffers, renderPromo, showTipCard, showReflectOffer,
-    showAccount, renderAccount, showArena, renderArena,
+    showAccount, renderAccount, showRestore, showArena, renderArena,
     renderBeasts, renderCollection, showCreature, showFeedPicker,
     renderFarm, waterGarden, showMealModal, showKcalTargetModal, renderFood,
     renderSummon, playWish, showSummonReveal,
