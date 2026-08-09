@@ -132,7 +132,7 @@ identical every session:
 - **Idle auto-battler** — your party of up to 4 beasts fights waves across 4 areas
   (Dewy Meadow, Sunwash Plains, Whisperfall Ruins, Frostpeak Pass), 10 stages each, looping
   into higher tiers. Wave 10 is a timed boss.
-- **297 creatures** with 9 elemental types, a type-effectiveness chart, party synergy,
+- **288 creatures** with 9 elemental types, a type-effectiveness chart, party synergy,
   rarities up to legendary, and **26 evolution lines** — evolving needs levels *and* essence,
   which only real-life rituals produce in volume.
 - **Summoning** — mana or gems fuel the circle, with pity protection and relic drops.
@@ -141,6 +141,13 @@ identical every session:
   *First Sound* to *Maestro*. The plan is editable any time from the Today hero.
 - **Personalized quests** — the daily quest board and the challenge-of-the-day are drawn
   from the tags your dream maps to, so a writer gets different work from a runner.
+- **Weekly events** — one of six events runs at a time and rotates every Monday, chosen by
+  the week number rather than a roll, so it is the same all week and the next one is
+  predictable. Each applies a modifier inside the grant functions themselves (Gold Rush
+  doubles every coin, Harvest Moon doubles seeds and yields, Ember Festival doubles XP),
+  and each carries a five-tier reward track that fills from real activity — practice
+  minutes, quests claimed, timers finished, bosses beaten. Unclaimed tiers are lost when
+  the week turns over.
 - **Offline progress** — your party keeps fighting while you're away (up to 12h); an active
   exercise boost multiplies it.
 

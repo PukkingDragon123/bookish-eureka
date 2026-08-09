@@ -318,10 +318,11 @@ const Dream = (() => {
     const el = def().element;
     const mana = grantMana(Math.round(mins * 2.2 * streakMult()));
     const xp = grantPlayerXp(Math.round(mins * 3.5 * streakMult()));
-    const ess = grantEssence(Math.max(1, Math.round(mins / 8)));
-    const seeds = Math.max(1, Math.round(mins / 15));
-    grantSeeds(seeds);
-    grantLabPoints(Math.max(1, Math.round(mins / 20)));
+    const ess = grantEssence(Math.max(2, Math.round(mins / 5)));
+    const seeds = grantSeeds(Math.max(2, Math.round(mins / 8)));
+    // a real session is the hardest thing the app asks for; it should pay like it
+    const gold = grantGold(Math.round(mins * 14 * Math.pow(1.12, globalStage())));
+    grantGems(Math.max(1, Math.round(mins / 12)));
     Farm.waterAll(Math.max(4, Math.round(mins / 2)));
 
     // the beast that shares your dream's element grows fastest
@@ -334,11 +335,13 @@ const Dream = (() => {
     Quests.progress('session', 1);
     Quests.progress('session_mins', mins);
     Quests.progress('any_habit', 1);
+    // practice is the heaviest contributor to the event track, by design
+    Events.add(mins + 15, 'session');
 
     const nowRung = rung();
     S.dream._lastRung = nowRung;
     save();
-    return { mana, xp, ess, seeds, mins,
+    return { mana, xp, ess, seeds, mins, gold,
              rungUp: nowRung > beforeRung ? def().ladder[nowRung - 1] : null };
   }
 

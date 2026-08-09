@@ -80,11 +80,48 @@ const UI = (() => {
     renderHero();
     renderFocus();
     renderRhythm();
+    renderEvent();
     renderTodayQuests();
     renderChallengeInto($('#today-challenge'));
     renderPromo();
     renderOffers();
     renderJournal();
+  }
+
+  /* ---- the week's event: what is running, how long is left, and the track ---- */
+  function renderEvent() {
+    const w = $('#event-card');
+    if (!w) return;
+    const e = Events.current();
+    const t = Events.track();
+    const left = Events.msLeft();
+    const days = Math.floor(left / 86400000);
+    const hrs = Math.floor((left % 86400000) / 3600000);
+    const last = Events.TIERS[Events.TIERS.length - 1].at;
+
+    w.innerHTML = `
+      <div class="card-head">${icon('star')} Event
+        <span class="ev-clock">${days ? days + 'd ' : ''}${hrs}h left</span></div>
+      <div class="ev-top">
+        <span class="ev-ic">${icon(e.icon, 'big')}</span>
+        <span class="ev-name"><b>${e.name}</b><span>${e.blurb}</span></span>
+      </div>
+      <div class="ev-bar"><i style="width:${Events.progressPct()}%"></i>
+        <b>${fmt(t.points)} / ${fmt(last)}</b></div>
+      <div class="ev-track">${Events.TIERS.map((tier, i) => {
+        const got = t.claimed.includes(i);
+        const ready = !got && t.points >= tier.at;
+        return `<button class="ev-tier ${got ? 'got' : ready ? 'ready' : ''}"
+          data-ev="${i}" ${ready ? '' : 'disabled'}>
+          <span class="ev-at">${tier.at}</span>
+          ${icon(tier.icon, 'big')}
+          <span class="ev-what">${got ? 'Claimed' : tier.text}</span>
+        </button>`;
+      }).join('')}</div>`;
+
+    $$('#event-card [data-ev]', w).forEach(b => {
+      b.onclick = () => { Events.claim(+b.dataset.ev); coinBurst(b, 6); };
+    });
   }
 
 
@@ -96,6 +133,13 @@ const UI = (() => {
     const w = $('#promo-strip');
     if (!w) return;
     const cards = [];
+    // a claimable event tier outranks everything else on the strip
+    if (Events.readyCount() > 0) {
+      cards.push({ icon: 'star', kind: 'event',
+                   title: `${Events.current().name} reward ready`,
+                   sub: `${Events.readyCount()} tier${Events.readyCount() > 1 ? 's' : ''} waiting`,
+                   cta: 'Claim' });
+    }
     const t = Arena.tourney();
     if (t && !t.done) {
       cards.push({ icon: 'sword', kind: 'arena', title: `Tournament · round ${t.round + 1}`,
@@ -127,7 +171,11 @@ const UI = (() => {
       </button>`;
     w.querySelector('.promo').onclick = () => {
       Sound.click();
-      if (c.kind === 'arena') { switchTab('battle'); showArena(); }
+      if (c.kind === 'event') {
+        switchTab('today');
+        const e = $('#event-card');
+        if (e) e.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else if (c.kind === 'arena') { switchTab('battle'); showArena(); }
       else if (c.kind === 'offers') { const o = $('#offers-card'); if (o) o.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
       else if (c.kind === 'battle') { switchTab('battle'); S.settings.panels.fusion = true; renderMerge(); }
       else switchTab(c.kind);
@@ -3147,7 +3195,7 @@ const UI = (() => {
     showDefeat, hideDefeat, showEncounter, renderQuestLog, renderUpgrades,
     renderCooldowns, tickCooldowns, renderPanels, togglePanel,
     renderMerge, mergeSpawnFx, mergeFuseFx, showMap,
-    renderOffers, renderPromo, showTipCard, showReflectOffer,
+    renderOffers, renderPromo, renderEvent, showTipCard, showReflectOffer,
     showAccount, renderAccount, showRestore, showArena, renderArena,
     renderBeasts, renderCollection, showCreature, showFeedPicker,
     renderFarm, waterGarden, showMealModal, showKcalTargetModal, renderFood,

@@ -178,6 +178,7 @@ const Habits = (() => {
     Quests.progress('habit_' + def.id, 1);
     Quests.progress('timer_mins', t.mins);
     Quests.progress('any_habit', 1);
+    Events.add(Math.round(t.mins / 2) + 6, 'timer');
     save();
     closeAllModals();
     UI.renderRituals();

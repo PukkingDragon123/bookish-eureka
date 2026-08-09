@@ -108,6 +108,8 @@ function defaultState() {
              minutes: 0, sessions: 0, todayMinutes: 0, lastDone: null,
              taskSkips: 0, log: [], _lastRung: 0, started: Date.now() },
     session: null,   // {mins, startedAt, paused, pausedAt, elapsedBefore}
+    /* --- v5: the running weekly event and its reward track --- */
+    event: { week: 0, points: 0, claimed: [] },
   };
 }
 
@@ -139,7 +141,7 @@ function sanitize() {
   if (!S.party.length && Object.keys(S.beasts).length) S.party = [Object.keys(S.beasts)[0]];
   if (S.starterCid && !C_BY_ID[S.starterCid]) S.starterCid = null;
   const d = defaultState();
-  for (const k of ['upgrades', 'merge', 'farm', 'lab', 'login', 'challenge', 'regionProgress', 'dream', 'offers', 'arena']) {
+  for (const k of ['upgrades', 'merge', 'farm', 'lab', 'login', 'challenge', 'regionProgress', 'dream', 'offers', 'arena', 'event']) {
     if (typeof S[k] !== 'object' || S[k] === null) S[k] = d[k];
   }
   if (typeof S.merge.up !== 'object' || S.merge.up === null) S.merge.up = { slots: 0, tier: 0, luck: 0, energy: 0, rarity: 0 };
@@ -371,19 +373,24 @@ function stageLabel() {
 }
 
 /* ---------- resource grants ---------- */
+/* every payout runs the week's event modifier last, so one hook covers every
+   source of that resource rather than every call site */
+function evMult(key) {
+  return typeof Events === 'undefined' ? 1 : Events.mult(key);
+}
 function grantGold(n, sourceEl) {
-  n = Math.floor(n * (1 + relicBonusStat('gold') + Lore.passiveBonus('gold') + upgradeBonus('gold') + mergeBonus('gold')) * (isBlessed() ? 1.15 : 1));
+  n = Math.floor(n * (1 + relicBonusStat('gold') + Lore.passiveBonus('gold') + upgradeBonus('gold') + mergeBonus('gold')) * (isBlessed() ? 1.15 : 1) * evMult('gold'));
   S.player.gold += n;
   if (sourceEl) coinBurst(sourceEl, 4);
   return n;
 }
 function grantMana(n) {
-  n = Math.floor(n * (1 + relicBonusStat('mana') + Lore.passiveBonus('mana')));
+  n = Math.floor(n * (1 + relicBonusStat('mana') + Lore.passiveBonus('mana')) * evMult('mana'));
   S.player.mana = Math.min(manaMax(), S.player.mana + n);
   return n;
 }
 function grantEssence(n) {
-  n = Math.floor(n * (1 + relicBonusStat('ess') + Lore.passiveBonus('ess')));
+  n = Math.floor(n * (1 + relicBonusStat('ess') + Lore.passiveBonus('ess')) * evMult('ess'));
   S.player.essence += n;
   return n;
 }
@@ -391,10 +398,10 @@ function grantGems(n) { S.player.gems += n; return n; }
 /* The Lab is gone. Everything that used to award lab points now pays gems, so
    no reward path silently drops its payout. */
 function grantLabPoints(n) { return grantGems(n); }
-function grantSeeds(n) { S.farm.seeds += n; return n; }
+function grantSeeds(n) { n = Math.round(n * evMult('seeds')); S.farm.seeds += n; return n; }
 
 function grantPlayerXp(n) {
-  n = Math.floor(n * (1 + relicBonusStat('xp') + Lore.passiveBonus('xp')) * (isBlessed() ? 1.15 : 1));
+  n = Math.floor(n * (1 + relicBonusStat('xp') + Lore.passiveBonus('xp')) * (isBlessed() ? 1.15 : 1) * evMult('xp'));
   S.player.xp += n;
   let leveled = false;
   while (S.player.xp >= xpForLevel(S.player.level)) {
@@ -426,6 +433,7 @@ function showLevelUpFlash(lvl) {
 
 /* beast xp from battles */
 function grantBeastXp(n) {
+  n = Math.round(n * evMult('beastxp'));
   const per = Math.max(1, Math.floor(n / Math.max(1, S.party.length)));
   for (const cid of S.party) {
     const inst = S.beasts[cid];

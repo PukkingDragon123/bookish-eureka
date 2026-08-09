@@ -2934,6 +2934,68 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
 }
 .promo:active { transform: scale(.985); }
 
+/* ============================================================
+   WEEKLY EVENT — one running event and its reward track
+   ============================================================ */
+#event-card { outline-color: var(--gold); }
+.ev-clock {
+  margin-left: auto; color: var(--gold); font-variant-numeric: tabular-nums;
+  letter-spacing: normal; text-transform: none;
+}
+.ev-top { display: flex; align-items: flex-start; gap: 8px; }
+.ev-ic {
+  flex: none; width: 40px; height: 40px; display: grid; place-items: center;
+  background: var(--bg0);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--line); outline-offset: calc(var(--px) * -2);
+}
+.ev-name { display: flex; flex-direction: column; min-width: 0; }
+.ev-name b { font-family: var(--display); font-size: var(--fs-title); color: var(--gold); }
+.ev-name span { font-size: var(--fs-meta); color: var(--txt-dim); line-height: 1.45; }
+
+.ev-bar {
+  position: relative; height: 15px; margin: 8px 0 7px;
+  background: #0a0e1c; border: var(--px) solid var(--ink);
+  overflow: hidden;
+}
+.ev-bar > i {
+  display: block; height: 100%;
+  background: repeating-linear-gradient(90deg, var(--gold) 0 6px, var(--gold-lo) 6px 10px);
+  transition: width .3s steps(6);
+}
+.ev-bar > b {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: var(--fs-micro); color: #fff; text-shadow: 1px 1px 0 var(--ink);
+}
+
+.ev-track { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 2px; }
+.ev-tier {
+  flex: 1 0 66px; min-width: 66px; min-height: 44px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 5px 3px;
+  background: var(--bg1); color: var(--txt-dim);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--line); outline-offset: calc(var(--px) * -2);
+  font: inherit; cursor: default;
+}
+.ev-tier .ev-at {
+  font-size: var(--fs-micro); color: var(--brass); font-variant-numeric: tabular-nums;
+}
+.ev-tier .ev-what { font-size: var(--fs-micro); text-align: center; line-height: 1.25; }
+.ev-tier .ico { filter: grayscale(.8) brightness(.7); }
+.ev-tier.ready {
+  cursor: pointer; color: var(--txt);
+  outline-color: var(--gold);
+  box-shadow: 0 3px 0 var(--ink);
+  animation: evready 1.1s steps(1) infinite;
+}
+.ev-tier.ready .ico { filter: none; }
+.ev-tier.ready .ev-what { color: var(--gold); }
+@keyframes evready { 50% { background: var(--bg3); } }
+.ev-tier.ready:active { transform: translateY(3px); box-shadow: none; }
+.ev-tier.got { opacity: .45; }
+.ev-tier.got .ev-what { color: var(--good); }
+
 /* ============ the cartoon layer ============
 
    Loaded last, on purpose. Everything here is presentation: a hand-inked
@@ -3085,116 +3147,233 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
   opacity: .32;
 }
 
-/* ============ the speech box ============ */
-/* above modals (100) and the tutorial veil (320): a character talking to you
-   is always the front-most thing on screen */
+/* ============ the text window ============
+   A pixel RPG draws dialogue as a hard-edged panel pinned to the bottom of the
+   screen: portrait framed inside it, name on a plate notched into the top
+   border, a blinking stepped arrow when there is more to read, and choices in
+   a command window stacked above. No soft corners, no drop shadows, no cream
+   speech bubble — those read as a chat app, not as this game.            */
 .dlg-root {
-  position: fixed; inset: 0; z-index: 340;
+  position: fixed; inset: 0; z-index: 340;    /* above modals and the tut veil */
   display: flex; align-items: flex-end; justify-content: center;
-  padding: 0 8px calc(18px + env(safe-area-inset-bottom));
+  padding: 0 6px calc(8px + env(safe-area-inset-bottom));
   pointer-events: none;
 }
 .dlg-root .dlg-veil { position: absolute; inset: 0; background: transparent; }
 .dlg-root.veiled .dlg-veil { background: rgba(6,9,20,.62); pointer-events: auto; }
-.dlg-box {
+.dlg-wrap {
   position: relative; pointer-events: auto; cursor: pointer;
   width: 100%; max-width: 480px;
-  display: flex; align-items: flex-end; gap: 4px;
-  transform: translateY(28px); opacity: 0;
-  transition: transform .3s var(--pop), opacity .2s linear;
+  display: flex; flex-direction: column; align-items: stretch; gap: 6px;
+  transform: translateY(18px); opacity: 0;
+  transition: transform .2s steps(4), opacity .16s linear;
 }
-.dlg-root.in .dlg-box { transform: none; opacity: 1; }
-.dlg-root.out .dlg-box { transform: translateY(24px); opacity: 0; }
+.dlg-root.in .dlg-wrap { transform: none; opacity: 1; }
+.dlg-root.out .dlg-wrap { transform: translateY(14px); opacity: 0; }
 
-.dlg-port { flex: none; width: 96px; align-self: flex-end; }
-@media (max-width: 360px) { .dlg-port { width: 74px; } }
-.dlg-port img { width: 100%; display: block; transform-origin: 50% 100%; }
-.dlg-port.bump img { animation: portbump .34s var(--pop); }
+.dlg-box {
+  position: relative;
+  background: var(--bg1);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--parch);
+  outline-offset: calc(var(--px) * -2);
+  box-shadow: 0 4px 0 var(--ink), 0 10px 24px rgba(0,0,0,.55);
+  padding: 12px 10px 14px;
+  margin-top: 9px;                          /* room for the name plate */
+}
+/* the name sits on a plate notched over the top border */
+.dlg-name {
+  position: absolute; top: -11px; left: 8px;
+  background: var(--gold); color: #2e1e02;
+  font-family: var(--display); font-size: var(--fs-label); font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase;
+  padding: 1px 8px;
+  border: var(--px) solid var(--ink);
+  box-shadow: 0 2px 0 var(--ink);
+}
+.dlg-inner { display: flex; align-items: flex-start; gap: 9px; }
+.dlg-port {
+  flex: none; width: 64px; height: 64px;
+  display: grid; place-items: center;
+  background: var(--bg0);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--line);
+  outline-offset: calc(var(--px) * -2);
+  overflow: hidden;
+}
+.dlg-port img {
+  width: 62px; height: auto; display: block;
+  transform-origin: 50% 100%; image-rendering: pixelated;
+}
+.dlg-port.bump img { animation: portbump .28s steps(3); }
 @keyframes portbump {
-  0% { transform: scale(1.1, .9) translateY(4px); }
-  55% { transform: scale(.96, 1.06) translateY(-4px); }
+  0% { transform: translateY(3px) scale(1.08, .92); }
+  60% { transform: translateY(-3px) scale(.96, 1.05); }
 }
 /* the portrait leans into what it is saying */
-.dlg-port[data-mood="up"]    img { transform: rotate(-4deg) translateY(-3px); }
-.dlg-port[data-mood="think"] img { transform: rotate(3deg) scale(.97); }
-.dlg-port[data-mood="cheer"] img { transform: rotate(-7deg) scale(1.05); }
+.dlg-port[data-mood="up"]    img { transform: translateY(-2px); }
+.dlg-port[data-mood="think"] img { transform: scale(.95); }
+.dlg-port[data-mood="cheer"] img { transform: translateY(-3px) scale(1.04); }
 
-.dlg-bubble {
-  position: relative; flex: 1; min-width: 0;
-  background: #fbf6ea; color: #1b1a24;
-  border: var(--toon-line-big) solid var(--toon-ink);
-  border-radius: 14px;
-  box-shadow: 0 5px 0 rgba(0,0,0,.45);
-  padding: 9px 12px 10px;
-}
-.dlg-tail {
-  position: absolute; left: -11px; bottom: 15px;
-  width: 0; height: 0;
-  border: 9px solid transparent;
-  border-right-color: var(--toon-ink);
-}
-.dlg-tail::after {
-  content: ''; position: absolute; left: -6px; top: -7px;
-  border: 7px solid transparent; border-right-color: #fbf6ea;
-}
-.dlg-name {
-  font-family: var(--display); font-size: var(--fs-label);
-  letter-spacing: 1.2px; text-transform: uppercase; color: #8a5a12;
-}
 .dlg-text {
-  font-size: var(--fs-body); line-height: 1.5; min-height: 2.9em;
-  color: #1b1a24;
+  flex: 1; min-width: 0;
+  font-size: var(--fs-body); line-height: 1.55; min-height: 3.1em;
+  color: var(--txt);
 }
-.dlg-more { display: none; justify-content: flex-end; gap: 3px; margin-top: 2px; }
-.dlg-more.on { display: flex; }
-.dlg-more i {
-  width: 5px; height: 5px; background: #8a5a12; border-radius: 50%;
-  animation: moredot 1s infinite;
-}
-.dlg-more i:nth-child(2) { animation-delay: .15s; }
-.dlg-more i:nth-child(3) { animation-delay: .3s; }
-@keyframes moredot { 50% { transform: translateY(-4px); opacity: .5; } }
 
-.dlg-choices { display: none; flex-direction: column; gap: 5px; margin-top: 7px; }
+/* the "more to read" arrow, drawn as three rows of pixels */
+.dlg-more {
+  position: absolute; right: 14px; bottom: 8px;
+  width: 4px; height: 4px; background: var(--gold);
+  display: none;
+  box-shadow:
+    -8px -8px 0 var(--gold), -4px -8px 0 var(--gold), 0 -8px 0 var(--gold),
+     4px -8px 0 var(--gold),  8px -8px 0 var(--gold),
+    -4px -4px 0 var(--gold),  0 -4px 0 var(--gold),  4px -4px 0 var(--gold);
+  animation: dlgmore 1s steps(1) infinite;
+}
+.dlg-more.on { display: block; }
+@keyframes dlgmore { 50% { opacity: 0; } }
+
+/* choices are a command window, not chat bubbles */
+.dlg-choices {
+  display: none; flex-direction: column;
+  background: var(--bg1);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--parch);
+  outline-offset: calc(var(--px) * -2);
+  box-shadow: 0 4px 0 var(--ink), 0 10px 24px rgba(0,0,0,.5);
+  padding: 5px;
+}
 .dlg-choices.on { display: flex; }
 .dlg-choice {
-  font: inherit; font-size: var(--fs-meta); text-align: left; cursor: pointer;
-  background: #fff; color: #1b1a24;
-  border: var(--toon-line-big) solid var(--toon-ink);
-  border-radius: 10px; padding: 8px 11px;
-  min-height: 40px;
-  box-shadow: 0 3px 0 var(--toon-ink);
-  animation: toonland .26s var(--pop) both;
+  position: relative;
+  font: inherit; font-size: var(--fs-body); text-align: left; cursor: pointer;
+  background: none; border: 0; color: var(--txt);
+  padding: 9px 8px 9px 26px;
+  min-height: 44px;
 }
-.dlg-choice:active { transform: translateY(3px); box-shadow: 0 0 0 var(--toon-ink); }
+/* a stepped cursor block instead of a bullet */
+.dlg-choice::before {
+  content: ''; position: absolute; left: 8px; top: 50%;
+  width: 4px; height: 4px; margin-top: -2px; background: var(--gold);
+  box-shadow: -4px -4px 0 var(--gold), -4px 4px 0 var(--gold),
+              -8px -8px 0 var(--gold), -8px 8px 0 var(--gold);
+  opacity: 0; transform: translateX(-4px);
+  transition: opacity .1s steps(2), transform .1s steps(2);
+}
+.dlg-choice:hover::before, .dlg-choice:focus-visible::before,
+.dlg-choice:active::before { opacity: 1; transform: none; }
+.dlg-choice + .dlg-choice { border-top: var(--px) solid var(--line); }
+.dlg-choice:active { background: var(--bg3); }
 
-/* ---- the guide reuses the same bubble ---- */
+/* ---- the guide reuses the same window ---- */
 .tut-prof .tut-bubble {
-  background: #fbf6ea; color: #1b1a24;
-  border: var(--toon-line-big) solid var(--toon-ink);
-  border-radius: 14px;
-  box-shadow: 0 5px 0 rgba(0,0,0,.45);
+  background: var(--bg1); color: var(--txt);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--parch);
+  outline-offset: calc(var(--px) * -2);
+  border-radius: 0;
+  box-shadow: 0 4px 0 var(--ink), 0 10px 24px rgba(0,0,0,.55);
+  margin-top: 9px;
 }
-.tut-prof .tut-bubble { outline: 0; }
-.tut-prof .tut-bubble::after { display: none; }     /* the dark tail it used to draw */
-.tut-prof .tut-name { color: #8a5a12; }
-.tut-prof .tut-text { color: #1b1a24; min-height: 3em; }
-.tut-prof .tut-skip { color: #6a6376; }
-.tut-prof .dlg-tail { bottom: 24px; }
+.tut-prof .tut-bubble::after { display: none; }   /* the old soft tail */
+.tut-prof .tut-name {
+  position: absolute; top: -11px; left: 8px; margin: 0;
+  background: var(--gold); color: #2e1e02;
+  font-family: var(--display); font-size: var(--fs-label); font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase;
+  padding: 1px 8px;
+  border: var(--px) solid var(--ink);
+  box-shadow: 0 2px 0 var(--ink);
+}
+.tut-prof .tut-text { color: var(--txt); min-height: 3em; margin-top: 4px; }
+.tut-prof .dlg-tail { display: none; }
+.tut-prof .dlg-choices { margin-top: 8px; box-shadow: none; }
 .tut-sprite {
   transform-origin: 50% 100%;
   animation: toonbob 2.6s cubic-bezier(.45,0,.55,1) infinite;
-  transition: transform .3s var(--pop);
 }
-.tut-prof[data-mood="up"]    .tut-sprite { animation: toonbob 1.9s cubic-bezier(.45,0,.55,1) infinite; }
-.tut-prof[data-mood="think"] .tut-sprite { animation: none; transform: rotate(4deg) scale(.96); }
-.tut-prof[data-mood="cheer"] .tut-sprite { animation: toonbob 1.3s cubic-bezier(.45,0,.55,1) infinite; }
-.tut-prof .dlg-choices { margin-top: 8px; }
+.tut-prof[data-mood="up"]    .tut-sprite { animation-duration: 1.9s; }
+.tut-prof[data-mood="think"] .tut-sprite { animation: none; }
+.tut-prof[data-mood="cheer"] .tut-sprite { animation-duration: 1.3s; }
 
 @media (prefers-reduced-motion: reduce) {
   .foe img, .fighter img, #hero-beast { animation: none; }
   .card, .cdcard, .dexcard, .pixbtn.primary, .pixbtn.gold, .dlg-choice { animation: none; }
 }
+
+/* ============ the pixel pass ============
+   Loaded last so it wins. A pixel UI has no soft corners: every radius between
+   3px and 24px was modern-app chrome that crept in with the newer screens, and
+   it all goes. 50% survives only where a real circle is drawn — progress
+   rings, the summon runes, particles and status dots.                     */
+.mslot, .mslot.empty::after, .mitem, .mitem .tier, .merge-ghost, .upcard,
+.banner .btag, .stag, .glyph-plus::before, .glyph-plus::after,
+.loot-chip, #offers-card .off-badge, .offrow, .offrow .off-go, .reflect-in,
+#boot img, .boot-bar, .boot-bar i, .acc-steps code, .accrow, .acc-in,
+.acc-code, #haste-btn, .tut-hole, .ar-rank, .ar-row, .ar-tag, .ar-chip,
+.tr-row, .si-card, .si-mark, .si-reward, .promo, .promo-cta,
+.dlg-box, .dlg-choices, .dlg-name, .tut-bubble, .tut-name, .toast {
+  border-radius: 0;
+}
+
+/* the impact burst, redrawn as an 8-bit sparkle: axis-aligned bars and pips,
+   no rotation, because rotating pixel art just blurs it */
+.pow { animation: powpop .4s steps(4) forwards; }
+.pow::before {
+  clip-path: none;
+  filter: none;
+  background:
+    linear-gradient(var(--pow-c, #ffd76a) 0 0) 37.5% 0    / 25%   100%  no-repeat,
+    linear-gradient(var(--pow-c, #ffd76a) 0 0) 0    37.5% / 100%  25%   no-repeat,
+    linear-gradient(var(--pow-c, #ffd76a) 0 0) 18.75% 18.75% / 62.5% 62.5% no-repeat,
+    linear-gradient(var(--pow-c, #ffd76a) 0 0) 12.5% 12.5% / 12.5% 12.5% no-repeat,
+    linear-gradient(var(--pow-c, #ffd76a) 0 0) 87.5% 12.5% / 12.5% 12.5% no-repeat,
+    linear-gradient(var(--pow-c, #ffd76a) 0 0) 12.5% 87.5% / 12.5% 12.5% no-repeat,
+    linear-gradient(var(--pow-c, #ffd76a) 0 0) 87.5% 87.5% / 12.5% 12.5% no-repeat;
+}
+.pow b {
+  transform: none;
+  text-shadow: 1px 1px 0 rgba(255,255,255,.45);
+}
+@keyframes powpop {
+  0%   { transform: scale(.4); opacity: 0; }
+  40%  { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+/* hard-edged motion everywhere: overshoot easing is a UI-kit tell */
+.card, .cdcard, .dexcard { animation: toonland .2s steps(3) both; }
+.pixbtn.primary:not(:disabled), .pixbtn.gold:not(:disabled) { animation: none; }
+.pixbtn { transition: transform .08s steps(2), filter .1s linear; }
+.pixbtn:active { transform: translateY(4px); }
+.tab.active { animation: tabland .18s steps(3) !important; }
+.hud-chip b.bumped { animation: countbump .28s steps(3); }
+#tabbar button.active .ico { animation: tabpop .24s steps(3); }
+
+/* the sign-in card is a panel, not a floating sheet */
+.si-card {
+  background: var(--bg1);
+  background-image: var(--grain);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--line);
+  outline-offset: calc(var(--px) * -2);
+  box-shadow: 0 5px 0 var(--ink), 0 14px 34px rgba(0,0,0,.55);
+  animation: sicard .24s steps(4) both;
+}
+@keyframes sicard { from { opacity: 0; transform: translateY(10px); } }
+.si-mark {
+  box-shadow: none;
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--line);
+  outline-offset: calc(var(--px) * -2);
+  image-rendering: pixelated;
+}
+.si-reward { box-shadow: 0 3px 0 var(--ink); }
+.boot-bar { border: var(--px) solid var(--ink); background: #0a0e1c; height: 10px; }
+.boot-bar i { transition: width .2s steps(4); }
+#boot img.boot-beast { border: 0; outline: 0; }
 
 </style>
 </head>
@@ -3264,6 +3443,8 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
       </div>
 
       <div id="today-challenge"></div>
+
+      <div id="event-card" class="card"></div>
 
       <div id="promo-strip"></div>
 
@@ -4434,6 +4615,8 @@ function defaultState() {
              minutes: 0, sessions: 0, todayMinutes: 0, lastDone: null,
              taskSkips: 0, log: [], _lastRung: 0, started: Date.now() },
     session: null,   // {mins, startedAt, paused, pausedAt, elapsedBefore}
+    /* --- v5: the running weekly event and its reward track --- */
+    event: { week: 0, points: 0, claimed: [] },
   };
 }
 
@@ -4465,7 +4648,7 @@ function sanitize() {
   if (!S.party.length && Object.keys(S.beasts).length) S.party = [Object.keys(S.beasts)[0]];
   if (S.starterCid && !C_BY_ID[S.starterCid]) S.starterCid = null;
   const d = defaultState();
-  for (const k of ['upgrades', 'merge', 'farm', 'lab', 'login', 'challenge', 'regionProgress', 'dream', 'offers', 'arena']) {
+  for (const k of ['upgrades', 'merge', 'farm', 'lab', 'login', 'challenge', 'regionProgress', 'dream', 'offers', 'arena', 'event']) {
     if (typeof S[k] !== 'object' || S[k] === null) S[k] = d[k];
   }
   if (typeof S.merge.up !== 'object' || S.merge.up === null) S.merge.up = { slots: 0, tier: 0, luck: 0, energy: 0, rarity: 0 };
@@ -4697,19 +4880,24 @@ function stageLabel() {
 }
 
 /* ---------- resource grants ---------- */
+/* every payout runs the week's event modifier last, so one hook covers every
+   source of that resource rather than every call site */
+function evMult(key) {
+  return typeof Events === 'undefined' ? 1 : Events.mult(key);
+}
 function grantGold(n, sourceEl) {
-  n = Math.floor(n * (1 + relicBonusStat('gold') + Lore.passiveBonus('gold') + upgradeBonus('gold') + mergeBonus('gold')) * (isBlessed() ? 1.15 : 1));
+  n = Math.floor(n * (1 + relicBonusStat('gold') + Lore.passiveBonus('gold') + upgradeBonus('gold') + mergeBonus('gold')) * (isBlessed() ? 1.15 : 1) * evMult('gold'));
   S.player.gold += n;
   if (sourceEl) coinBurst(sourceEl, 4);
   return n;
 }
 function grantMana(n) {
-  n = Math.floor(n * (1 + relicBonusStat('mana') + Lore.passiveBonus('mana')));
+  n = Math.floor(n * (1 + relicBonusStat('mana') + Lore.passiveBonus('mana')) * evMult('mana'));
   S.player.mana = Math.min(manaMax(), S.player.mana + n);
   return n;
 }
 function grantEssence(n) {
-  n = Math.floor(n * (1 + relicBonusStat('ess') + Lore.passiveBonus('ess')));
+  n = Math.floor(n * (1 + relicBonusStat('ess') + Lore.passiveBonus('ess')) * evMult('ess'));
   S.player.essence += n;
   return n;
 }
@@ -4717,10 +4905,10 @@ function grantGems(n) { S.player.gems += n; return n; }
 /* The Lab is gone. Everything that used to award lab points now pays gems, so
    no reward path silently drops its payout. */
 function grantLabPoints(n) { return grantGems(n); }
-function grantSeeds(n) { S.farm.seeds += n; return n; }
+function grantSeeds(n) { n = Math.round(n * evMult('seeds')); S.farm.seeds += n; return n; }
 
 function grantPlayerXp(n) {
-  n = Math.floor(n * (1 + relicBonusStat('xp') + Lore.passiveBonus('xp')) * (isBlessed() ? 1.15 : 1));
+  n = Math.floor(n * (1 + relicBonusStat('xp') + Lore.passiveBonus('xp')) * (isBlessed() ? 1.15 : 1) * evMult('xp'));
   S.player.xp += n;
   let leveled = false;
   while (S.player.xp >= xpForLevel(S.player.level)) {
@@ -4752,6 +4940,7 @@ function showLevelUpFlash(lvl) {
 
 /* beast xp from battles */
 function grantBeastXp(n) {
+  n = Math.round(n * evMult('beastxp'));
   const per = Math.max(1, Math.floor(n / Math.max(1, S.party.length)));
   for (const cid of S.party) {
     const inst = S.beasts[cid];
@@ -5139,10 +5328,11 @@ const Dream = (() => {
     const el = def().element;
     const mana = grantMana(Math.round(mins * 2.2 * streakMult()));
     const xp = grantPlayerXp(Math.round(mins * 3.5 * streakMult()));
-    const ess = grantEssence(Math.max(1, Math.round(mins / 8)));
-    const seeds = Math.max(1, Math.round(mins / 15));
-    grantSeeds(seeds);
-    grantLabPoints(Math.max(1, Math.round(mins / 20)));
+    const ess = grantEssence(Math.max(2, Math.round(mins / 5)));
+    const seeds = grantSeeds(Math.max(2, Math.round(mins / 8)));
+    // a real session is the hardest thing the app asks for; it should pay like it
+    const gold = grantGold(Math.round(mins * 14 * Math.pow(1.12, globalStage())));
+    grantGems(Math.max(1, Math.round(mins / 12)));
     Farm.waterAll(Math.max(4, Math.round(mins / 2)));
 
     // the beast that shares your dream's element grows fastest
@@ -5155,11 +5345,13 @@ const Dream = (() => {
     Quests.progress('session', 1);
     Quests.progress('session_mins', mins);
     Quests.progress('any_habit', 1);
+    // practice is the heaviest contributor to the event track, by design
+    Events.add(mins + 15, 'session');
 
     const nowRung = rung();
     S.dream._lastRung = nowRung;
     save();
-    return { mana, xp, ess, seeds, mins,
+    return { mana, xp, ess, seeds, mins, gold,
              rungUp: nowRung > beforeRung ? def().ladder[nowRung - 1] : null };
   }
 
@@ -6479,10 +6671,12 @@ const Battle = (() => {
     if (wasBoss) {
       S.bossKills++;
       Quests.progress('boss', 1);
-      grantGems(irnd(2, 4));
-      grantEssence(irnd(2, 5));
-      grantLabPoints(irnd(1, 2));
-      toast('Boss defeated! Gems, essence and lab points recovered.', 'gold');
+      const bg = grantGems(irnd(6, 12));
+      const be = grantEssence(irnd(10, 20));
+      grantSeeds(irnd(1, 3));
+      grantGold(180 * Math.pow(1.24, globalStage() - 1));
+      Events.add(12, 'boss');
+      toast(`Boss down! +${bg} gems, +${be} essence`, 'gold');
       confetti(30);
       advanceStage();
     } else if (!S.stage.farm) {
@@ -6575,8 +6769,8 @@ const Battle = (() => {
     const kills = Math.floor(seconds / killTime * 0.85);
     return {
       kills,
-      gold: Math.floor(kills * 5 * Math.pow(1.24, g - 1)),
-      xp: Math.floor(kills * (2 + g * 0.55) * 0.35),
+      gold: Math.floor(kills * 9 * Math.pow(1.24, g - 1)),
+      xp: Math.floor(kills * (2 + g * 0.55) * 0.6),
     };
   }
 
@@ -6785,6 +6979,7 @@ const Habits = (() => {
     Quests.progress('habit_' + def.id, 1);
     Quests.progress('timer_mins', t.mins);
     Quests.progress('any_habit', 1);
+    Events.add(Math.round(t.mins / 2) + 6, 'timer');
     save();
     closeAllModals();
     UI.renderRituals();
@@ -6897,13 +7092,14 @@ const Quests = (() => {
 
   /* ---- 7-day login row ---- */
   const LOGIN = [
-    { icon: 'gold',    text: '400 gold',        grant: () => grantGold(400) },
-    { icon: 'seed',    text: '3 seeds',         grant: () => grantSeeds(3) },
-    { icon: 'gem',     text: '15 gems',         grant: () => grantGems(15) },
-    { icon: 'gem',     text: '8 gems',          grant: () => grantGems(8) },
-    { icon: 'essence', text: '20 essence',      grant: () => grantEssence(20) },
-    { icon: 'mana',    text: '80 mana',         grant: () => grantMana(80) },
-    { icon: 'chest',   text: 'Grand chest',     grant: () => { grantGems(40); grantSeeds(4); } },
+    { icon: 'gold',    text: '1,200 gold',  grant: () => grantGold(1200) },
+    { icon: 'seed',    text: '6 seeds',     grant: () => grantSeeds(6) },
+    { icon: 'gem',     text: '30 gems',     grant: () => grantGems(30) },
+    { icon: 'essence', text: '60 essence',  grant: () => grantEssence(60) },
+    { icon: 'gem',     text: '45 gems',     grant: () => grantGems(45) },
+    { icon: 'mana',    text: '180 mana',    grant: () => grantMana(180) },
+    { icon: 'chest',   text: 'Grand chest',
+      grant: () => { grantGems(120); grantSeeds(10); grantGold(8000); grantEssence(150); } },
   ];
 
   /* which quest pools and challenge tags suit the chosen dream */
@@ -7021,13 +7217,15 @@ const Quests = (() => {
     if (r.lp) { grantGems(r.lp); bits.push(`+${r.lp} gems`); }
     if (r.seeds) { grantSeeds(r.seeds); bits.push(`+${r.seeds} seeds`); }
     if (r.mana) { grantMana(r.mana); bits.push(`+${r.mana} mana`); }
-    if (r.gold) { const g = grantGold(60 * Math.pow(1.2, globalStage())); bits.push(`+${fmt(g)} gold`); }
+    const g = grantGold(140 * Math.pow(1.2, globalStage()));
+    bits.push(`+${fmt(g)} gold`);
     Sound.quest();
     confetti(24);
     if (btnEl) coinBurst(btnEl, 5);
     toast(`Quest complete! ${bits.join(' ')}`, 'gold');
-    grantPlayerXp(25);
-    Farm.waterAll(4);
+    grantPlayerXp(45);
+    Farm.waterAll(5);
+    Events.add(14, 'quest');
     save();
     UI.renderQuests();
     UI.renderQuestLog();
@@ -7198,6 +7396,125 @@ const Offers = (() => {
 
   return { list, start, claim, submitReflection, insureStreak, isInsured,
            readyCount, available, INSURE_COST, CARD_MS };
+})();
+
+</script>
+<script>
+/* ============ weekly events ============
+
+   One event runs at a time and rotates every Monday. Which one is decided by
+   the week number, not by a roll, so it is the same all week, survives a
+   reload, and the next one is predictable rather than random noise.
+
+   Two halves:
+
+     * A MODIFIER, applied inside the grant functions in state.js, so it lifts
+       every payout of that kind wherever it comes from.
+     * A REWARD TRACK. Playing during the event earns event points; five tiers
+       hand out gold, gems, seeds, essence and a final chest. Points come from
+       real activity — practice minutes, quests, timers, bosses — so the track
+       fills by using the app, not by leaving it open.
+
+   Everything resets on the week boundary, and unclaimed tiers are lost, which
+   is the point of a limited event.                                        */
+'use strict';
+
+const Events = (() => {
+  const WEEK = 7 * 24 * 3600 * 1000;
+  /* the unix epoch was a Thursday; shifting by 4 days puts week boundaries on
+     Monday 00:00 UTC, which is when the event flips */
+  const SHIFT = 4 * 24 * 3600 * 1000;
+
+  const EVENTS = [
+    { id: 'gold', name: 'Gold Rush', icon: 'gold',
+      blurb: 'Every coin your party wins is doubled.',
+      mult: { gold: 2 } },
+    { id: 'ember', name: 'Ember Festival', icon: 'bolt',
+      blurb: 'Battles pay double XP. Your beasts level twice as fast.',
+      mult: { xp: 2, beastxp: 2 } },
+    { id: 'harvest', name: 'Harvest Moon', icon: 'seed',
+      blurb: 'The garden yields double, and seeds come twice as often.',
+      mult: { seeds: 2, food: 2 } },
+    { id: 'focus', name: 'Deep Focus', icon: 'mana',
+      blurb: 'Practice pays half as much again in mana.',
+      mult: { mana: 1.5 } },
+    { id: 'essence', name: 'Wild Hunt', icon: 'essence',
+      blurb: 'Essence drops double. A good week to evolve something.',
+      mult: { ess: 2 } },
+    { id: 'founders', name: "Keeper's Week", icon: 'star',
+      blurb: 'Gold, XP and mana all up by a quarter.',
+      mult: { gold: 1.25, xp: 1.25, mana: 1.25 } },
+  ];
+
+  /* five tiers, worth clearly more than a day of quests — the whole point of
+     an event is that the week is worth showing up for */
+  const TIERS = [
+    { at: 30,  icon: 'gold',    text: '1,500 gold', grant: () => grantGold(1500) },
+    { at: 80,  icon: 'gem',     text: '25 gems',    grant: () => grantGems(25) },
+    { at: 160, icon: 'seed',    text: '8 seeds',    grant: () => grantSeeds(8) },
+    { at: 260, icon: 'essence', text: '120 essence', grant: () => grantEssence(120) },
+    { at: 400, icon: 'chest',   text: 'Event chest',
+      grant: () => { grantGems(80); grantGold(6000); grantSeeds(6); grantEssence(80); } },
+  ];
+
+  function weekId() { return Math.floor((Date.now() + SHIFT) / WEEK); }
+  function current() { return EVENTS[weekId() % EVENTS.length]; }
+  function endsAt() { return (weekId() + 1) * WEEK - SHIFT; }
+  function msLeft() { return Math.max(0, endsAt() - Date.now()); }
+
+  /* the live track, rolled over the moment the week changes */
+  function track() {
+    if (!S.event || S.event.week !== weekId()) {
+      S.event = { week: weekId(), points: 0, claimed: [] };
+    }
+    if (!Array.isArray(S.event.claimed)) S.event.claimed = [];
+    return S.event;
+  }
+
+  function mult(key) {
+    const m = current().mult;
+    return (m && m[key]) || 1;
+  }
+
+  /* called from the places where real activity happens */
+  function add(points, why) {
+    if (!(points > 0)) return;
+    const t = track();
+    const before = readyCount();
+    t.points += Math.round(points);
+    if (readyCount() > before) {
+      toast('Event reward ready to claim', 'gold');
+      Sound.quest();
+    }
+    if (typeof UI !== 'undefined') UI.renderEvent();
+  }
+
+  function readyCount() {
+    const t = track();
+    return TIERS.filter((tier, i) => t.points >= tier.at && !t.claimed.includes(i)).length;
+  }
+
+  function claim(i) {
+    const t = track();
+    const tier = TIERS[i];
+    if (!tier || t.points < tier.at || t.claimed.includes(i)) return false;
+    t.claimed.push(i);
+    tier.grant();
+    Sound.coin();
+    confetti(28);
+    toast(`${tier.text} claimed`, 'gold');
+    save();
+    if (typeof UI !== 'undefined') { UI.renderEvent(); UI.renderHud(); }
+    return true;
+  }
+
+  function progressPct() {
+    const t = track();
+    return Math.min(100, 100 * t.points / TIERS[TIERS.length - 1].at);
+  }
+
+  return { EVENTS, TIERS, current, endsAt, msLeft, track, mult, add,
+           claim, readyCount, progressPct };
 })();
 
 </script>
@@ -7702,24 +8019,28 @@ const Dialog = (() => {
     return new Promise(resolve => {
       let i = 0, answer = null;
       root = el('div', 'dlg-root' + (opts.veil ? ' veiled' : ''));
+      // a text window, the way a pixel RPG draws one: portrait framed inside
+      // the box, name on a plate notched into the top edge, choices stacked in
+      // a command window above it
       root.innerHTML = `
         <div class="dlg-veil"></div>
-        <div class="dlg-box">
-          <div class="dlg-port">
-            <img src="${assetUrl(opts.portrait || 'assets/ui/npc.png')}" alt="">
-          </div>
-          <div class="dlg-bubble">
-            <span class="dlg-tail"></span>
+        <div class="dlg-wrap">
+          <div class="dlg-choices"></div>
+          <div class="dlg-box">
             <div class="dlg-name">${opts.name || 'Professor Vale'}</div>
-            <p class="dlg-text"></p>
-            <div class="dlg-choices"></div>
-            <div class="dlg-more"><i></i><i></i><i></i></div>
+            <div class="dlg-inner">
+              <div class="dlg-port">
+                <img src="${assetUrl(opts.portrait || 'assets/ui/npc.png')}" alt="">
+              </div>
+              <p class="dlg-text"></p>
+            </div>
+            <span class="dlg-more"></span>
           </div>
         </div>`;
       document.body.appendChild(root);
       requestAnimationFrame(() => root.classList.add('in'));
 
-      const bubble = root.querySelector('.dlg-bubble');
+      const bubble = root.querySelector('.dlg-box');
       const port = root.querySelector('.dlg-port');
 
       function beat() {
@@ -8266,11 +8587,48 @@ const UI = (() => {
     renderHero();
     renderFocus();
     renderRhythm();
+    renderEvent();
     renderTodayQuests();
     renderChallengeInto($('#today-challenge'));
     renderPromo();
     renderOffers();
     renderJournal();
+  }
+
+  /* ---- the week's event: what is running, how long is left, and the track ---- */
+  function renderEvent() {
+    const w = $('#event-card');
+    if (!w) return;
+    const e = Events.current();
+    const t = Events.track();
+    const left = Events.msLeft();
+    const days = Math.floor(left / 86400000);
+    const hrs = Math.floor((left % 86400000) / 3600000);
+    const last = Events.TIERS[Events.TIERS.length - 1].at;
+
+    w.innerHTML = `
+      <div class="card-head">${icon('star')} Event
+        <span class="ev-clock">${days ? days + 'd ' : ''}${hrs}h left</span></div>
+      <div class="ev-top">
+        <span class="ev-ic">${icon(e.icon, 'big')}</span>
+        <span class="ev-name"><b>${e.name}</b><span>${e.blurb}</span></span>
+      </div>
+      <div class="ev-bar"><i style="width:${Events.progressPct()}%"></i>
+        <b>${fmt(t.points)} / ${fmt(last)}</b></div>
+      <div class="ev-track">${Events.TIERS.map((tier, i) => {
+        const got = t.claimed.includes(i);
+        const ready = !got && t.points >= tier.at;
+        return `<button class="ev-tier ${got ? 'got' : ready ? 'ready' : ''}"
+          data-ev="${i}" ${ready ? '' : 'disabled'}>
+          <span class="ev-at">${tier.at}</span>
+          ${icon(tier.icon, 'big')}
+          <span class="ev-what">${got ? 'Claimed' : tier.text}</span>
+        </button>`;
+      }).join('')}</div>`;
+
+    $$('#event-card [data-ev]', w).forEach(b => {
+      b.onclick = () => { Events.claim(+b.dataset.ev); coinBurst(b, 6); };
+    });
   }
 
 
@@ -8282,6 +8640,13 @@ const UI = (() => {
     const w = $('#promo-strip');
     if (!w) return;
     const cards = [];
+    // a claimable event tier outranks everything else on the strip
+    if (Events.readyCount() > 0) {
+      cards.push({ icon: 'star', kind: 'event',
+                   title: `${Events.current().name} reward ready`,
+                   sub: `${Events.readyCount()} tier${Events.readyCount() > 1 ? 's' : ''} waiting`,
+                   cta: 'Claim' });
+    }
     const t = Arena.tourney();
     if (t && !t.done) {
       cards.push({ icon: 'sword', kind: 'arena', title: `Tournament · round ${t.round + 1}`,
@@ -8313,7 +8678,11 @@ const UI = (() => {
       </button>`;
     w.querySelector('.promo').onclick = () => {
       Sound.click();
-      if (c.kind === 'arena') { switchTab('battle'); showArena(); }
+      if (c.kind === 'event') {
+        switchTab('today');
+        const e = $('#event-card');
+        if (e) e.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else if (c.kind === 'arena') { switchTab('battle'); showArena(); }
       else if (c.kind === 'offers') { const o = $('#offers-card'); if (o) o.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
       else if (c.kind === 'battle') { switchTab('battle'); S.settings.panels.fusion = true; renderMerge(); }
       else switchTab(c.kind);
@@ -11333,7 +11702,7 @@ const UI = (() => {
     showDefeat, hideDefeat, showEncounter, renderQuestLog, renderUpgrades,
     renderCooldowns, tickCooldowns, renderPanels, togglePanel,
     renderMerge, mergeSpawnFx, mergeFuseFx, showMap,
-    renderOffers, renderPromo, showTipCard, showReflectOffer,
+    renderOffers, renderPromo, renderEvent, showTipCard, showReflectOffer,
     showAccount, renderAccount, showRestore, showArena, renderArena,
     renderBeasts, renderCollection, showCreature, showFeedPicker,
     renderFarm, waterGarden, showMealModal, showKcalTargetModal, renderFood,

@@ -23,24 +23,28 @@ const Dialog = (() => {
     return new Promise(resolve => {
       let i = 0, answer = null;
       root = el('div', 'dlg-root' + (opts.veil ? ' veiled' : ''));
+      // a text window, the way a pixel RPG draws one: portrait framed inside
+      // the box, name on a plate notched into the top edge, choices stacked in
+      // a command window above it
       root.innerHTML = `
         <div class="dlg-veil"></div>
-        <div class="dlg-box">
-          <div class="dlg-port">
-            <img src="${assetUrl(opts.portrait || 'assets/ui/npc.png')}" alt="">
-          </div>
-          <div class="dlg-bubble">
-            <span class="dlg-tail"></span>
+        <div class="dlg-wrap">
+          <div class="dlg-choices"></div>
+          <div class="dlg-box">
             <div class="dlg-name">${opts.name || 'Professor Vale'}</div>
-            <p class="dlg-text"></p>
-            <div class="dlg-choices"></div>
-            <div class="dlg-more"><i></i><i></i><i></i></div>
+            <div class="dlg-inner">
+              <div class="dlg-port">
+                <img src="${assetUrl(opts.portrait || 'assets/ui/npc.png')}" alt="">
+              </div>
+              <p class="dlg-text"></p>
+            </div>
+            <span class="dlg-more"></span>
           </div>
         </div>`;
       document.body.appendChild(root);
       requestAnimationFrame(() => root.classList.add('in'));
 
-      const bubble = root.querySelector('.dlg-bubble');
+      const bubble = root.querySelector('.dlg-box');
       const port = root.querySelector('.dlg-port');
 
       function beat() {

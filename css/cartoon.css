@@ -149,113 +149,230 @@
   opacity: .32;
 }
 
-/* ============ the speech box ============ */
-/* above modals (100) and the tutorial veil (320): a character talking to you
-   is always the front-most thing on screen */
+/* ============ the text window ============
+   A pixel RPG draws dialogue as a hard-edged panel pinned to the bottom of the
+   screen: portrait framed inside it, name on a plate notched into the top
+   border, a blinking stepped arrow when there is more to read, and choices in
+   a command window stacked above. No soft corners, no drop shadows, no cream
+   speech bubble — those read as a chat app, not as this game.            */
 .dlg-root {
-  position: fixed; inset: 0; z-index: 340;
+  position: fixed; inset: 0; z-index: 340;    /* above modals and the tut veil */
   display: flex; align-items: flex-end; justify-content: center;
-  padding: 0 8px calc(18px + env(safe-area-inset-bottom));
+  padding: 0 6px calc(8px + env(safe-area-inset-bottom));
   pointer-events: none;
 }
 .dlg-root .dlg-veil { position: absolute; inset: 0; background: transparent; }
 .dlg-root.veiled .dlg-veil { background: rgba(6,9,20,.62); pointer-events: auto; }
-.dlg-box {
+.dlg-wrap {
   position: relative; pointer-events: auto; cursor: pointer;
   width: 100%; max-width: 480px;
-  display: flex; align-items: flex-end; gap: 4px;
-  transform: translateY(28px); opacity: 0;
-  transition: transform .3s var(--pop), opacity .2s linear;
+  display: flex; flex-direction: column; align-items: stretch; gap: 6px;
+  transform: translateY(18px); opacity: 0;
+  transition: transform .2s steps(4), opacity .16s linear;
 }
-.dlg-root.in .dlg-box { transform: none; opacity: 1; }
-.dlg-root.out .dlg-box { transform: translateY(24px); opacity: 0; }
+.dlg-root.in .dlg-wrap { transform: none; opacity: 1; }
+.dlg-root.out .dlg-wrap { transform: translateY(14px); opacity: 0; }
 
-.dlg-port { flex: none; width: 96px; align-self: flex-end; }
-@media (max-width: 360px) { .dlg-port { width: 74px; } }
-.dlg-port img { width: 100%; display: block; transform-origin: 50% 100%; }
-.dlg-port.bump img { animation: portbump .34s var(--pop); }
+.dlg-box {
+  position: relative;
+  background: var(--bg1);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--parch);
+  outline-offset: calc(var(--px) * -2);
+  box-shadow: 0 4px 0 var(--ink), 0 10px 24px rgba(0,0,0,.55);
+  padding: 12px 10px 14px;
+  margin-top: 9px;                          /* room for the name plate */
+}
+/* the name sits on a plate notched over the top border */
+.dlg-name {
+  position: absolute; top: -11px; left: 8px;
+  background: var(--gold); color: #2e1e02;
+  font-family: var(--display); font-size: var(--fs-label); font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase;
+  padding: 1px 8px;
+  border: var(--px) solid var(--ink);
+  box-shadow: 0 2px 0 var(--ink);
+}
+.dlg-inner { display: flex; align-items: flex-start; gap: 9px; }
+.dlg-port {
+  flex: none; width: 64px; height: 64px;
+  display: grid; place-items: center;
+  background: var(--bg0);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--line);
+  outline-offset: calc(var(--px) * -2);
+  overflow: hidden;
+}
+.dlg-port img {
+  width: 62px; height: auto; display: block;
+  transform-origin: 50% 100%; image-rendering: pixelated;
+}
+.dlg-port.bump img { animation: portbump .28s steps(3); }
 @keyframes portbump {
-  0% { transform: scale(1.1, .9) translateY(4px); }
-  55% { transform: scale(.96, 1.06) translateY(-4px); }
+  0% { transform: translateY(3px) scale(1.08, .92); }
+  60% { transform: translateY(-3px) scale(.96, 1.05); }
 }
 /* the portrait leans into what it is saying */
-.dlg-port[data-mood="up"]    img { transform: rotate(-4deg) translateY(-3px); }
-.dlg-port[data-mood="think"] img { transform: rotate(3deg) scale(.97); }
-.dlg-port[data-mood="cheer"] img { transform: rotate(-7deg) scale(1.05); }
+.dlg-port[data-mood="up"]    img { transform: translateY(-2px); }
+.dlg-port[data-mood="think"] img { transform: scale(.95); }
+.dlg-port[data-mood="cheer"] img { transform: translateY(-3px) scale(1.04); }
 
-.dlg-bubble {
-  position: relative; flex: 1; min-width: 0;
-  background: #fbf6ea; color: #1b1a24;
-  border: var(--toon-line-big) solid var(--toon-ink);
-  border-radius: 14px;
-  box-shadow: 0 5px 0 rgba(0,0,0,.45);
-  padding: 9px 12px 10px;
-}
-.dlg-tail {
-  position: absolute; left: -11px; bottom: 15px;
-  width: 0; height: 0;
-  border: 9px solid transparent;
-  border-right-color: var(--toon-ink);
-}
-.dlg-tail::after {
-  content: ''; position: absolute; left: -6px; top: -7px;
-  border: 7px solid transparent; border-right-color: #fbf6ea;
-}
-.dlg-name {
-  font-family: var(--display); font-size: var(--fs-label);
-  letter-spacing: 1.2px; text-transform: uppercase; color: #8a5a12;
-}
 .dlg-text {
-  font-size: var(--fs-body); line-height: 1.5; min-height: 2.9em;
-  color: #1b1a24;
+  flex: 1; min-width: 0;
+  font-size: var(--fs-body); line-height: 1.55; min-height: 3.1em;
+  color: var(--txt);
 }
-.dlg-more { display: none; justify-content: flex-end; gap: 3px; margin-top: 2px; }
-.dlg-more.on { display: flex; }
-.dlg-more i {
-  width: 5px; height: 5px; background: #8a5a12; border-radius: 50%;
-  animation: moredot 1s infinite;
-}
-.dlg-more i:nth-child(2) { animation-delay: .15s; }
-.dlg-more i:nth-child(3) { animation-delay: .3s; }
-@keyframes moredot { 50% { transform: translateY(-4px); opacity: .5; } }
 
-.dlg-choices { display: none; flex-direction: column; gap: 5px; margin-top: 7px; }
+/* the "more to read" arrow, drawn as three rows of pixels */
+.dlg-more {
+  position: absolute; right: 14px; bottom: 8px;
+  width: 4px; height: 4px; background: var(--gold);
+  display: none;
+  box-shadow:
+    -8px -8px 0 var(--gold), -4px -8px 0 var(--gold), 0 -8px 0 var(--gold),
+     4px -8px 0 var(--gold),  8px -8px 0 var(--gold),
+    -4px -4px 0 var(--gold),  0 -4px 0 var(--gold),  4px -4px 0 var(--gold);
+  animation: dlgmore 1s steps(1) infinite;
+}
+.dlg-more.on { display: block; }
+@keyframes dlgmore { 50% { opacity: 0; } }
+
+/* choices are a command window, not chat bubbles */
+.dlg-choices {
+  display: none; flex-direction: column;
+  background: var(--bg1);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--parch);
+  outline-offset: calc(var(--px) * -2);
+  box-shadow: 0 4px 0 var(--ink), 0 10px 24px rgba(0,0,0,.5);
+  padding: 5px;
+}
 .dlg-choices.on { display: flex; }
 .dlg-choice {
-  font: inherit; font-size: var(--fs-meta); text-align: left; cursor: pointer;
-  background: #fff; color: #1b1a24;
-  border: var(--toon-line-big) solid var(--toon-ink);
-  border-radius: 10px; padding: 8px 11px;
-  min-height: 40px;
-  box-shadow: 0 3px 0 var(--toon-ink);
-  animation: toonland .26s var(--pop) both;
+  position: relative;
+  font: inherit; font-size: var(--fs-body); text-align: left; cursor: pointer;
+  background: none; border: 0; color: var(--txt);
+  padding: 9px 8px 9px 26px;
+  min-height: 44px;
 }
-.dlg-choice:active { transform: translateY(3px); box-shadow: 0 0 0 var(--toon-ink); }
+/* a stepped cursor block instead of a bullet */
+.dlg-choice::before {
+  content: ''; position: absolute; left: 8px; top: 50%;
+  width: 4px; height: 4px; margin-top: -2px; background: var(--gold);
+  box-shadow: -4px -4px 0 var(--gold), -4px 4px 0 var(--gold),
+              -8px -8px 0 var(--gold), -8px 8px 0 var(--gold);
+  opacity: 0; transform: translateX(-4px);
+  transition: opacity .1s steps(2), transform .1s steps(2);
+}
+.dlg-choice:hover::before, .dlg-choice:focus-visible::before,
+.dlg-choice:active::before { opacity: 1; transform: none; }
+.dlg-choice + .dlg-choice { border-top: var(--px) solid var(--line); }
+.dlg-choice:active { background: var(--bg3); }
 
-/* ---- the guide reuses the same bubble ---- */
+/* ---- the guide reuses the same window ---- */
 .tut-prof .tut-bubble {
-  background: #fbf6ea; color: #1b1a24;
-  border: var(--toon-line-big) solid var(--toon-ink);
-  border-radius: 14px;
-  box-shadow: 0 5px 0 rgba(0,0,0,.45);
+  background: var(--bg1); color: var(--txt);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--parch);
+  outline-offset: calc(var(--px) * -2);
+  border-radius: 0;
+  box-shadow: 0 4px 0 var(--ink), 0 10px 24px rgba(0,0,0,.55);
+  margin-top: 9px;
 }
-.tut-prof .tut-bubble { outline: 0; }
-.tut-prof .tut-bubble::after { display: none; }     /* the dark tail it used to draw */
-.tut-prof .tut-name { color: #8a5a12; }
-.tut-prof .tut-text { color: #1b1a24; min-height: 3em; }
-.tut-prof .tut-skip { color: #6a6376; }
-.tut-prof .dlg-tail { bottom: 24px; }
+.tut-prof .tut-bubble::after { display: none; }   /* the old soft tail */
+.tut-prof .tut-name {
+  position: absolute; top: -11px; left: 8px; margin: 0;
+  background: var(--gold); color: #2e1e02;
+  font-family: var(--display); font-size: var(--fs-label); font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase;
+  padding: 1px 8px;
+  border: var(--px) solid var(--ink);
+  box-shadow: 0 2px 0 var(--ink);
+}
+.tut-prof .tut-text { color: var(--txt); min-height: 3em; margin-top: 4px; }
+.tut-prof .dlg-tail { display: none; }
+.tut-prof .dlg-choices { margin-top: 8px; box-shadow: none; }
 .tut-sprite {
   transform-origin: 50% 100%;
   animation: toonbob 2.6s cubic-bezier(.45,0,.55,1) infinite;
-  transition: transform .3s var(--pop);
 }
-.tut-prof[data-mood="up"]    .tut-sprite { animation: toonbob 1.9s cubic-bezier(.45,0,.55,1) infinite; }
-.tut-prof[data-mood="think"] .tut-sprite { animation: none; transform: rotate(4deg) scale(.96); }
-.tut-prof[data-mood="cheer"] .tut-sprite { animation: toonbob 1.3s cubic-bezier(.45,0,.55,1) infinite; }
-.tut-prof .dlg-choices { margin-top: 8px; }
+.tut-prof[data-mood="up"]    .tut-sprite { animation-duration: 1.9s; }
+.tut-prof[data-mood="think"] .tut-sprite { animation: none; }
+.tut-prof[data-mood="cheer"] .tut-sprite { animation-duration: 1.3s; }
 
 @media (prefers-reduced-motion: reduce) {
   .foe img, .fighter img, #hero-beast { animation: none; }
   .card, .cdcard, .dexcard, .pixbtn.primary, .pixbtn.gold, .dlg-choice { animation: none; }
 }
+
+/* ============ the pixel pass ============
+   Loaded last so it wins. A pixel UI has no soft corners: every radius between
+   3px and 24px was modern-app chrome that crept in with the newer screens, and
+   it all goes. 50% survives only where a real circle is drawn — progress
+   rings, the summon runes, particles and status dots.                     */
+.mslot, .mslot.empty::after, .mitem, .mitem .tier, .merge-ghost, .upcard,
+.banner .btag, .stag, .glyph-plus::before, .glyph-plus::after,
+.loot-chip, #offers-card .off-badge, .offrow, .offrow .off-go, .reflect-in,
+#boot img, .boot-bar, .boot-bar i, .acc-steps code, .accrow, .acc-in,
+.acc-code, #haste-btn, .tut-hole, .ar-rank, .ar-row, .ar-tag, .ar-chip,
+.tr-row, .si-card, .si-mark, .si-reward, .promo, .promo-cta,
+.dlg-box, .dlg-choices, .dlg-name, .tut-bubble, .tut-name, .toast {
+  border-radius: 0;
+}
+
+/* the impact burst, redrawn as an 8-bit sparkle: axis-aligned bars and pips,
+   no rotation, because rotating pixel art just blurs it */
+.pow { animation: powpop .4s steps(4) forwards; }
+.pow::before {
+  clip-path: none;
+  filter: none;
+  background:
+    linear-gradient(var(--pow-c, #ffd76a) 0 0) 37.5% 0    / 25%   100%  no-repeat,
+    linear-gradient(var(--pow-c, #ffd76a) 0 0) 0    37.5% / 100%  25%   no-repeat,
+    linear-gradient(var(--pow-c, #ffd76a) 0 0) 18.75% 18.75% / 62.5% 62.5% no-repeat,
+    linear-gradient(var(--pow-c, #ffd76a) 0 0) 12.5% 12.5% / 12.5% 12.5% no-repeat,
+    linear-gradient(var(--pow-c, #ffd76a) 0 0) 87.5% 12.5% / 12.5% 12.5% no-repeat,
+    linear-gradient(var(--pow-c, #ffd76a) 0 0) 12.5% 87.5% / 12.5% 12.5% no-repeat,
+    linear-gradient(var(--pow-c, #ffd76a) 0 0) 87.5% 87.5% / 12.5% 12.5% no-repeat;
+}
+.pow b {
+  transform: none;
+  text-shadow: 1px 1px 0 rgba(255,255,255,.45);
+}
+@keyframes powpop {
+  0%   { transform: scale(.4); opacity: 0; }
+  40%  { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+/* hard-edged motion everywhere: overshoot easing is a UI-kit tell */
+.card, .cdcard, .dexcard { animation: toonland .2s steps(3) both; }
+.pixbtn.primary:not(:disabled), .pixbtn.gold:not(:disabled) { animation: none; }
+.pixbtn { transition: transform .08s steps(2), filter .1s linear; }
+.pixbtn:active { transform: translateY(4px); }
+.tab.active { animation: tabland .18s steps(3) !important; }
+.hud-chip b.bumped { animation: countbump .28s steps(3); }
+#tabbar button.active .ico { animation: tabpop .24s steps(3); }
+
+/* the sign-in card is a panel, not a floating sheet */
+.si-card {
+  background: var(--bg1);
+  background-image: var(--grain);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--line);
+  outline-offset: calc(var(--px) * -2);
+  box-shadow: 0 5px 0 var(--ink), 0 14px 34px rgba(0,0,0,.55);
+  animation: sicard .24s steps(4) both;
+}
+@keyframes sicard { from { opacity: 0; transform: translateY(10px); } }
+.si-mark {
+  box-shadow: none;
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--line);
+  outline-offset: calc(var(--px) * -2);
+  image-rendering: pixelated;
+}
+.si-reward { box-shadow: 0 3px 0 var(--ink); }
+.boot-bar { border: var(--px) solid var(--ink); background: #0a0e1c; height: 10px; }
+.boot-bar i { transition: width .2s steps(4); }
+#boot img.boot-beast { border: 0; outline: 0; }

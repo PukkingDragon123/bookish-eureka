@@ -309,10 +309,12 @@ const Battle = (() => {
     if (wasBoss) {
       S.bossKills++;
       Quests.progress('boss', 1);
-      grantGems(irnd(2, 4));
-      grantEssence(irnd(2, 5));
-      grantLabPoints(irnd(1, 2));
-      toast('Boss defeated! Gems, essence and lab points recovered.', 'gold');
+      const bg = grantGems(irnd(6, 12));
+      const be = grantEssence(irnd(10, 20));
+      grantSeeds(irnd(1, 3));
+      grantGold(180 * Math.pow(1.24, globalStage() - 1));
+      Events.add(12, 'boss');
+      toast(`Boss down! +${bg} gems, +${be} essence`, 'gold');
       confetti(30);
       advanceStage();
     } else if (!S.stage.farm) {
@@ -405,8 +407,8 @@ const Battle = (() => {
     const kills = Math.floor(seconds / killTime * 0.85);
     return {
       kills,
-      gold: Math.floor(kills * 5 * Math.pow(1.24, g - 1)),
-      xp: Math.floor(kills * (2 + g * 0.55) * 0.35),
+      gold: Math.floor(kills * 9 * Math.pow(1.24, g - 1)),
+      xp: Math.floor(kills * (2 + g * 0.55) * 0.6),
     };
   }
 

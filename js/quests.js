@@ -62,13 +62,14 @@ const Quests = (() => {
 
   /* ---- 7-day login row ---- */
   const LOGIN = [
-    { icon: 'gold',    text: '400 gold',        grant: () => grantGold(400) },
-    { icon: 'seed',    text: '3 seeds',         grant: () => grantSeeds(3) },
-    { icon: 'gem',     text: '15 gems',         grant: () => grantGems(15) },
-    { icon: 'gem',     text: '8 gems',          grant: () => grantGems(8) },
-    { icon: 'essence', text: '20 essence',      grant: () => grantEssence(20) },
-    { icon: 'mana',    text: '80 mana',         grant: () => grantMana(80) },
-    { icon: 'chest',   text: 'Grand chest',     grant: () => { grantGems(40); grantSeeds(4); } },
+    { icon: 'gold',    text: '1,200 gold',  grant: () => grantGold(1200) },
+    { icon: 'seed',    text: '6 seeds',     grant: () => grantSeeds(6) },
+    { icon: 'gem',     text: '30 gems',     grant: () => grantGems(30) },
+    { icon: 'essence', text: '60 essence',  grant: () => grantEssence(60) },
+    { icon: 'gem',     text: '45 gems',     grant: () => grantGems(45) },
+    { icon: 'mana',    text: '180 mana',    grant: () => grantMana(180) },
+    { icon: 'chest',   text: 'Grand chest',
+      grant: () => { grantGems(120); grantSeeds(10); grantGold(8000); grantEssence(150); } },
   ];
 
   /* which quest pools and challenge tags suit the chosen dream */
@@ -186,13 +187,15 @@ const Quests = (() => {
     if (r.lp) { grantGems(r.lp); bits.push(`+${r.lp} gems`); }
     if (r.seeds) { grantSeeds(r.seeds); bits.push(`+${r.seeds} seeds`); }
     if (r.mana) { grantMana(r.mana); bits.push(`+${r.mana} mana`); }
-    if (r.gold) { const g = grantGold(60 * Math.pow(1.2, globalStage())); bits.push(`+${fmt(g)} gold`); }
+    const g = grantGold(140 * Math.pow(1.2, globalStage()));
+    bits.push(`+${fmt(g)} gold`);
     Sound.quest();
     confetti(24);
     if (btnEl) coinBurst(btnEl, 5);
     toast(`Quest complete! ${bits.join(' ')}`, 'gold');
-    grantPlayerXp(25);
-    Farm.waterAll(4);
+    grantPlayerXp(45);
+    Farm.waterAll(5);
+    Events.add(14, 'quest');
     save();
     UI.renderQuests();
     UI.renderQuestLog();
