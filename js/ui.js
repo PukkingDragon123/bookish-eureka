@@ -24,16 +24,26 @@ const UI = (() => {
   }
 
   /* ================= HUD ================= */
+  /* A counter that changes should visibly react — otherwise a reward lands
+     with no acknowledgement at all and the screen reads as static. */
+  function setCount(sel, text) {
+    const e = $(sel);
+    if (!e || e.textContent === text) return;
+    e.textContent = text;
+    e.classList.remove('bumped');
+    void e.offsetWidth;
+    e.classList.add('bumped');
+  }
   function renderHud() {
     $('#hud-lvl-num').textContent = S.player.level;
     $('#hud-xp-fill').style.width = (100 * S.player.xp / xpForLevel(S.player.level)) + '%';
-    $('#hud-gold').textContent = fmt(S.player.gold);
-    $('#hud-gems').textContent = fmt(S.player.gems);
-    $('#hud-mana').textContent = fmt(S.player.mana);
+    setCount('#hud-gold', fmt(S.player.gold));
+    setCount('#hud-gems', fmt(S.player.gems));
+    setCount('#hud-mana', fmt(S.player.mana));
     $('#hud-mana-fill').style.width = (100 * S.player.mana / manaMax()) + '%';
-    $('#hud-ess').textContent = fmt(S.player.essence);
-    $('#hud-seeds').textContent = fmt(S.farm.seeds);
-    $('#hud-streak').textContent = S.streak.count;
+    setCount('#hud-ess', fmt(S.player.essence));
+    setCount('#hud-seeds', fmt(S.farm.seeds));
+    setCount('#hud-streak', String(S.streak.count));
   }
 
   /* ================= tabs ================= */
@@ -146,9 +156,7 @@ const UI = (() => {
     wrap.innerHTML = `
       <div class="card-head"><i class="ico ico-chest"></i> Free rewards
         ${ready ? `<span class="off-badge">${ready}</span>` : ''}</div>
-      <p class="off-note">These are from Hourling itself — there are no adverts
-        in this app and nothing costs money. Each one asks for fifteen seconds
-        or one honest line.</p>
+      <p class="off-note">No adverts, nothing costs money. Fifteen seconds each.</p>
       ${rows}
       <button class="offrow ${ins ? 'done' : 'sink'}" data-off="insure" ${ins ? 'disabled' : ''}>
         <span class="off-ic">${icon('streak')}</span>
@@ -213,8 +221,7 @@ const UI = (() => {
   function showReflectOffer() {
     const box = el('div');
     box.innerHTML = `<h3>${icon('scroll')} One honest line</h3>
-      <p class="subtle" style="text-align:center">What was practice actually like today?
-        Bad days count — write it anyway.</p>
+      <p class="subtle" style="text-align:center">How did practice actually go? Bad days count.</p>
       <textarea class="reflect-in" rows="3" maxlength="120"
         placeholder="Fumbled the same bar ten times, got it on the eleventh."></textarea>
       <div class="mrow"></div>`;
@@ -722,6 +729,10 @@ const UI = (() => {
     } else if (vfx) VFX.cast(vfx, p.x, p.y, crit ? 1.5 : 1);
     else VFX.hit(p.x, p.y, 'metal', crit);
     if (crit) VFX.kick(3, 130);
+    // a comic hit is a shape, not just a number — but only on the hits that
+    // deserve one, or the scene turns into a wall of onomatopoeia
+    if (crit) powBurst(p.x, p.y - 10, null, '#ffd76a');
+    else if (label && Math.random() < 0.35) powBurst(p.x, p.y - 10, null, '#7fe0ff');
     if (label) skillFlash(label, false);
   }
 
@@ -853,7 +864,7 @@ const UI = (() => {
     if (state.length) {
       const head = el('div', 'cd-head');
       head.innerHTML = `<i class="ico ico-sword"></i> Skills
-        <span class="cd-note">fire automatically when ready</span>`;
+        <span class="cd-note">auto-fire when ready</span>`;
       strip.appendChild(head);
     }
     for (const p of state) {
@@ -870,12 +881,17 @@ const UI = (() => {
         const row = el('div', 'cdrow');
         const art = sk.moveIdx != null ? moveIcon(sk.type, sk.moveIdx)
                                        : skillIcon(sk.type || 'Ultimate', p.cid + sk.name);
+        const n = skillNumbers(p.cid, sk);
         row.innerHTML = `${art}<span class="cdname">${sk.name}</span>` +
+          `<span class="cdhit">${fmt(n.hit)}</span>` +
           `<span class="cdmeter"><i></i></span>`;
+        row.title = `${sk.name} · ${sk.type} · ${sk.cd}s`;
         bars.appendChild(row);
         meters.push(row.querySelector('.cdmeter'));
       });
       card.appendChild(bars);
+      // tapping a fighter's card opens its full sheet, from the fight itself
+      card.onclick = () => showCreature(p.cid);
       strip.appendChild(card);
       cdCards.push({ cid: p.cid, meters });
     }
@@ -1473,6 +1489,58 @@ const UI = (() => {
   }
 
   /* ================= creature detail ================= */
+
+  /* What a skill is actually worth, in the numbers the battle uses.
+     memberDps() without a target is atk * (1 + spd/40); a skill lands that
+     times its power. Shown against a neutral defender, because the real
+     multiplier depends on who is standing in front of you. */
+  function skillNumbers(cid, sk) {
+    const st = beastStats(cid);
+    const base = st.atk * (1 + st.spd / 40);
+    const hit = Math.round(base * sk.power);
+    return { hit, dps: Math.round(hit / (sk.cd || 1)) };
+  }
+  function matchup(type) {
+    const row = TYPE_CHART[type] || {};
+    const up = Object.keys(row).filter(k => row[k] > 1);
+    const down = Object.keys(row).filter(k => row[k] < 1);
+    if (!up.length && !down.length) return '';
+    return `<div class="smatch">` +
+      (up.length ? `<span class="mu">+50% vs ${up.map(t => elemIcon(t, 'sm')).join('')}</span>` : '') +
+      (down.length ? `<span class="md">−33% vs ${down.map(t => elemIcon(t, 'sm')).join('')}</span>` : '') +
+      `</div>`;
+  }
+  /* one skill row, with everything a player needs to compare it to the next */
+  function skillCard(cid, sk, o) {
+    o = o || {};
+    const n = o.owned ? skillNumbers(cid, sk) : null;
+    const isMove = sk.moveIdx != null;
+    const art = o.art || (isMove ? moveIcon(sk.type, sk.moveIdx) : skillIcon(sk.type, cid + sk.name));
+    const col = TYPE_COLORS[sk.type] || '#8a93bb';
+    const locked = sk.unlockLv && o.lvl < sk.unlockLv;
+    const tags = [
+      `<span class="stag" style="background:${hexAlpha(col, .22)};color:${col}">${elemIcon(sk.type, 'sm')}${sk.type}</span>`,
+      `<span class="stag">${o.aoe ? 'All enemies' : 'Front enemy'}</span>`,
+      `<span class="stag">${sk.cd ? sk.cd + 's' : '100% charge'}</span>`,
+      o.kind ? `<span class="stag ${o.kindCls || ''}">${o.kind}</span>` : '',
+    ].join('');
+    const bar = Math.max(6, Math.min(100, Math.round(sk.power / 7 * 100)));
+    return `
+    <div class="skillrow ${isMove ? 'moverow' : ''} ${o.cls || ''} ${locked ? 'locked-move' : ''}">
+      <div class="sicon" style="background:${hexAlpha(col, .16)}">${art}</div>
+      <div class="sbody">
+        <div class="sname">${sk.name}${locked ? `<span class="mvtag lock">LV.${sk.unlockLv}</span>` : ''}</div>
+        <div class="sdesc">${sk.desc}</div>
+        <div class="stags">${tags}</div>
+        <div class="spow"><i style="width:${bar}%;background:${col}"></i>
+          <span>${Math.round(sk.power * 100)}% power</span></div>
+        ${n ? `<div class="snums"><span>Hit <b>${fmt(n.hit)}</b></span>
+          ${sk.cd ? `<span>≈<b>${fmt(n.dps)}</b>/s</span>` : ''}</div>` : ''}
+        ${matchup(sk.type)}
+      </div>
+    </div>`;
+  }
+
   function showCreature(cid) {
     const c = C_BY_ID[cid];
     const owned = !!S.beasts[cid];
@@ -1492,37 +1560,26 @@ const UI = (() => {
       }).join('') + '</div>';
     }
 
-    const skills = kit.skills.map(sk => {
-      const isMove = sk.moveIdx != null;
-      const lockedMv = sk.unlockLv && lvl < sk.unlockLv;
-      const art = isMove ? moveIcon(sk.type, sk.moveIdx) : skillIcon(sk.type, cid + sk.name);
-      return `
-      <div class="skillrow ${isMove ? 'moverow' : ''} ${lockedMv ? 'locked-move' : ''}">
-        <div class="sicon" style="background:${hexAlpha(TYPE_COLORS[sk.type] || '#666', .16)}">${art}</div>
-        <div><div class="sname">${sk.name}${isMove ? ' <span class="mvtag">MOVE</span>' : ''}</div>
-        <div class="sdesc">${sk.desc}</div>
-        <div class="smeta">${Math.round(sk.power * 100)}% power · ${sk.cd}s cooldown ·
-          ${lockedMv ? `unlocks at Lv.${sk.unlockLv}` : sk.type}</div></div>
-      </div>`;
-    }).join('');
+    const skills = kit.skills.map((sk, i) => skillCard(cid, sk, {
+      owned, lvl,
+      kind: sk.moveIdx != null ? 'Signature' : i === 0 ? 'Quick' : 'Heavy',
+      kindCls: sk.moveIdx != null ? 'sig' : '',
+    })).join('');
 
     let graftHtml = '';
     if (owned && inst.graft && C_BY_ID[inst.graft]) {
       const g = Lore.kit(inst.graft).skills[1];
-      graftHtml = `<div class="skillrow graftrow">
-        <div class="sicon" style="background:${hexAlpha(TYPE_COLORS[g.type] || '#666', .16)}">${skillIcon(g.type, cid + g.name)}</div>
-        <div><div class="sname">${g.name} <span class="subtle">(grafted)</span></div>
-        <div class="sdesc">Lab-grafted from ${C_BY_ID[inst.graft].name}.</div>
-        <div class="smeta">${Math.round(g.power * 100)}% power · ${(g.cd * 1.4).toFixed(1)}s cooldown</div></div>
-      </div>`;
+      graftHtml = skillCard(cid, { ...g, cd: +(g.cd * 1.4).toFixed(1),
+        desc: `Grafted from ${C_BY_ID[inst.graft].name}.` },
+        { owned, lvl, kind: 'Grafted', cls: 'graftrow',
+          art: skillIcon(g.type, cid + g.name) });
     }
 
     const u = kit.ult;
-    const ultHtml = `<div class="skillrow ultrow">
-      <div class="sicon" style="background:${hexAlpha(TYPE_COLORS[u.type] || '#666', .16)}">${skillIcon('Ultimate', cid + u.name)}</div>
-      <div><div class="sname">${u.name}</div><div class="sdesc">${u.desc}</div>
-      <div class="smeta">${Math.round(u.power * 100)}% power · hits every enemy at 100% charge</div></div>
-    </div>`;
+    const ultHtml = skillCard(cid, { ...u, cd: 0, desc: u.desc }, {
+      owned, lvl, aoe: true, kind: 'Ultimate', kindCls: 'sig', cls: 'ultrow',
+      art: skillIcon('Ultimate', cid + u.name),
+    });
 
     const passes = kit.passives.map(p => {
       const on = lvl >= p.level;
@@ -2244,7 +2301,7 @@ const UI = (() => {
         <svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="52"/><circle class="fill" cx="60" cy="60" r="52" stroke-dasharray="326.7" /></svg>
         <div class="timer-mid"><b id="tm-left">--:--</b><span>keep going!</span></div>
       </div>
-      <p class="subtle">Stay with it — your beasts believe in you.<br>The timer keeps running if you close the app.</p>
+      <p class="subtle">The timer keeps running if you close the app.</p>
       <div class="mrow"></div>`;
     const row = box.querySelector('.mrow');
     const give = el('button', 'pixbtn ghost sm', 'Abandon');
@@ -2368,12 +2425,9 @@ const UI = (() => {
     function drawIntro() {
       box.innerHTML = steps() + `
         <h2>Hourling</h2>
-        <p>There is something you have always meant to get good at.<br>
-        This is the app that actually makes you do it.</p>
-        <p style="margin-top:10px">You will pick one dream. Every day it gives you
-        <b>one concrete task</b> and a real timer. The minutes you actually put in
-        are the only currency in the game — they hatch beasts, grow your garden
-        and win your battles.</p>
+        <p>Pick one thing you've always meant to get good at.</p>
+        <p style="margin-top:10px">You get <b>one task a day</b> and a real timer.
+        The minutes you put in are the only currency here.</p>
         <p style="margin-top:10px;color:var(--gold)">Six quick questions.</p>`;
       nav('Let\'s go', true, () => { step = 1; draw(); });
     }
@@ -2597,6 +2651,17 @@ const UI = (() => {
     const box = el('div', 'arena');
     openModal(box);
     renderArena();
+    // Vale introduces the place once, and only once
+    if (!S.settings.metArena) {
+      S.settings.metArena = true;
+      save();
+      Dialog.say([
+        { text: 'The Arena. Everyone here is a real team someone sent you.', mood: 'up',
+          choices: [{ label: 'How do I get rivals?' }, { label: 'Got it', end: true }] },
+        { text: 'Swap codes with a friend. Their party fights exactly as they left it.',
+          mood: 'think' },
+      ]);
+    }
   }
 
   function renderArena() {
@@ -2617,9 +2682,8 @@ const UI = (() => {
         </div>
       </div>
 
-      <p class="ar-honest">No server, so no live matchmaking: you trade
-        <b>rival codes</b> with friends and fight the team their code carries.
-        Everyone else here is a challenger this app generates.</p>
+      <p class="ar-honest">No server here, so no live matchmaking. Trade
+        <b>rival codes</b> to fight a friend's real team. The rest are generated.</p>
 
       <div class="acc-btns">
         <button class="pixbtn sm" data-ar="mycode">Copy my rival code</button>
@@ -2636,8 +2700,7 @@ const UI = (() => {
           <button class="pixbtn ghost sm" data-ar="tquit">Withdraw</button></div>
       </div>` : `<div class="ar-sec">
         <div class="acc-h">Tournament</div>
-        <p class="acc-note">Eight entrants, three rounds, one winner. Placing pays
-          gems whether or not you take it.</p>
+        <p class="acc-note">Eight entrants, three rounds. Every placing pays gems.</p>
         <div class="acc-btns"><button class="pixbtn gold sm" data-ar="tstart"><b>Enter tournament</b></button></div>
       </div>`}
 
@@ -2830,10 +2893,9 @@ const UI = (() => {
                </ol>
                <input class="acc-in" type="text" placeholder="…apps.googleusercontent.com" value="">
                <div class="acc-btns"><button class="pixbtn sm" data-act="setcid">Save client ID</button></div>`}`}
-        <p class="acc-note warn">Being straight with you: with no server behind
-          this app, signing in proves nothing and syncs nothing. It can show
-          your name, and that is all — your save still lives in this browser.
-          Real cross-device sync needs a backend this app does not have.</p>
+        <p class="acc-note warn">No server behind this app: signing in shows your
+          name and nothing else. Your save stays in this browser — use a backup
+          code to move it.</p>
       </div>`;
 
     $$('#modal-root [data-prof]', box).forEach(b => {

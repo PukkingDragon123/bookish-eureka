@@ -1,73 +1,74 @@
-/* ============ the Professor — interactive guide ============
+/* ============ Professor Vale — the guided first run ============
 
-   A guided first run, led by the mentor sprite the player uploaded. It is not
-   a wall of text with a Next button: each step dims the screen except for one
-   real element, the professor points at it, and where a step asks you to do
-   something the guide waits for you to actually do it rather than for you to
-   press Next.
+   Not a wall of text with a Next button. Each step dims the screen except one
+   real element, Vale points at it, and steps that ask you to do something wait
+   for you to actually do it.
 
-   Every step names a live selector, so the spotlight tracks the real layout —
-   if a control moves, the hole moves with it.                              */
+   Two routes: the full tour, or the short one for people who have played a
+   game before. The player picks at the first beat, so the guide is a
+   conversation from the first tap rather than a slideshow.                  */
 'use strict';
 
 const Tutor = (() => {
-  /* where: css selector to spotlight (null = no hole, just the professor)
-     tab:   switch here first
-     do:    { event } — the step completes when Game fires that, not on Next
-     side:  'top' | 'bottom' — which half the bubble sits in            */
+  /* where: selector to spotlight  ·  tab: switch here first
+     wait: { tab } — advances on the real tap, not on Next
+     ask:  [{ label, go }] — branch: jump to that step key             */
   const STEPS = [
-    { text: "There you are. I'm Professor Vale — I study what people become when they keep showing up. Give me two minutes and I'll show you how this works.",
-      tab: 'today', where: null, side: 'bottom' },
+    { key: 'hi', tab: 'today', where: null, mood: 'up',
+      text: "I'm Vale. I study what people become when they keep showing up.",
+      ask: [{ label: 'Show me around', go: 'ladder' },
+            { label: "I've got this — the short version", go: 'mana' }] },
 
-    { text: "This is your dream and the ladder under it. Ten rungs, measured in hours you have genuinely practised. Nothing else moves it.",
-      tab: 'today', where: '#today-hero', side: 'bottom' },
+    { key: 'ladder', tab: 'today', where: '#today-hero', mood: 'think',
+      text: 'Your dream, and ten rungs under it. Only practised hours move it.' },
 
-    { text: "Today's focus is one concrete task. Not \"practise more\" — one thing, with a timer. That is the whole engine.",
-      tab: 'today', where: '#focus-card', side: 'bottom' },
+    { key: 'focus', tab: 'today', where: '#focus-card',
+      text: 'One task a day. Not "practise more" — one thing, with a timer.' },
 
-    { text: "Your minutes become mana, and mana is what everything else in here runs on. Real practice, real currency. There is no other way to earn it.",
-      tab: 'today', where: '.mana-chip', side: 'bottom' },
+    { key: 'mana', tab: 'today', where: '.mana-chip', mood: 'up',
+      text: 'Minutes become mana. Everything else in here runs on it.' },
 
-    { text: "Meanwhile your beasts fight on their own. Tap Battle and I'll show you.",
-      tab: 'today', where: '#tabbar button[data-tab="battle"]', side: 'top',
+    { key: 'go', tab: 'today', where: '#tabbar button[data-tab="battle"]', mood: 'cheer',
+      text: 'Your beasts fight without you. Tap Battle.',
       wait: { tab: 'battle' } },
 
-    { text: "They fight slowly and steadily, whether or not you are watching. Come back after a session and you will have made progress.",
-      tab: 'battle', where: '#scene', side: 'bottom' },
+    { key: 'scene', tab: 'battle', where: '#scene',
+      text: 'Slow and steady, whether or not you watch. Come back after a session.' },
 
-    { text: "In a hurry? Gems buy five minutes of triple speed. Useful before a boss — never necessary.",
-      tab: 'battle', where: '#haste-btn', side: 'bottom' },
+    { key: 'haste', tab: 'battle', where: '#haste-btn', mood: 'think',
+      text: 'Gems buy five minutes of triple speed. Never necessary.' },
 
-    { text: "Down here is the Forge. Spin the wheel, drag two matching pieces together, and every piece on the board quietly buffs your party.",
-      tab: 'battle', where: '#merge-panel', side: 'top', openPanel: 'fusion' },
+    { key: 'forge', tab: 'battle', where: '#merge-panel', openPanel: 'fusion',
+      text: 'Drag two matching pieces together. Every piece buffs the party.' },
 
-    { text: "Quests turn your real habits into rewards — water, walks, cooking, whatever you signed up for. That is where the gems come from.",
-      tab: 'quests', where: '#quest-list', side: 'bottom' },
+    { key: 'quests', tab: 'quests', where: '#quest-list', mood: 'up',
+      text: 'Real habits, real rewards. This is where gems come from.' },
 
-    { text: "That's everything. Put in one real session today and the rest follows. I'll be in Settings if you want this again.",
-      tab: 'today', where: null, side: 'bottom' },
+    { key: 'end', tab: 'today', where: null, mood: 'cheer',
+      text: "That's it. One real session today and the rest follows." },
   ];
+  const AT = {};
+  STEPS.forEach((s, i) => { AT[s.key] = i; });
 
-  let idx = 0, active = false, root = null, onTab = null;
+  let idx = 0, active = false, root = null, typer = null, watcher = null, full = '';
 
   function done() { return !!(S.tutorial && S.tutorial.done); }
 
   function start(fromSettings) {
     if (active) return;
-    // the guide owns the screen: clear anything already sitting over the app
     try { closeAllModals(); } catch (e) {}
     active = true;
     idx = 0;
     root = el('div', 'tut-root');
     root.innerHTML = `
-      <div class="tut-veil">
-        <div class="tut-hole"></div>
-      </div>
+      <div class="tut-veil"><div class="tut-hole"></div></div>
       <div class="tut-prof">
         <img class="tut-sprite" src="${assetUrl('assets/ui/npc.png')}" alt="Professor Vale">
         <div class="tut-bubble">
+          <span class="dlg-tail"></span>
           <div class="tut-name">Professor Vale</div>
           <p class="tut-text"></p>
+          <div class="dlg-choices"></div>
           <div class="tut-foot">
             <span class="tut-dots"></span>
             <button class="tut-skip">Skip</button>
@@ -76,11 +77,51 @@ const Tutor = (() => {
         </div>
       </div>`;
     document.body.appendChild(root);
-    root.querySelector('.tut-skip').onclick = () => finish(true);
-    root.querySelector('.tut-next').onclick = () => next();
+    root.querySelector('.tut-skip').onclick = e => { e.stopPropagation(); finish(true); };
+    root.querySelector('.tut-next').onclick = e => { e.stopPropagation(); advance(); };
+    // tapping the bubble hurries the typing, then moves on
+    root.querySelector('.tut-bubble').onclick = e => {
+      if (e.target.closest('button')) return;
+      if (typer) return hurry();
+      if (!root.querySelector('.dlg-choices').classList.contains('on')) advance();
+    };
     window.addEventListener('resize', reposition);
     if (!fromSettings) Sound.quest();
     show();
+  }
+
+  function hurry() {
+    clearInterval(typer); typer = null;
+    root.querySelector('.tut-text').textContent = full;
+    reveal();
+  }
+
+  /* what appears once the line has finished typing */
+  function reveal() {
+    const st = STEPS[idx];
+    const ch = root.querySelector('.dlg-choices');
+    const nextBtn = root.querySelector('.tut-next');
+    if (st.ask) {
+      ch.innerHTML = '';
+      st.ask.forEach((a, n) => {
+        const b = el('button', 'dlg-choice');
+        b.style.animationDelay = (n * 70) + 'ms';
+        b.textContent = a.label;
+        b.onclick = ev => {
+          ev.stopPropagation();
+          Sound.click();
+          ch.classList.remove('on');
+          idx = AT[a.go] != null ? AT[a.go] : idx + 1;
+          show();
+        };
+        ch.appendChild(b);
+      });
+      ch.classList.add('on');
+      nextBtn.style.display = 'none';
+    } else {
+      ch.classList.remove('on');
+      nextBtn.style.display = '';
+    }
   }
 
   function show() {
@@ -92,29 +133,41 @@ const Tutor = (() => {
       UI.renderMerge();
     }
 
+    const prof = root.querySelector('.tut-prof');
+    prof.dataset.mood = st.mood || 'calm';
+    const sprite = root.querySelector('.tut-sprite');
+    sprite.style.animation = 'none';
+    void sprite.offsetWidth;
+    sprite.style.animation = '';
+
     const txt = root.querySelector('.tut-text');
+    full = st.text;
     txt.textContent = '';
-    // type it out — the professor is talking, not printing
+    root.querySelector('.dlg-choices').classList.remove('on');
     let i = 0;
-    clearInterval(onTab);
-    onTab = setInterval(() => {
+    clearInterval(typer);
+    typer = setInterval(() => {
       i += 2;
-      txt.textContent = st.text.slice(0, i);
-      if (i >= st.text.length) clearInterval(onTab);
-    }, 14);
+      txt.textContent = full.slice(0, i);
+      if (i >= full.length) { clearInterval(typer); typer = null; reveal(); }
+    }, 15);
 
     root.querySelector('.tut-dots').innerHTML =
       STEPS.map((_, n) => `<i class="${n === idx ? 'on' : ''}"></i>`).join('');
     const nextBtn = root.querySelector('.tut-next');
     nextBtn.querySelector('b').textContent =
-      idx === STEPS.length - 1 ? 'Start' : st.wait ? 'Go on then' : 'Next';
+      idx === STEPS.length - 1 ? 'Start' : st.wait ? 'Go on' : 'Next';
 
-    // a step that asks you to tap something waits for the real tap
+    clearInterval(watcher);
     if (st.wait && st.wait.tab) {
       nextBtn.classList.add('ghosted');
-      const check = setInterval(() => {
-        if (UI.currentTab() === st.wait.tab) { clearInterval(check); nextBtn.classList.remove('ghosted'); next(); }
-        if (!active) clearInterval(check);
+      watcher = setInterval(() => {
+        if (!active) return clearInterval(watcher);
+        if (UI.currentTab() === st.wait.tab) {
+          clearInterval(watcher);
+          nextBtn.classList.remove('ghosted');
+          advance();
+        }
       }, 200);
     } else {
       nextBtn.classList.remove('ghosted');
@@ -138,7 +191,6 @@ const Tutor = (() => {
       hole.style.top = (r.top - pad) + 'px';
       hole.style.width = (r.width + pad * 2) + 'px';
       hole.style.height = (r.height + pad * 2) + 'px';
-      // put the professor on the opposite side from the highlight
       const below = r.top + r.height / 2 < window.innerHeight / 2;
       prof.classList.toggle('at-bottom', below);
       prof.classList.toggle('at-top', !below);
@@ -150,7 +202,7 @@ const Tutor = (() => {
     }
   }
 
-  function next() {
+  function advance() {
     idx++;
     if (idx >= STEPS.length) return finish(false);
     show();
@@ -158,7 +210,8 @@ const Tutor = (() => {
 
   function finish(skipped) {
     active = false;
-    clearInterval(onTab);
+    clearInterval(typer); typer = null;
+    clearInterval(watcher);
     window.removeEventListener('resize', reposition);
     if (root) {
       root.classList.add('leaving');
@@ -169,9 +222,7 @@ const Tutor = (() => {
     S.tutorial = S.tutorial || {};
     S.tutorial.done = true;
     save();
-    if (!skipped) {
-      toast('Professor Vale: come find me in Settings any time', 'gold');
-    }
+    if (!skipped) toast('Vale is in Settings if you want him again', 'gold');
   }
 
   /* offered once, right after onboarding */

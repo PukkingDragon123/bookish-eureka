@@ -418,7 +418,7 @@ const Battle = (() => {
       skills: skillListFor(cid).map((sk, i) => {
         const left = cds[cid + '_' + i] || 0;
         return { name: sk.name, cd: sk.cd, left, frac: clamp(1 - left / sk.cd, 0, 1),
-                 type: sk.type, moveIdx: sk.moveIdx };
+                 type: sk.type, moveIdx: sk.moveIdx, power: sk.power };
       }),
     }));
   }

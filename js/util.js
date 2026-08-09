@@ -178,6 +178,19 @@ function floatText(txt, x, y, cls) {
   setTimeout(() => f.remove(), 1400);
 }
 
+/* ---------- comic impact burst ---------- */
+const POW_WORDS = ['POW', 'BAM', 'WHAM', 'KRAK', 'THWK', 'SMASH'];
+function powBurst(x, y, word, colour) {
+  const layer = $('#fx-layer');
+  if (!layer) return;
+  const p = el('div', 'pow', `<b>${word || pick(POW_WORDS)}</b>`);
+  p.style.left = (x + rnd(-10, 10)) + 'px';
+  p.style.top = (y + rnd(-8, 8)) + 'px';
+  if (colour) p.style.setProperty('--pow-c', colour);
+  layer.appendChild(p);
+  setTimeout(() => p.remove(), 460);
+}
+
 /* ---------- coin fly to HUD ---------- */
 function coinBurst(fromEl, n, iconKey) {
   const tgt = $('#hud-gold');

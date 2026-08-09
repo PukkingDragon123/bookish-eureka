@@ -599,7 +599,11 @@ button { font-family: inherit; color: inherit; }
   z-index: 5; position: relative;
 }
 #app.modal-open #hud { z-index: 0; }
-.hud-row { display: flex; align-items: center; gap: 4px; }
+/* the HUD is one row of chips and it must never push the page wider than the
+   screen: a five-figure gold count on a 320px phone used to do exactly that */
+.hud-row { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.hud-row > .hud-chip { min-width: 0; }
+.hud-row > .hud-chip b { overflow: hidden; text-overflow: ellipsis; }
 .hud-row + .hud-row { margin-top: 4px; }
 .hud-chip {
   display: flex; align-items: center; gap: 4px;
@@ -1134,6 +1138,10 @@ button.hud-chip:active { transform: translateY(2px); }
 .cdrow .cdname {
   flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   font-weight: 600;
+}
+.cdrow .cdhit {
+  flex: none; font-size: var(--fs-micro); color: var(--gold);
+  font-variant-numeric: tabular-nums;
 }
 .cdmeter {
   width: 74px; height: 11px; flex: none;
@@ -1760,6 +1768,33 @@ button.hud-chip:active { transform: translateY(2px); }
 .skillrow .sdesc { font-size: 12.5px; color: var(--txt-dim); line-height: 1.5; }
 .skillrow .smeta { font-size: 12px; color: var(--gold); margin-top: 2px; }
 .skillrow .sicon { width: 44px; height: 44px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 1px solid var(--ink); }
+/* the detail a player needs to compare two skills without doing the maths */
+.skillrow .sbody { flex: 1; min-width: 0; }
+.skillrow .stags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
+.stag {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: var(--fs-micro); letter-spacing: .04em; text-transform: uppercase;
+  background: var(--bg3); color: var(--txt-dim);
+  padding: 1px 5px; border: 1px solid var(--ink); border-radius: 3px;
+}
+.stag.sig { background: var(--gold-lo); color: #2e1e02; }
+.skillrow .spow {
+  position: relative; height: 13px; margin-top: 5px;
+  background: #0a0e1c; border: 1px solid var(--ink); overflow: hidden;
+}
+.skillrow .spow > i { display: block; height: 100%; opacity: .55; }
+.skillrow .spow > span {
+  position: absolute; inset: 0; display: flex; align-items: center;
+  padding-left: 5px; font-size: var(--fs-micro); color: var(--parch);
+  text-shadow: 1px 1px 0 rgba(0,0,0,.7);
+}
+.skillrow .snums { display: flex; gap: 10px; margin-top: 4px; font-size: var(--fs-meta); color: var(--txt-dim); }
+.skillrow .snums b { color: var(--gold); }
+.skillrow .smatch { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 3px; font-size: var(--fs-micro); }
+.skillrow .smatch .mu { color: var(--good); }
+.skillrow .smatch .md { color: var(--txt-dim); }
+.skillrow .smatch .elem { vertical-align: -2px; }
+.mvtag.lock { background: var(--bg3); color: var(--txt-dim); }
 .passrow {
   display: flex; gap: 7px; align-items: center;
   background: var(--bg2); border: var(--px) solid var(--ink);
@@ -2847,6 +2882,268 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
 }
 .promo:active { transform: scale(.985); }
 
+/* ============ the cartoon layer ============
+
+   Loaded last, on purpose. Everything here is presentation: a hand-inked
+   outline around every sprite, squash-and-stretch instead of stepped bobbing,
+   overshoot on anything that appears, and the comic-panel furniture (impact
+   bursts, the speech bubble) that makes the game read as drawn rather than
+   generated.
+
+   The outline is four 1px drop-shadows rather than an SVG stroke, because it
+   costs nothing, follows the alpha exactly, and survives any scale.        */
+
+:root {
+  --toon-ink: #0a0d1c;
+  --toon-line: 1.4px;
+  --toon-line-big: 2px;
+}
+
+/* ---- inked sprites ---- */
+.toon-ink,
+.foe img, .fighter img, #hero-beast, .sring-beast,
+.dexcard img, .cimg-wrap img, .evostep img, .pslot img,
+.cdcard > img, .sb-party img, .sb-foe img,
+.ts-beast img, .dlg-port img, .tut-sprite, .wish-beast img {
+  filter:
+    drop-shadow(var(--toon-line) 0 0 var(--toon-ink))
+    drop-shadow(calc(var(--toon-line) * -1) 0 0 var(--toon-ink))
+    drop-shadow(0 var(--toon-line) 0 var(--toon-ink))
+    drop-shadow(0 calc(var(--toon-line) * -1) 0 var(--toon-ink));
+}
+/* the two biggest sprites carry a heavier line and a cast shadow */
+#hero-beast, .cimg-wrap img, .ts-beast img, .wish-beast img {
+  --toon-line: var(--toon-line-big);
+}
+.foe img, .fighter img {
+  filter:
+    drop-shadow(var(--toon-line) 0 0 var(--toon-ink))
+    drop-shadow(calc(var(--toon-line) * -1) 0 0 var(--toon-ink))
+    drop-shadow(0 var(--toon-line) 0 var(--toon-ink))
+    drop-shadow(0 calc(var(--toon-line) * -1) 0 var(--toon-ink))
+    drop-shadow(0 5px 1px rgba(0,0,0,.34));
+}
+
+/* ---- squash and stretch ---- */
+/* a stepped bob reads as a sprite sheet; a cartoon breathes and lands soft */
+.foe img { animation: toonbob 2.2s cubic-bezier(.45,0,.55,1) infinite; }
+@keyframes toonbob {
+  0%,100% { transform: translateY(0)    scale(1.03, .97); }
+  45%     { transform: translateY(-7px) scale(.97, 1.04); }
+  70%     { transform: translateY(0)    scale(1.05, .95); }
+}
+.fighter img { animation: toonpbob 2.4s cubic-bezier(.45,0,.55,1) infinite; }
+@keyframes toonpbob {
+  0%,100% { transform: scaleX(-1) translateY(0)    scale(1.03, .97); }
+  45%     { transform: scaleX(-1) translateY(-6px) scale(.97, 1.04); }
+  70%     { transform: scaleX(-1) translateY(0)    scale(1.05, .95); }
+}
+/* the party is not a chorus line — stagger it */
+.fighter:nth-child(2) img { animation-delay: -.5s; }
+.fighter:nth-child(3) img { animation-delay: -1.1s; }
+.fighter:nth-child(4) img { animation-delay: -1.7s; }
+.foe:nth-child(2) img { animation-delay: -.7s; }
+.foe:nth-child(3) img { animation-delay: -1.4s; }
+
+.fighter.striking img { animation: toonstrike .26s var(--pop); }
+@keyframes toonstrike {
+  0%   { transform: scaleX(-1) rotate(-18deg) translate(-8px,-2px) scale(.9, 1.12); }
+  55%  { transform: scaleX(-1) rotate(12deg) translate(10px, 3px) scale(1.16, .86); }
+  100% { transform: scaleX(-1); }
+}
+.foe.lunging img { animation: toonlunge .42s var(--pop); }
+@keyframes toonlunge {
+  40% { transform: translate(-20px, 4px) rotate(-8deg) scale(1.12, .88); }
+}
+#hero-beast { animation: toonbob 3s cubic-bezier(.45,0,.55,1) infinite; }
+
+/* ---- impact ---- */
+/* a comic hit is a shape, not a flash: a spiked burst behind the word */
+.pow {
+  position: absolute; z-index: 8; pointer-events: none;
+  display: grid; place-items: center;
+  width: 62px; height: 62px; margin: -31px 0 0 -31px;
+  animation: powpop .42s var(--pop) forwards;
+}
+.pow::before {
+  content: ''; position: absolute; inset: 0;
+  background: var(--pow-c, #ffd76a);
+  clip-path: polygon(50% 0, 61% 33%, 95% 12%, 76% 44%, 100% 55%, 70% 65%,
+                     84% 95%, 53% 76%, 33% 100%, 33% 70%, 3% 76%, 24% 51%,
+                     0 33%, 30% 34%, 22% 4%, 45% 26%);
+  filter: drop-shadow(2px 2px 0 var(--toon-ink)) drop-shadow(-2px 0 0 var(--toon-ink))
+          drop-shadow(0 -2px 0 var(--toon-ink));
+}
+.pow b {
+  position: relative; font-family: var(--display); font-size: 17px;
+  color: #1a1206; letter-spacing: .5px; transform: rotate(-9deg);
+}
+@keyframes powpop {
+  0%   { transform: scale(.2) rotate(-24deg); opacity: 0; }
+  45%  { transform: scale(1.12) rotate(6deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 0; }
+}
+
+/* speed lines behind a charging fighter */
+.fighter.charging::after {
+  content: ''; position: absolute; right: 100%; top: 30%;
+  width: 46px; height: 40%;
+  background: repeating-linear-gradient(
+    to bottom, rgba(255,255,255,.45) 0 2px, transparent 2px 8px);
+  -webkit-mask-image: linear-gradient(to left, #000, transparent);
+  mask-image: linear-gradient(to left, #000, transparent);
+}
+
+/* ---- arrival ---- */
+/* things that appear should land, not fade */
+.card, .cdcard, .dexcard { animation: toonland .3s var(--pop) both; }
+@keyframes toonland {
+  from { transform: translateY(9px) scale(.985); opacity: 0; }
+}
+.pixbtn { transition: transform .1s var(--pop), filter .12s linear; }
+.pixbtn:active { transform: translateY(4px) scale(1.05, .93); }
+.pixbtn.primary:not(:disabled), .pixbtn.gold:not(:disabled) { animation: toonsit .5s var(--pop) both; }
+@keyframes toonsit { from { transform: scale(.9, 1.08); } }
+
+/* a counter that just changed says so */
+.hud-chip b.bumped { animation: countbump .34s var(--pop); display: inline-block; }
+@keyframes countbump {
+  0%   { transform: scale(1.45, .8); }
+  45%  { transform: scale(.92, 1.12); }
+  100% { transform: scale(1); }
+}
+
+/* tabs land instead of fading */
+.tab.active { animation: tabland .26s var(--pop) !important; }
+@keyframes tabland { from { opacity: .2; transform: translateY(10px) scale(.99); } }
+#tabbar button.active .ico { animation: tabpop .3s var(--pop); }
+@keyframes tabpop {
+  0% { transform: translateY(2px) scale(.8); }
+  55% { transform: translateY(-4px) scale(1.18); }
+  100% { transform: translateY(-2px) scale(1); }
+}
+
+/* ---- the scene reads as a drawn panel ---- */
+#scene::after {                       /* halftone, the way print shading works */
+  content: ''; position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  background-image: radial-gradient(rgba(0,0,0,.22) 32%, transparent 33%);
+  background-size: 5px 5px;
+  -webkit-mask-image: radial-gradient(120% 90% at 50% 30%, transparent 45%, #000);
+  mask-image: radial-gradient(120% 90% at 50% 30%, transparent 45%, #000);
+  opacity: .32;
+}
+
+/* ============ the speech box ============ */
+/* above modals (100) and the tutorial veil (320): a character talking to you
+   is always the front-most thing on screen */
+.dlg-root {
+  position: fixed; inset: 0; z-index: 340;
+  display: flex; align-items: flex-end; justify-content: center;
+  padding: 0 8px calc(18px + env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+.dlg-root .dlg-veil { position: absolute; inset: 0; background: transparent; }
+.dlg-root.veiled .dlg-veil { background: rgba(6,9,20,.62); pointer-events: auto; }
+.dlg-box {
+  position: relative; pointer-events: auto; cursor: pointer;
+  width: 100%; max-width: 480px;
+  display: flex; align-items: flex-end; gap: 4px;
+  transform: translateY(28px); opacity: 0;
+  transition: transform .3s var(--pop), opacity .2s linear;
+}
+.dlg-root.in .dlg-box { transform: none; opacity: 1; }
+.dlg-root.out .dlg-box { transform: translateY(24px); opacity: 0; }
+
+.dlg-port { flex: none; width: 96px; align-self: flex-end; }
+@media (max-width: 360px) { .dlg-port { width: 74px; } }
+.dlg-port img { width: 100%; display: block; transform-origin: 50% 100%; }
+.dlg-port.bump img { animation: portbump .34s var(--pop); }
+@keyframes portbump {
+  0% { transform: scale(1.1, .9) translateY(4px); }
+  55% { transform: scale(.96, 1.06) translateY(-4px); }
+}
+/* the portrait leans into what it is saying */
+.dlg-port[data-mood="up"]    img { transform: rotate(-4deg) translateY(-3px); }
+.dlg-port[data-mood="think"] img { transform: rotate(3deg) scale(.97); }
+.dlg-port[data-mood="cheer"] img { transform: rotate(-7deg) scale(1.05); }
+
+.dlg-bubble {
+  position: relative; flex: 1; min-width: 0;
+  background: #fbf6ea; color: #1b1a24;
+  border: var(--toon-line-big) solid var(--toon-ink);
+  border-radius: 14px;
+  box-shadow: 0 5px 0 rgba(0,0,0,.45);
+  padding: 9px 12px 10px;
+}
+.dlg-tail {
+  position: absolute; left: -11px; bottom: 15px;
+  width: 0; height: 0;
+  border: 9px solid transparent;
+  border-right-color: var(--toon-ink);
+}
+.dlg-tail::after {
+  content: ''; position: absolute; left: -6px; top: -7px;
+  border: 7px solid transparent; border-right-color: #fbf6ea;
+}
+.dlg-name {
+  font-family: var(--display); font-size: var(--fs-label);
+  letter-spacing: 1.2px; text-transform: uppercase; color: #8a5a12;
+}
+.dlg-text {
+  font-size: var(--fs-body); line-height: 1.5; min-height: 2.9em;
+  color: #1b1a24;
+}
+.dlg-more { display: none; justify-content: flex-end; gap: 3px; margin-top: 2px; }
+.dlg-more.on { display: flex; }
+.dlg-more i {
+  width: 5px; height: 5px; background: #8a5a12; border-radius: 50%;
+  animation: moredot 1s infinite;
+}
+.dlg-more i:nth-child(2) { animation-delay: .15s; }
+.dlg-more i:nth-child(3) { animation-delay: .3s; }
+@keyframes moredot { 50% { transform: translateY(-4px); opacity: .5; } }
+
+.dlg-choices { display: none; flex-direction: column; gap: 5px; margin-top: 7px; }
+.dlg-choices.on { display: flex; }
+.dlg-choice {
+  font: inherit; font-size: var(--fs-meta); text-align: left; cursor: pointer;
+  background: #fff; color: #1b1a24;
+  border: var(--toon-line-big) solid var(--toon-ink);
+  border-radius: 10px; padding: 8px 11px;
+  min-height: 40px;
+  box-shadow: 0 3px 0 var(--toon-ink);
+  animation: toonland .26s var(--pop) both;
+}
+.dlg-choice:active { transform: translateY(3px); box-shadow: 0 0 0 var(--toon-ink); }
+
+/* ---- the guide reuses the same bubble ---- */
+.tut-prof .tut-bubble {
+  background: #fbf6ea; color: #1b1a24;
+  border: var(--toon-line-big) solid var(--toon-ink);
+  border-radius: 14px;
+  box-shadow: 0 5px 0 rgba(0,0,0,.45);
+}
+.tut-prof .tut-bubble { outline: 0; }
+.tut-prof .tut-bubble::after { display: none; }     /* the dark tail it used to draw */
+.tut-prof .tut-name { color: #8a5a12; }
+.tut-prof .tut-text { color: #1b1a24; min-height: 3em; }
+.tut-prof .tut-skip { color: #6a6376; }
+.tut-prof .dlg-tail { bottom: 24px; }
+.tut-sprite {
+  transform-origin: 50% 100%;
+  animation: toonbob 2.6s cubic-bezier(.45,0,.55,1) infinite;
+  transition: transform .3s var(--pop);
+}
+.tut-prof[data-mood="up"]    .tut-sprite { animation: toonbob 1.9s cubic-bezier(.45,0,.55,1) infinite; }
+.tut-prof[data-mood="think"] .tut-sprite { animation: none; transform: rotate(4deg) scale(.96); }
+.tut-prof[data-mood="cheer"] .tut-sprite { animation: toonbob 1.3s cubic-bezier(.45,0,.55,1) infinite; }
+.tut-prof .dlg-choices { margin-top: 8px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .foe img, .fighter img, #hero-beast { animation: none; }
+  .card, .cdcard, .dexcard, .pixbtn.primary, .pixbtn.gold, .dlg-choice { animation: none; }
+}
+
 </style>
 </head>
 <body>
@@ -3014,8 +3311,8 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
       </div>
       <div id="garden-notes" class="card">
         <div class="card-head"><i class="ico ico-seed"></i> How this works</div>
-        <p class="hint-line">Practising waters the beds. Harvest turns into food,
-          food levels your beasts. Match the element for double XP.</p>
+        <p class="hint-line">Practice waters the beds. Harvest becomes food, food
+          levels beasts. Matching element = double XP.</p>
       </div>
     </section>
 
@@ -3263,6 +3560,19 @@ function floatText(txt, x, y, cls) {
   f.style.top = y + 'px';
   layer.appendChild(f);
   setTimeout(() => f.remove(), 1400);
+}
+
+/* ---------- comic impact burst ---------- */
+const POW_WORDS = ['POW', 'BAM', 'WHAM', 'KRAK', 'THWK', 'SMASH'];
+function powBurst(x, y, word, colour) {
+  const layer = $('#fx-layer');
+  if (!layer) return;
+  const p = el('div', 'pow', `<b>${word || pick(POW_WORDS)}</b>`);
+  p.style.left = (x + rnd(-10, 10)) + 'px';
+  p.style.top = (y + rnd(-8, 8)) + 'px';
+  if (colour) p.style.setProperty('--pow-c', colour);
+  layer.appendChild(p);
+  setTimeout(() => p.remove(), 460);
 }
 
 /* ---------- coin fly to HUD ---------- */
@@ -6226,7 +6536,7 @@ const Battle = (() => {
       skills: skillListFor(cid).map((sk, i) => {
         const left = cds[cid + '_' + i] || 0;
         return { name: sk.name, cd: sk.cd, left, frac: clamp(1 - left / sk.cd, 0, 1),
-                 type: sk.type, moveIdx: sk.moveIdx };
+                 type: sk.type, moveIdx: sk.moveIdx, power: sk.power };
       }),
     }));
   }
@@ -7224,76 +7534,212 @@ const Title = (() => {
 
 </script>
 <script>
-/* ============ the Professor — interactive guide ============
+/* ============ speech: one dialogue box for the whole game ============
 
-   A guided first run, led by the mentor sprite the player uploaded. It is not
-   a wall of text with a Next button: each step dims the screen except for one
-   real element, the professor points at it, and where a step asks you to do
-   something the guide waits for you to actually do it rather than for you to
-   press Next.
+   Every character line in Hourling goes through here, so a conversation looks
+   and behaves the same wherever it happens: a comic bubble with a tail, the
+   speaker's portrait, text that types itself, and a tap anywhere to hurry it.
 
-   Every step names a live selector, so the spotlight tracks the real layout —
-   if a control moves, the hole moves with it.                              */
+   A beat is { text, mood, choices }. Choices turn the beat into a real
+   question — the promise resolves with the value the player picked, so a
+   caller can branch on it. Without choices the beat just advances.          */
+'use strict';
+
+const Dialog = (() => {
+  let root = null, typer = null, done = null;
+
+  const MOODS = ['calm', 'up', 'think', 'cheer'];
+
+  function speaking() { return !!root; }
+
+  /* say([beat, …]) -> Promise resolving with the last chosen value (or null) */
+  function say(beats, opts) {
+    opts = opts || {};
+    close();
+    return new Promise(resolve => {
+      let i = 0, answer = null;
+      root = el('div', 'dlg-root' + (opts.veil ? ' veiled' : ''));
+      root.innerHTML = `
+        <div class="dlg-veil"></div>
+        <div class="dlg-box">
+          <div class="dlg-port">
+            <img src="${assetUrl(opts.portrait || 'assets/ui/npc.png')}" alt="">
+          </div>
+          <div class="dlg-bubble">
+            <span class="dlg-tail"></span>
+            <div class="dlg-name">${opts.name || 'Professor Vale'}</div>
+            <p class="dlg-text"></p>
+            <div class="dlg-choices"></div>
+            <div class="dlg-more"><i></i><i></i><i></i></div>
+          </div>
+        </div>`;
+      document.body.appendChild(root);
+      requestAnimationFrame(() => root.classList.add('in'));
+
+      const bubble = root.querySelector('.dlg-bubble');
+      const port = root.querySelector('.dlg-port');
+
+      function beat() {
+        const b = beats[i];
+        if (!b) return finish();
+        port.dataset.mood = MOODS.includes(b.mood) ? b.mood : 'calm';
+        port.classList.remove('bump');
+        void port.offsetWidth;
+        port.classList.add('bump');
+        type(b.text, () => {
+          if (b.choices) showChoices(b.choices);
+          else root.querySelector('.dlg-more').classList.add('on');
+        });
+      }
+
+      function showChoices(list) {
+        const wrap = root.querySelector('.dlg-choices');
+        wrap.innerHTML = '';
+        list.forEach((c, n) => {
+          const b = el('button', 'dlg-choice');
+          b.style.animationDelay = (n * 60) + 'ms';
+          b.textContent = c.label;
+          b.onclick = ev => {
+            ev.stopPropagation();
+            Sound.click();
+            answer = c.value !== undefined ? c.value : c.label;
+            wrap.innerHTML = '';
+            if (c.then) { beats = c.then; i = 0; return beat(); }
+            if (c.end) return finish();
+            i++; beat();
+          };
+          wrap.appendChild(b);
+        });
+        wrap.classList.add('on');
+      }
+
+      function type(text, after) {
+        const p = root.querySelector('.dlg-text');
+        root.querySelector('.dlg-more').classList.remove('on');
+        root.querySelector('.dlg-choices').classList.remove('on');
+        clearInterval(typer);
+        p.textContent = '';
+        let n = 0;
+        typer = setInterval(() => {
+          n += 2;
+          p.textContent = text.slice(0, n);
+          if (n >= text.length) { clearInterval(typer); typer = null; after(); }
+        }, 16);
+        root.dataset.full = text;
+        root.dataset.after = '1';
+        root._after = after;
+      }
+
+      // tap anywhere on the box: finish the typing, or move to the next beat
+      bubble.parentNode.onclick = ev => {
+        if (ev.target.closest('.dlg-choice')) return;
+        if (typer) {                                   // hurry the typewriter
+          clearInterval(typer); typer = null;
+          root.querySelector('.dlg-text').textContent = root.dataset.full;
+          if (root._after) root._after();
+          return;
+        }
+        if (root.querySelector('.dlg-choices').classList.contains('on')) return;
+        Sound.click();
+        i++; beat();
+      };
+
+      function finish() {
+        close();
+        resolve(answer);
+      }
+      done = finish;
+      beat();
+    });
+  }
+
+  function close() {
+    clearInterval(typer); typer = null;
+    if (root) {
+      const r = root;
+      r.classList.add('out');
+      setTimeout(() => r.remove(), 260);
+      root = null;
+    }
+    done = null;
+  }
+
+  return { say, close, speaking };
+})();
+
+</script>
+<script>
+/* ============ Professor Vale — the guided first run ============
+
+   Not a wall of text with a Next button. Each step dims the screen except one
+   real element, Vale points at it, and steps that ask you to do something wait
+   for you to actually do it.
+
+   Two routes: the full tour, or the short one for people who have played a
+   game before. The player picks at the first beat, so the guide is a
+   conversation from the first tap rather than a slideshow.                  */
 'use strict';
 
 const Tutor = (() => {
-  /* where: css selector to spotlight (null = no hole, just the professor)
-     tab:   switch here first
-     do:    { event } — the step completes when Game fires that, not on Next
-     side:  'top' | 'bottom' — which half the bubble sits in            */
+  /* where: selector to spotlight  ·  tab: switch here first
+     wait: { tab } — advances on the real tap, not on Next
+     ask:  [{ label, go }] — branch: jump to that step key             */
   const STEPS = [
-    { text: "There you are. I'm Professor Vale — I study what people become when they keep showing up. Give me two minutes and I'll show you how this works.",
-      tab: 'today', where: null, side: 'bottom' },
+    { key: 'hi', tab: 'today', where: null, mood: 'up',
+      text: "I'm Vale. I study what people become when they keep showing up.",
+      ask: [{ label: 'Show me around', go: 'ladder' },
+            { label: "I've got this — the short version", go: 'mana' }] },
 
-    { text: "This is your dream and the ladder under it. Ten rungs, measured in hours you have genuinely practised. Nothing else moves it.",
-      tab: 'today', where: '#today-hero', side: 'bottom' },
+    { key: 'ladder', tab: 'today', where: '#today-hero', mood: 'think',
+      text: 'Your dream, and ten rungs under it. Only practised hours move it.' },
 
-    { text: "Today's focus is one concrete task. Not \"practise more\" — one thing, with a timer. That is the whole engine.",
-      tab: 'today', where: '#focus-card', side: 'bottom' },
+    { key: 'focus', tab: 'today', where: '#focus-card',
+      text: 'One task a day. Not "practise more" — one thing, with a timer.' },
 
-    { text: "Your minutes become mana, and mana is what everything else in here runs on. Real practice, real currency. There is no other way to earn it.",
-      tab: 'today', where: '.mana-chip', side: 'bottom' },
+    { key: 'mana', tab: 'today', where: '.mana-chip', mood: 'up',
+      text: 'Minutes become mana. Everything else in here runs on it.' },
 
-    { text: "Meanwhile your beasts fight on their own. Tap Battle and I'll show you.",
-      tab: 'today', where: '#tabbar button[data-tab="battle"]', side: 'top',
+    { key: 'go', tab: 'today', where: '#tabbar button[data-tab="battle"]', mood: 'cheer',
+      text: 'Your beasts fight without you. Tap Battle.',
       wait: { tab: 'battle' } },
 
-    { text: "They fight slowly and steadily, whether or not you are watching. Come back after a session and you will have made progress.",
-      tab: 'battle', where: '#scene', side: 'bottom' },
+    { key: 'scene', tab: 'battle', where: '#scene',
+      text: 'Slow and steady, whether or not you watch. Come back after a session.' },
 
-    { text: "In a hurry? Gems buy five minutes of triple speed. Useful before a boss — never necessary.",
-      tab: 'battle', where: '#haste-btn', side: 'bottom' },
+    { key: 'haste', tab: 'battle', where: '#haste-btn', mood: 'think',
+      text: 'Gems buy five minutes of triple speed. Never necessary.' },
 
-    { text: "Down here is the Forge. Spin the wheel, drag two matching pieces together, and every piece on the board quietly buffs your party.",
-      tab: 'battle', where: '#merge-panel', side: 'top', openPanel: 'fusion' },
+    { key: 'forge', tab: 'battle', where: '#merge-panel', openPanel: 'fusion',
+      text: 'Drag two matching pieces together. Every piece buffs the party.' },
 
-    { text: "Quests turn your real habits into rewards — water, walks, cooking, whatever you signed up for. That is where the gems come from.",
-      tab: 'quests', where: '#quest-list', side: 'bottom' },
+    { key: 'quests', tab: 'quests', where: '#quest-list', mood: 'up',
+      text: 'Real habits, real rewards. This is where gems come from.' },
 
-    { text: "That's everything. Put in one real session today and the rest follows. I'll be in Settings if you want this again.",
-      tab: 'today', where: null, side: 'bottom' },
+    { key: 'end', tab: 'today', where: null, mood: 'cheer',
+      text: "That's it. One real session today and the rest follows." },
   ];
+  const AT = {};
+  STEPS.forEach((s, i) => { AT[s.key] = i; });
 
-  let idx = 0, active = false, root = null, onTab = null;
+  let idx = 0, active = false, root = null, typer = null, watcher = null, full = '';
 
   function done() { return !!(S.tutorial && S.tutorial.done); }
 
   function start(fromSettings) {
     if (active) return;
-    // the guide owns the screen: clear anything already sitting over the app
     try { closeAllModals(); } catch (e) {}
     active = true;
     idx = 0;
     root = el('div', 'tut-root');
     root.innerHTML = `
-      <div class="tut-veil">
-        <div class="tut-hole"></div>
-      </div>
+      <div class="tut-veil"><div class="tut-hole"></div></div>
       <div class="tut-prof">
         <img class="tut-sprite" src="${assetUrl('assets/ui/npc.png')}" alt="Professor Vale">
         <div class="tut-bubble">
+          <span class="dlg-tail"></span>
           <div class="tut-name">Professor Vale</div>
           <p class="tut-text"></p>
+          <div class="dlg-choices"></div>
           <div class="tut-foot">
             <span class="tut-dots"></span>
             <button class="tut-skip">Skip</button>
@@ -7302,11 +7748,51 @@ const Tutor = (() => {
         </div>
       </div>`;
     document.body.appendChild(root);
-    root.querySelector('.tut-skip').onclick = () => finish(true);
-    root.querySelector('.tut-next').onclick = () => next();
+    root.querySelector('.tut-skip').onclick = e => { e.stopPropagation(); finish(true); };
+    root.querySelector('.tut-next').onclick = e => { e.stopPropagation(); advance(); };
+    // tapping the bubble hurries the typing, then moves on
+    root.querySelector('.tut-bubble').onclick = e => {
+      if (e.target.closest('button')) return;
+      if (typer) return hurry();
+      if (!root.querySelector('.dlg-choices').classList.contains('on')) advance();
+    };
     window.addEventListener('resize', reposition);
     if (!fromSettings) Sound.quest();
     show();
+  }
+
+  function hurry() {
+    clearInterval(typer); typer = null;
+    root.querySelector('.tut-text').textContent = full;
+    reveal();
+  }
+
+  /* what appears once the line has finished typing */
+  function reveal() {
+    const st = STEPS[idx];
+    const ch = root.querySelector('.dlg-choices');
+    const nextBtn = root.querySelector('.tut-next');
+    if (st.ask) {
+      ch.innerHTML = '';
+      st.ask.forEach((a, n) => {
+        const b = el('button', 'dlg-choice');
+        b.style.animationDelay = (n * 70) + 'ms';
+        b.textContent = a.label;
+        b.onclick = ev => {
+          ev.stopPropagation();
+          Sound.click();
+          ch.classList.remove('on');
+          idx = AT[a.go] != null ? AT[a.go] : idx + 1;
+          show();
+        };
+        ch.appendChild(b);
+      });
+      ch.classList.add('on');
+      nextBtn.style.display = 'none';
+    } else {
+      ch.classList.remove('on');
+      nextBtn.style.display = '';
+    }
   }
 
   function show() {
@@ -7318,29 +7804,41 @@ const Tutor = (() => {
       UI.renderMerge();
     }
 
+    const prof = root.querySelector('.tut-prof');
+    prof.dataset.mood = st.mood || 'calm';
+    const sprite = root.querySelector('.tut-sprite');
+    sprite.style.animation = 'none';
+    void sprite.offsetWidth;
+    sprite.style.animation = '';
+
     const txt = root.querySelector('.tut-text');
+    full = st.text;
     txt.textContent = '';
-    // type it out — the professor is talking, not printing
+    root.querySelector('.dlg-choices').classList.remove('on');
     let i = 0;
-    clearInterval(onTab);
-    onTab = setInterval(() => {
+    clearInterval(typer);
+    typer = setInterval(() => {
       i += 2;
-      txt.textContent = st.text.slice(0, i);
-      if (i >= st.text.length) clearInterval(onTab);
-    }, 14);
+      txt.textContent = full.slice(0, i);
+      if (i >= full.length) { clearInterval(typer); typer = null; reveal(); }
+    }, 15);
 
     root.querySelector('.tut-dots').innerHTML =
       STEPS.map((_, n) => `<i class="${n === idx ? 'on' : ''}"></i>`).join('');
     const nextBtn = root.querySelector('.tut-next');
     nextBtn.querySelector('b').textContent =
-      idx === STEPS.length - 1 ? 'Start' : st.wait ? 'Go on then' : 'Next';
+      idx === STEPS.length - 1 ? 'Start' : st.wait ? 'Go on' : 'Next';
 
-    // a step that asks you to tap something waits for the real tap
+    clearInterval(watcher);
     if (st.wait && st.wait.tab) {
       nextBtn.classList.add('ghosted');
-      const check = setInterval(() => {
-        if (UI.currentTab() === st.wait.tab) { clearInterval(check); nextBtn.classList.remove('ghosted'); next(); }
-        if (!active) clearInterval(check);
+      watcher = setInterval(() => {
+        if (!active) return clearInterval(watcher);
+        if (UI.currentTab() === st.wait.tab) {
+          clearInterval(watcher);
+          nextBtn.classList.remove('ghosted');
+          advance();
+        }
       }, 200);
     } else {
       nextBtn.classList.remove('ghosted');
@@ -7364,7 +7862,6 @@ const Tutor = (() => {
       hole.style.top = (r.top - pad) + 'px';
       hole.style.width = (r.width + pad * 2) + 'px';
       hole.style.height = (r.height + pad * 2) + 'px';
-      // put the professor on the opposite side from the highlight
       const below = r.top + r.height / 2 < window.innerHeight / 2;
       prof.classList.toggle('at-bottom', below);
       prof.classList.toggle('at-top', !below);
@@ -7376,7 +7873,7 @@ const Tutor = (() => {
     }
   }
 
-  function next() {
+  function advance() {
     idx++;
     if (idx >= STEPS.length) return finish(false);
     show();
@@ -7384,7 +7881,8 @@ const Tutor = (() => {
 
   function finish(skipped) {
     active = false;
-    clearInterval(onTab);
+    clearInterval(typer); typer = null;
+    clearInterval(watcher);
     window.removeEventListener('resize', reposition);
     if (root) {
       root.classList.add('leaving');
@@ -7395,9 +7893,7 @@ const Tutor = (() => {
     S.tutorial = S.tutorial || {};
     S.tutorial.done = true;
     save();
-    if (!skipped) {
-      toast('Professor Vale: come find me in Settings any time', 'gold');
-    }
+    if (!skipped) toast('Vale is in Settings if you want him again', 'gold');
   }
 
   /* offered once, right after onboarding */
@@ -7571,16 +8067,26 @@ const UI = (() => {
   }
 
   /* ================= HUD ================= */
+  /* A counter that changes should visibly react — otherwise a reward lands
+     with no acknowledgement at all and the screen reads as static. */
+  function setCount(sel, text) {
+    const e = $(sel);
+    if (!e || e.textContent === text) return;
+    e.textContent = text;
+    e.classList.remove('bumped');
+    void e.offsetWidth;
+    e.classList.add('bumped');
+  }
   function renderHud() {
     $('#hud-lvl-num').textContent = S.player.level;
     $('#hud-xp-fill').style.width = (100 * S.player.xp / xpForLevel(S.player.level)) + '%';
-    $('#hud-gold').textContent = fmt(S.player.gold);
-    $('#hud-gems').textContent = fmt(S.player.gems);
-    $('#hud-mana').textContent = fmt(S.player.mana);
+    setCount('#hud-gold', fmt(S.player.gold));
+    setCount('#hud-gems', fmt(S.player.gems));
+    setCount('#hud-mana', fmt(S.player.mana));
     $('#hud-mana-fill').style.width = (100 * S.player.mana / manaMax()) + '%';
-    $('#hud-ess').textContent = fmt(S.player.essence);
-    $('#hud-seeds').textContent = fmt(S.farm.seeds);
-    $('#hud-streak').textContent = S.streak.count;
+    setCount('#hud-ess', fmt(S.player.essence));
+    setCount('#hud-seeds', fmt(S.farm.seeds));
+    setCount('#hud-streak', String(S.streak.count));
   }
 
   /* ================= tabs ================= */
@@ -7693,9 +8199,7 @@ const UI = (() => {
     wrap.innerHTML = `
       <div class="card-head"><i class="ico ico-chest"></i> Free rewards
         ${ready ? `<span class="off-badge">${ready}</span>` : ''}</div>
-      <p class="off-note">These are from Hourling itself — there are no adverts
-        in this app and nothing costs money. Each one asks for fifteen seconds
-        or one honest line.</p>
+      <p class="off-note">No adverts, nothing costs money. Fifteen seconds each.</p>
       ${rows}
       <button class="offrow ${ins ? 'done' : 'sink'}" data-off="insure" ${ins ? 'disabled' : ''}>
         <span class="off-ic">${icon('streak')}</span>
@@ -7760,8 +8264,7 @@ const UI = (() => {
   function showReflectOffer() {
     const box = el('div');
     box.innerHTML = `<h3>${icon('scroll')} One honest line</h3>
-      <p class="subtle" style="text-align:center">What was practice actually like today?
-        Bad days count — write it anyway.</p>
+      <p class="subtle" style="text-align:center">How did practice actually go? Bad days count.</p>
       <textarea class="reflect-in" rows="3" maxlength="120"
         placeholder="Fumbled the same bar ten times, got it on the eleventh."></textarea>
       <div class="mrow"></div>`;
@@ -8269,6 +8772,10 @@ const UI = (() => {
     } else if (vfx) VFX.cast(vfx, p.x, p.y, crit ? 1.5 : 1);
     else VFX.hit(p.x, p.y, 'metal', crit);
     if (crit) VFX.kick(3, 130);
+    // a comic hit is a shape, not just a number — but only on the hits that
+    // deserve one, or the scene turns into a wall of onomatopoeia
+    if (crit) powBurst(p.x, p.y - 10, null, '#ffd76a');
+    else if (label && Math.random() < 0.35) powBurst(p.x, p.y - 10, null, '#7fe0ff');
     if (label) skillFlash(label, false);
   }
 
@@ -8400,7 +8907,7 @@ const UI = (() => {
     if (state.length) {
       const head = el('div', 'cd-head');
       head.innerHTML = `<i class="ico ico-sword"></i> Skills
-        <span class="cd-note">fire automatically when ready</span>`;
+        <span class="cd-note">auto-fire when ready</span>`;
       strip.appendChild(head);
     }
     for (const p of state) {
@@ -8417,12 +8924,17 @@ const UI = (() => {
         const row = el('div', 'cdrow');
         const art = sk.moveIdx != null ? moveIcon(sk.type, sk.moveIdx)
                                        : skillIcon(sk.type || 'Ultimate', p.cid + sk.name);
+        const n = skillNumbers(p.cid, sk);
         row.innerHTML = `${art}<span class="cdname">${sk.name}</span>` +
+          `<span class="cdhit">${fmt(n.hit)}</span>` +
           `<span class="cdmeter"><i></i></span>`;
+        row.title = `${sk.name} · ${sk.type} · ${sk.cd}s`;
         bars.appendChild(row);
         meters.push(row.querySelector('.cdmeter'));
       });
       card.appendChild(bars);
+      // tapping a fighter's card opens its full sheet, from the fight itself
+      card.onclick = () => showCreature(p.cid);
       strip.appendChild(card);
       cdCards.push({ cid: p.cid, meters });
     }
@@ -9020,6 +9532,58 @@ const UI = (() => {
   }
 
   /* ================= creature detail ================= */
+
+  /* What a skill is actually worth, in the numbers the battle uses.
+     memberDps() without a target is atk * (1 + spd/40); a skill lands that
+     times its power. Shown against a neutral defender, because the real
+     multiplier depends on who is standing in front of you. */
+  function skillNumbers(cid, sk) {
+    const st = beastStats(cid);
+    const base = st.atk * (1 + st.spd / 40);
+    const hit = Math.round(base * sk.power);
+    return { hit, dps: Math.round(hit / (sk.cd || 1)) };
+  }
+  function matchup(type) {
+    const row = TYPE_CHART[type] || {};
+    const up = Object.keys(row).filter(k => row[k] > 1);
+    const down = Object.keys(row).filter(k => row[k] < 1);
+    if (!up.length && !down.length) return '';
+    return `<div class="smatch">` +
+      (up.length ? `<span class="mu">+50% vs ${up.map(t => elemIcon(t, 'sm')).join('')}</span>` : '') +
+      (down.length ? `<span class="md">−33% vs ${down.map(t => elemIcon(t, 'sm')).join('')}</span>` : '') +
+      `</div>`;
+  }
+  /* one skill row, with everything a player needs to compare it to the next */
+  function skillCard(cid, sk, o) {
+    o = o || {};
+    const n = o.owned ? skillNumbers(cid, sk) : null;
+    const isMove = sk.moveIdx != null;
+    const art = o.art || (isMove ? moveIcon(sk.type, sk.moveIdx) : skillIcon(sk.type, cid + sk.name));
+    const col = TYPE_COLORS[sk.type] || '#8a93bb';
+    const locked = sk.unlockLv && o.lvl < sk.unlockLv;
+    const tags = [
+      `<span class="stag" style="background:${hexAlpha(col, .22)};color:${col}">${elemIcon(sk.type, 'sm')}${sk.type}</span>`,
+      `<span class="stag">${o.aoe ? 'All enemies' : 'Front enemy'}</span>`,
+      `<span class="stag">${sk.cd ? sk.cd + 's' : '100% charge'}</span>`,
+      o.kind ? `<span class="stag ${o.kindCls || ''}">${o.kind}</span>` : '',
+    ].join('');
+    const bar = Math.max(6, Math.min(100, Math.round(sk.power / 7 * 100)));
+    return `
+    <div class="skillrow ${isMove ? 'moverow' : ''} ${o.cls || ''} ${locked ? 'locked-move' : ''}">
+      <div class="sicon" style="background:${hexAlpha(col, .16)}">${art}</div>
+      <div class="sbody">
+        <div class="sname">${sk.name}${locked ? `<span class="mvtag lock">LV.${sk.unlockLv}</span>` : ''}</div>
+        <div class="sdesc">${sk.desc}</div>
+        <div class="stags">${tags}</div>
+        <div class="spow"><i style="width:${bar}%;background:${col}"></i>
+          <span>${Math.round(sk.power * 100)}% power</span></div>
+        ${n ? `<div class="snums"><span>Hit <b>${fmt(n.hit)}</b></span>
+          ${sk.cd ? `<span>≈<b>${fmt(n.dps)}</b>/s</span>` : ''}</div>` : ''}
+        ${matchup(sk.type)}
+      </div>
+    </div>`;
+  }
+
   function showCreature(cid) {
     const c = C_BY_ID[cid];
     const owned = !!S.beasts[cid];
@@ -9039,37 +9603,26 @@ const UI = (() => {
       }).join('') + '</div>';
     }
 
-    const skills = kit.skills.map(sk => {
-      const isMove = sk.moveIdx != null;
-      const lockedMv = sk.unlockLv && lvl < sk.unlockLv;
-      const art = isMove ? moveIcon(sk.type, sk.moveIdx) : skillIcon(sk.type, cid + sk.name);
-      return `
-      <div class="skillrow ${isMove ? 'moverow' : ''} ${lockedMv ? 'locked-move' : ''}">
-        <div class="sicon" style="background:${hexAlpha(TYPE_COLORS[sk.type] || '#666', .16)}">${art}</div>
-        <div><div class="sname">${sk.name}${isMove ? ' <span class="mvtag">MOVE</span>' : ''}</div>
-        <div class="sdesc">${sk.desc}</div>
-        <div class="smeta">${Math.round(sk.power * 100)}% power · ${sk.cd}s cooldown ·
-          ${lockedMv ? `unlocks at Lv.${sk.unlockLv}` : sk.type}</div></div>
-      </div>`;
-    }).join('');
+    const skills = kit.skills.map((sk, i) => skillCard(cid, sk, {
+      owned, lvl,
+      kind: sk.moveIdx != null ? 'Signature' : i === 0 ? 'Quick' : 'Heavy',
+      kindCls: sk.moveIdx != null ? 'sig' : '',
+    })).join('');
 
     let graftHtml = '';
     if (owned && inst.graft && C_BY_ID[inst.graft]) {
       const g = Lore.kit(inst.graft).skills[1];
-      graftHtml = `<div class="skillrow graftrow">
-        <div class="sicon" style="background:${hexAlpha(TYPE_COLORS[g.type] || '#666', .16)}">${skillIcon(g.type, cid + g.name)}</div>
-        <div><div class="sname">${g.name} <span class="subtle">(grafted)</span></div>
-        <div class="sdesc">Lab-grafted from ${C_BY_ID[inst.graft].name}.</div>
-        <div class="smeta">${Math.round(g.power * 100)}% power · ${(g.cd * 1.4).toFixed(1)}s cooldown</div></div>
-      </div>`;
+      graftHtml = skillCard(cid, { ...g, cd: +(g.cd * 1.4).toFixed(1),
+        desc: `Grafted from ${C_BY_ID[inst.graft].name}.` },
+        { owned, lvl, kind: 'Grafted', cls: 'graftrow',
+          art: skillIcon(g.type, cid + g.name) });
     }
 
     const u = kit.ult;
-    const ultHtml = `<div class="skillrow ultrow">
-      <div class="sicon" style="background:${hexAlpha(TYPE_COLORS[u.type] || '#666', .16)}">${skillIcon('Ultimate', cid + u.name)}</div>
-      <div><div class="sname">${u.name}</div><div class="sdesc">${u.desc}</div>
-      <div class="smeta">${Math.round(u.power * 100)}% power · hits every enemy at 100% charge</div></div>
-    </div>`;
+    const ultHtml = skillCard(cid, { ...u, cd: 0, desc: u.desc }, {
+      owned, lvl, aoe: true, kind: 'Ultimate', kindCls: 'sig', cls: 'ultrow',
+      art: skillIcon('Ultimate', cid + u.name),
+    });
 
     const passes = kit.passives.map(p => {
       const on = lvl >= p.level;
@@ -9791,7 +10344,7 @@ const UI = (() => {
         <svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="52"/><circle class="fill" cx="60" cy="60" r="52" stroke-dasharray="326.7" /></svg>
         <div class="timer-mid"><b id="tm-left">--:--</b><span>keep going!</span></div>
       </div>
-      <p class="subtle">Stay with it — your beasts believe in you.<br>The timer keeps running if you close the app.</p>
+      <p class="subtle">The timer keeps running if you close the app.</p>
       <div class="mrow"></div>`;
     const row = box.querySelector('.mrow');
     const give = el('button', 'pixbtn ghost sm', 'Abandon');
@@ -9915,12 +10468,9 @@ const UI = (() => {
     function drawIntro() {
       box.innerHTML = steps() + `
         <h2>Hourling</h2>
-        <p>There is something you have always meant to get good at.<br>
-        This is the app that actually makes you do it.</p>
-        <p style="margin-top:10px">You will pick one dream. Every day it gives you
-        <b>one concrete task</b> and a real timer. The minutes you actually put in
-        are the only currency in the game — they hatch beasts, grow your garden
-        and win your battles.</p>
+        <p>Pick one thing you've always meant to get good at.</p>
+        <p style="margin-top:10px">You get <b>one task a day</b> and a real timer.
+        The minutes you put in are the only currency here.</p>
         <p style="margin-top:10px;color:var(--gold)">Six quick questions.</p>`;
       nav('Let\'s go', true, () => { step = 1; draw(); });
     }
@@ -10144,6 +10694,17 @@ const UI = (() => {
     const box = el('div', 'arena');
     openModal(box);
     renderArena();
+    // Vale introduces the place once, and only once
+    if (!S.settings.metArena) {
+      S.settings.metArena = true;
+      save();
+      Dialog.say([
+        { text: 'The Arena. Everyone here is a real team someone sent you.', mood: 'up',
+          choices: [{ label: 'How do I get rivals?' }, { label: 'Got it', end: true }] },
+        { text: 'Swap codes with a friend. Their party fights exactly as they left it.',
+          mood: 'think' },
+      ]);
+    }
   }
 
   function renderArena() {
@@ -10164,9 +10725,8 @@ const UI = (() => {
         </div>
       </div>
 
-      <p class="ar-honest">No server, so no live matchmaking: you trade
-        <b>rival codes</b> with friends and fight the team their code carries.
-        Everyone else here is a challenger this app generates.</p>
+      <p class="ar-honest">No server here, so no live matchmaking. Trade
+        <b>rival codes</b> to fight a friend's real team. The rest are generated.</p>
 
       <div class="acc-btns">
         <button class="pixbtn sm" data-ar="mycode">Copy my rival code</button>
@@ -10183,8 +10743,7 @@ const UI = (() => {
           <button class="pixbtn ghost sm" data-ar="tquit">Withdraw</button></div>
       </div>` : `<div class="ar-sec">
         <div class="acc-h">Tournament</div>
-        <p class="acc-note">Eight entrants, three rounds, one winner. Placing pays
-          gems whether or not you take it.</p>
+        <p class="acc-note">Eight entrants, three rounds. Every placing pays gems.</p>
         <div class="acc-btns"><button class="pixbtn gold sm" data-ar="tstart"><b>Enter tournament</b></button></div>
       </div>`}
 
@@ -10377,10 +10936,9 @@ const UI = (() => {
                </ol>
                <input class="acc-in" type="text" placeholder="…apps.googleusercontent.com" value="">
                <div class="acc-btns"><button class="pixbtn sm" data-act="setcid">Save client ID</button></div>`}`}
-        <p class="acc-note warn">Being straight with you: with no server behind
-          this app, signing in proves nothing and syncs nothing. It can show
-          your name, and that is all — your save still lives in this browser.
-          Real cross-device sync needs a backend this app does not have.</p>
+        <p class="acc-note warn">No server behind this app: signing in shows your
+          name and nothing else. Your save stays in this browser — use a backup
+          code to move it.</p>
       </div>`;
 
     $$('#modal-root [data-prof]', box).forEach(b => {

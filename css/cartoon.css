@@ -1,0 +1,261 @@
+/* ============ the cartoon layer ============
+
+   Loaded last, on purpose. Everything here is presentation: a hand-inked
+   outline around every sprite, squash-and-stretch instead of stepped bobbing,
+   overshoot on anything that appears, and the comic-panel furniture (impact
+   bursts, the speech bubble) that makes the game read as drawn rather than
+   generated.
+
+   The outline is four 1px drop-shadows rather than an SVG stroke, because it
+   costs nothing, follows the alpha exactly, and survives any scale.        */
+
+:root {
+  --toon-ink: #0a0d1c;
+  --toon-line: 1.4px;
+  --toon-line-big: 2px;
+}
+
+/* ---- inked sprites ---- */
+.toon-ink,
+.foe img, .fighter img, #hero-beast, .sring-beast,
+.dexcard img, .cimg-wrap img, .evostep img, .pslot img,
+.cdcard > img, .sb-party img, .sb-foe img,
+.ts-beast img, .dlg-port img, .tut-sprite, .wish-beast img {
+  filter:
+    drop-shadow(var(--toon-line) 0 0 var(--toon-ink))
+    drop-shadow(calc(var(--toon-line) * -1) 0 0 var(--toon-ink))
+    drop-shadow(0 var(--toon-line) 0 var(--toon-ink))
+    drop-shadow(0 calc(var(--toon-line) * -1) 0 var(--toon-ink));
+}
+/* the two biggest sprites carry a heavier line and a cast shadow */
+#hero-beast, .cimg-wrap img, .ts-beast img, .wish-beast img {
+  --toon-line: var(--toon-line-big);
+}
+.foe img, .fighter img {
+  filter:
+    drop-shadow(var(--toon-line) 0 0 var(--toon-ink))
+    drop-shadow(calc(var(--toon-line) * -1) 0 0 var(--toon-ink))
+    drop-shadow(0 var(--toon-line) 0 var(--toon-ink))
+    drop-shadow(0 calc(var(--toon-line) * -1) 0 var(--toon-ink))
+    drop-shadow(0 5px 1px rgba(0,0,0,.34));
+}
+
+/* ---- squash and stretch ---- */
+/* a stepped bob reads as a sprite sheet; a cartoon breathes and lands soft */
+.foe img { animation: toonbob 2.2s cubic-bezier(.45,0,.55,1) infinite; }
+@keyframes toonbob {
+  0%,100% { transform: translateY(0)    scale(1.03, .97); }
+  45%     { transform: translateY(-7px) scale(.97, 1.04); }
+  70%     { transform: translateY(0)    scale(1.05, .95); }
+}
+.fighter img { animation: toonpbob 2.4s cubic-bezier(.45,0,.55,1) infinite; }
+@keyframes toonpbob {
+  0%,100% { transform: scaleX(-1) translateY(0)    scale(1.03, .97); }
+  45%     { transform: scaleX(-1) translateY(-6px) scale(.97, 1.04); }
+  70%     { transform: scaleX(-1) translateY(0)    scale(1.05, .95); }
+}
+/* the party is not a chorus line — stagger it */
+.fighter:nth-child(2) img { animation-delay: -.5s; }
+.fighter:nth-child(3) img { animation-delay: -1.1s; }
+.fighter:nth-child(4) img { animation-delay: -1.7s; }
+.foe:nth-child(2) img { animation-delay: -.7s; }
+.foe:nth-child(3) img { animation-delay: -1.4s; }
+
+.fighter.striking img { animation: toonstrike .26s var(--pop); }
+@keyframes toonstrike {
+  0%   { transform: scaleX(-1) rotate(-18deg) translate(-8px,-2px) scale(.9, 1.12); }
+  55%  { transform: scaleX(-1) rotate(12deg) translate(10px, 3px) scale(1.16, .86); }
+  100% { transform: scaleX(-1); }
+}
+.foe.lunging img { animation: toonlunge .42s var(--pop); }
+@keyframes toonlunge {
+  40% { transform: translate(-20px, 4px) rotate(-8deg) scale(1.12, .88); }
+}
+#hero-beast { animation: toonbob 3s cubic-bezier(.45,0,.55,1) infinite; }
+
+/* ---- impact ---- */
+/* a comic hit is a shape, not a flash: a spiked burst behind the word */
+.pow {
+  position: absolute; z-index: 8; pointer-events: none;
+  display: grid; place-items: center;
+  width: 62px; height: 62px; margin: -31px 0 0 -31px;
+  animation: powpop .42s var(--pop) forwards;
+}
+.pow::before {
+  content: ''; position: absolute; inset: 0;
+  background: var(--pow-c, #ffd76a);
+  clip-path: polygon(50% 0, 61% 33%, 95% 12%, 76% 44%, 100% 55%, 70% 65%,
+                     84% 95%, 53% 76%, 33% 100%, 33% 70%, 3% 76%, 24% 51%,
+                     0 33%, 30% 34%, 22% 4%, 45% 26%);
+  filter: drop-shadow(2px 2px 0 var(--toon-ink)) drop-shadow(-2px 0 0 var(--toon-ink))
+          drop-shadow(0 -2px 0 var(--toon-ink));
+}
+.pow b {
+  position: relative; font-family: var(--display); font-size: 17px;
+  color: #1a1206; letter-spacing: .5px; transform: rotate(-9deg);
+}
+@keyframes powpop {
+  0%   { transform: scale(.2) rotate(-24deg); opacity: 0; }
+  45%  { transform: scale(1.12) rotate(6deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 0; }
+}
+
+/* speed lines behind a charging fighter */
+.fighter.charging::after {
+  content: ''; position: absolute; right: 100%; top: 30%;
+  width: 46px; height: 40%;
+  background: repeating-linear-gradient(
+    to bottom, rgba(255,255,255,.45) 0 2px, transparent 2px 8px);
+  -webkit-mask-image: linear-gradient(to left, #000, transparent);
+  mask-image: linear-gradient(to left, #000, transparent);
+}
+
+/* ---- arrival ---- */
+/* things that appear should land, not fade */
+.card, .cdcard, .dexcard { animation: toonland .3s var(--pop) both; }
+@keyframes toonland {
+  from { transform: translateY(9px) scale(.985); opacity: 0; }
+}
+.pixbtn { transition: transform .1s var(--pop), filter .12s linear; }
+.pixbtn:active { transform: translateY(4px) scale(1.05, .93); }
+.pixbtn.primary:not(:disabled), .pixbtn.gold:not(:disabled) { animation: toonsit .5s var(--pop) both; }
+@keyframes toonsit { from { transform: scale(.9, 1.08); } }
+
+/* a counter that just changed says so */
+.hud-chip b.bumped { animation: countbump .34s var(--pop); display: inline-block; }
+@keyframes countbump {
+  0%   { transform: scale(1.45, .8); }
+  45%  { transform: scale(.92, 1.12); }
+  100% { transform: scale(1); }
+}
+
+/* tabs land instead of fading */
+.tab.active { animation: tabland .26s var(--pop) !important; }
+@keyframes tabland { from { opacity: .2; transform: translateY(10px) scale(.99); } }
+#tabbar button.active .ico { animation: tabpop .3s var(--pop); }
+@keyframes tabpop {
+  0% { transform: translateY(2px) scale(.8); }
+  55% { transform: translateY(-4px) scale(1.18); }
+  100% { transform: translateY(-2px) scale(1); }
+}
+
+/* ---- the scene reads as a drawn panel ---- */
+#scene::after {                       /* halftone, the way print shading works */
+  content: ''; position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  background-image: radial-gradient(rgba(0,0,0,.22) 32%, transparent 33%);
+  background-size: 5px 5px;
+  -webkit-mask-image: radial-gradient(120% 90% at 50% 30%, transparent 45%, #000);
+  mask-image: radial-gradient(120% 90% at 50% 30%, transparent 45%, #000);
+  opacity: .32;
+}
+
+/* ============ the speech box ============ */
+/* above modals (100) and the tutorial veil (320): a character talking to you
+   is always the front-most thing on screen */
+.dlg-root {
+  position: fixed; inset: 0; z-index: 340;
+  display: flex; align-items: flex-end; justify-content: center;
+  padding: 0 8px calc(18px + env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+.dlg-root .dlg-veil { position: absolute; inset: 0; background: transparent; }
+.dlg-root.veiled .dlg-veil { background: rgba(6,9,20,.62); pointer-events: auto; }
+.dlg-box {
+  position: relative; pointer-events: auto; cursor: pointer;
+  width: 100%; max-width: 480px;
+  display: flex; align-items: flex-end; gap: 4px;
+  transform: translateY(28px); opacity: 0;
+  transition: transform .3s var(--pop), opacity .2s linear;
+}
+.dlg-root.in .dlg-box { transform: none; opacity: 1; }
+.dlg-root.out .dlg-box { transform: translateY(24px); opacity: 0; }
+
+.dlg-port { flex: none; width: 96px; align-self: flex-end; }
+@media (max-width: 360px) { .dlg-port { width: 74px; } }
+.dlg-port img { width: 100%; display: block; transform-origin: 50% 100%; }
+.dlg-port.bump img { animation: portbump .34s var(--pop); }
+@keyframes portbump {
+  0% { transform: scale(1.1, .9) translateY(4px); }
+  55% { transform: scale(.96, 1.06) translateY(-4px); }
+}
+/* the portrait leans into what it is saying */
+.dlg-port[data-mood="up"]    img { transform: rotate(-4deg) translateY(-3px); }
+.dlg-port[data-mood="think"] img { transform: rotate(3deg) scale(.97); }
+.dlg-port[data-mood="cheer"] img { transform: rotate(-7deg) scale(1.05); }
+
+.dlg-bubble {
+  position: relative; flex: 1; min-width: 0;
+  background: #fbf6ea; color: #1b1a24;
+  border: var(--toon-line-big) solid var(--toon-ink);
+  border-radius: 14px;
+  box-shadow: 0 5px 0 rgba(0,0,0,.45);
+  padding: 9px 12px 10px;
+}
+.dlg-tail {
+  position: absolute; left: -11px; bottom: 15px;
+  width: 0; height: 0;
+  border: 9px solid transparent;
+  border-right-color: var(--toon-ink);
+}
+.dlg-tail::after {
+  content: ''; position: absolute; left: -6px; top: -7px;
+  border: 7px solid transparent; border-right-color: #fbf6ea;
+}
+.dlg-name {
+  font-family: var(--display); font-size: var(--fs-label);
+  letter-spacing: 1.2px; text-transform: uppercase; color: #8a5a12;
+}
+.dlg-text {
+  font-size: var(--fs-body); line-height: 1.5; min-height: 2.9em;
+  color: #1b1a24;
+}
+.dlg-more { display: none; justify-content: flex-end; gap: 3px; margin-top: 2px; }
+.dlg-more.on { display: flex; }
+.dlg-more i {
+  width: 5px; height: 5px; background: #8a5a12; border-radius: 50%;
+  animation: moredot 1s infinite;
+}
+.dlg-more i:nth-child(2) { animation-delay: .15s; }
+.dlg-more i:nth-child(3) { animation-delay: .3s; }
+@keyframes moredot { 50% { transform: translateY(-4px); opacity: .5; } }
+
+.dlg-choices { display: none; flex-direction: column; gap: 5px; margin-top: 7px; }
+.dlg-choices.on { display: flex; }
+.dlg-choice {
+  font: inherit; font-size: var(--fs-meta); text-align: left; cursor: pointer;
+  background: #fff; color: #1b1a24;
+  border: var(--toon-line-big) solid var(--toon-ink);
+  border-radius: 10px; padding: 8px 11px;
+  min-height: 40px;
+  box-shadow: 0 3px 0 var(--toon-ink);
+  animation: toonland .26s var(--pop) both;
+}
+.dlg-choice:active { transform: translateY(3px); box-shadow: 0 0 0 var(--toon-ink); }
+
+/* ---- the guide reuses the same bubble ---- */
+.tut-prof .tut-bubble {
+  background: #fbf6ea; color: #1b1a24;
+  border: var(--toon-line-big) solid var(--toon-ink);
+  border-radius: 14px;
+  box-shadow: 0 5px 0 rgba(0,0,0,.45);
+}
+.tut-prof .tut-bubble { outline: 0; }
+.tut-prof .tut-bubble::after { display: none; }     /* the dark tail it used to draw */
+.tut-prof .tut-name { color: #8a5a12; }
+.tut-prof .tut-text { color: #1b1a24; min-height: 3em; }
+.tut-prof .tut-skip { color: #6a6376; }
+.tut-prof .dlg-tail { bottom: 24px; }
+.tut-sprite {
+  transform-origin: 50% 100%;
+  animation: toonbob 2.6s cubic-bezier(.45,0,.55,1) infinite;
+  transition: transform .3s var(--pop);
+}
+.tut-prof[data-mood="up"]    .tut-sprite { animation: toonbob 1.9s cubic-bezier(.45,0,.55,1) infinite; }
+.tut-prof[data-mood="think"] .tut-sprite { animation: none; transform: rotate(4deg) scale(.96); }
+.tut-prof[data-mood="cheer"] .tut-sprite { animation: toonbob 1.3s cubic-bezier(.45,0,.55,1) infinite; }
+.tut-prof .dlg-choices { margin-top: 8px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .foe img, .fighter img, #hero-beast { animation: none; }
+  .card, .cdcard, .dexcard, .pixbtn.primary, .pixbtn.gold, .dlg-choice { animation: none; }
+}
