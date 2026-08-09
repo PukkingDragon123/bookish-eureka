@@ -72,8 +72,56 @@ const UI = (() => {
     renderRhythm();
     renderTodayQuests();
     renderChallengeInto($('#today-challenge'));
+    renderPromo();
     renderOffers();
     renderJournal();
+  }
+
+
+  /* The promo strip sits where a mobile game would run a banner ad. It only
+     ever advertises this app's own features, and it says so — there is no ad
+     network here and nothing on it costs money. It rotates to whatever is
+     actually worth your attention right now. */
+  function renderPromo() {
+    const w = $('#promo-strip');
+    if (!w) return;
+    const cards = [];
+    const t = Arena.tourney();
+    if (t && !t.done) {
+      cards.push({ icon: 'sword', kind: 'arena', title: `Tournament · round ${t.round + 1}`,
+                   sub: 'Your bracket is waiting', cta: 'Fight' });
+    } else if (Arena.fightsLeft() > 0) {
+      cards.push({ icon: 'sword', kind: 'arena', title: 'Arena is open',
+                   sub: `${Arena.fightsLeft()} duels left today`, cta: 'Enter' });
+    }
+    if (!S.challenge.done) {
+      cards.push({ icon: 'star', kind: 'quests', title: "Today's challenge",
+                   sub: 'One odd task, paid in gems', cta: 'See it' });
+    }
+    if (Offers.readyCount() > 0) {
+      cards.push({ icon: 'chest', kind: 'offers', title: 'Free rewards ready',
+                   sub: `${Offers.readyCount()} waiting`, cta: 'Collect' });
+    }
+    if (S.merge.energy >= Merge.energyMax()) {
+      cards.push({ icon: 'portal', kind: 'battle', title: 'Forge wheel is full',
+                   sub: 'Spend the charges before they cap', cta: 'Open' });
+    }
+    if (!cards.length) { w.innerHTML = ''; return; }
+    const c = cards[Math.floor(Date.now() / 20000) % cards.length];
+    w.innerHTML = `
+      <button class="promo" data-go="${c.kind}">
+        <span class="promo-tag">from Hourling</span>
+        <span class="promo-ic">${icon(c.icon)}</span>
+        <span class="promo-txt"><b>${c.title}</b><span>${c.sub}</span></span>
+        <span class="promo-cta">${c.cta}</span>
+      </button>`;
+    w.querySelector('.promo').onclick = () => {
+      Sound.click();
+      if (c.kind === 'arena') { switchTab('battle'); showArena(); }
+      else if (c.kind === 'offers') { const o = $('#offers-card'); if (o) o.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+      else if (c.kind === 'battle') { switchTab('battle'); S.settings.panels.fusion = true; renderMerge(); }
+      else switchTab(c.kind);
+    };
   }
 
   /* ================= free rewards (in-app offers) ================= */
@@ -2169,7 +2217,7 @@ const UI = (() => {
   function showTimerStart(def) {
     const box = el('div', 'timer-wrap');
     box.innerHTML = `<h3>${icon(def.icon)} ${def.name}</h3>
-      <p class="subtle">Pick a duration — the timer runs in real time.<br>${def.boost ? 'Completing it grants <b style="color:var(--gold)">x3 idle rewards</b> for twice the duration!' : 'Minutes become mana & essence, and water the garden.'}</p>
+      <p class="subtle">Pick a duration — the timer runs in real time.<br>${def.boost ? 'Completing it grants <b style="color:var(--gold)">x3 idle rewards</b> for twice the duration!' : 'Minutes become mana and essence, and water the garden.'}</p>
       <div class="preset-row"></div>
       <div class="mrow"></div>`;
     const row = box.querySelector('.preset-row');
@@ -2877,13 +2925,12 @@ const UI = (() => {
     plan.onclick = () => { closeAllModals(); showPlanEditor(); };
     row.appendChild(plan);
     const reset = el('button', 'pixbtn ghost sm', 'Reset all progress');
-    reset.onclick = () => { if (confirm('Really erase your entire journey? This cannot be undone.')) hardReset(); };
+    reset.onclick = () => { if (confirm('Erase this profile and start over? This cannot be undone.')) hardReset(); };
     row.appendChild(reset);
     const about = el('p', 'subtle');
     about.style.textAlign = 'center';
     about.style.marginTop = '10px';
-    about.innerHTML = 'Hourling — the hours you really put in power a whole world.<br>' +
-      'Be kind to yourself. Missing a day is part of the journey.';
+    about.innerHTML = 'Hourling v5<br>Missing a day is fine. Missing two is the thing to watch.';
     box.appendChild(about);
     openModal(box);
   }
@@ -3014,7 +3061,7 @@ const UI = (() => {
     showDefeat, hideDefeat, showEncounter, renderQuestLog, renderUpgrades,
     renderCooldowns, tickCooldowns, renderPanels, togglePanel,
     renderMerge, mergeSpawnFx, mergeFuseFx, showMap,
-    renderOffers, showTipCard, showReflectOffer,
+    renderOffers, renderPromo, showTipCard, showReflectOffer,
     showAccount, renderAccount, showArena, renderArena,
     renderBeasts, renderCollection, showCreature, showFeedPicker,
     renderFarm, waterGarden, showMealModal, showKcalTargetModal, renderFood,

@@ -30,7 +30,6 @@
   /* ---- first-run vs returning ---- */
   if (!hadSave || !S.dream || !S.dream.key) {
     UI.renderSceneBg();
-    UI.showOnboarding();
   } else {
     Quests.generateToday();
     Habits.resetMealsIfNewDay();
@@ -51,8 +50,13 @@
     }
   }
   UI.renderAll();
-  PWA.hideBoot();
-  if (hadSave && S.dream && S.dream.key) Tutor.maybeStart();
+
+  /* loading screen, then the title. Only once the player taps through does
+     the first-run flow (onboarding or the professor) begin. */
+  Title.boot(() => {
+    if (!hadSave || !S.dream || !S.dream.key) UI.showOnboarding();
+    else Tutor.maybeStart();
+  });
 
   /* ---- loops ---- */
   setInterval(() => Battle.tick(), Battle.TICK_MS);
