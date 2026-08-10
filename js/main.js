@@ -42,16 +42,15 @@
     if (S.exTimer && Habits.timerRemaining() <= 0) Habits.finishTimer();
     if (S.session) UI.openSessionOverlay();
     const away = (Date.now() - S.lastSeen) / 1000;
-    const firstRun = !Tutor.done();
     if (away > 90 && S.party.length > 0) {
       const idleCap = 12 * 3600 * (1 + relicBonusStat('idle'));
       const gains = Battle.offlineGains(Math.min(away, idleCap));
       const mult = rewardMult();
       gains.gold *= mult; gains.xp *= mult;
       // a first-time player meets the professor before anything else pops up
-      if (gains.kills > 0 && !firstRun) greet = () => UI.showWelcomeBack(away, gains);
-      else if (!firstRun) greet = UI.maybeShowLogin;
-    } else if (!firstRun) {
+      if (gains.kills > 0) greet = () => UI.showWelcomeBack(away, gains);
+      else greet = UI.maybeShowLogin;
+    } else {
       greet = UI.maybeShowLogin;
     }
   }
@@ -60,7 +59,6 @@
   /* loading, then sign-in if it is owed, then the game. No main menu. */
   Title.boot(() => {
     if (fresh) return UI.showOnboarding();
-    Tutor.maybeStart();
     if (greet) setTimeout(greet, 500);
   });
 

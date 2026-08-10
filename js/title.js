@@ -127,13 +127,19 @@ const Title = (() => {
     const root = el('div', 'signin');
     const profs = Account.profiles();
     const paid = !!(S.settings && S.settings.signinPaid);
+    // scene on top (art, wordmark, Vale standing on the ground), controls in a
+    // framed panel at the bottom — the shape every phone game's title uses
     root.innerHTML = `
       <div class="si-sky"></div>
+      <div class="si-scene">
+        <div class="si-logo">
+          <h1>Hourling</h1>
+          <p class="si-sub">${paid ? 'Sign back in, or carry on.' : 'Sign in and claim your welcome gems'}</p>
+        </div>
+        <img class="si-vale" src="${assetUrl('assets/ui/npc.png')}" alt="">
+        <img class="si-beast" src="${assetUrl(beastFile())}" alt="">
+      </div>
       <div class="si-card">
-        <img class="si-mark" src="${assetUrl('assets/ui/app-192.png')}" alt="">
-        <h1>Hourling</h1>
-        <p class="si-sub">${paid ? 'Sign back in, or carry on.' : 'Sign in to claim your welcome gems.'}</p>
-
         ${paid ? '' : `<div class="si-reward">${icon('gem')}<b>${SIGNIN_GEMS}</b><span>welcome bonus</span></div>`}
 
         <div class="si-google"></div>

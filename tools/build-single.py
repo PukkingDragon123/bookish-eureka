@@ -109,19 +109,31 @@ def main():
     # has to travel inline too — the published page may not fetch anything.
     ui_cache = {}
 
+    MIME = {'.png': 'image/png', '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg', '.gif': 'image/gif'}
+
     def inline_css_url(m):
         rel = m.group(1)
         path = os.path.normpath(os.path.join(ROOT, 'css', rel))
         if path not in ui_cache:
-            with open(path, 'rb') as fh:
-                ui_cache[path] = data_uri(fh.read(), 'image/png')
+            ext = os.path.splitext(path)[1].lower()
+            # background plates are huge at source size; the same shrink the
+            # scene backgrounds get applies here, so the login/loading screens
+            # cost a few tens of KB rather than a few hundred
+            if '/assets/bg/' in path.replace(os.sep, '/'):
+                raw, mime = shrink_bg(path)
+            else:
+                with open(path, 'rb') as fh:
+                    raw = fh.read()
+                mime = MIME.get(ext, 'image/png')
+            ui_cache[path] = data_uri(raw, mime)
         return 'url(' + ui_cache[path] + ')'
 
     total_css = 0
     css_parts = []
     for href in sheets:
         text = open(os.path.join(ROOT, href)).read()
-        text = re.sub(r'url\((\.\./assets/[^)]+\.png)\)', inline_css_url, text)
+        text = re.sub(r'url\((\.\./assets/[^)]+\.(?:png|jpe?g|gif))\)', inline_css_url, text)
         total_css += len(text)
         css_parts.append(text)
     # guard: a sheet inlined many times means its url() is repeated across keyed

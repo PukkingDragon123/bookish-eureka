@@ -20,15 +20,15 @@
 .foe img, .fighter img, #hero-beast, .sring-beast,
 .dexcard img, .cimg-wrap img, .evostep img, .pslot img,
 .cdcard > img, .sb-party img, .sb-foe img,
-.dlg-port img, .tut-sprite, .wish-beast img {
+.dlg-port img, .tk-prof, .wish-beast img {
   filter:
     drop-shadow(var(--toon-line) 0 0 var(--toon-ink))
     drop-shadow(calc(var(--toon-line) * -1) 0 0 var(--toon-ink))
     drop-shadow(0 var(--toon-line) 0 var(--toon-ink))
     drop-shadow(0 calc(var(--toon-line) * -1) 0 var(--toon-ink));
 }
-/* the two biggest sprites carry a heavier line and a cast shadow */
-#hero-beast, .cimg-wrap img, .wish-beast img {
+/* the biggest sprites carry a heavier line */
+#hero-beast, .cimg-wrap img, .wish-beast img, .boot-beast, .si-vale {
   --toon-line: var(--toon-line-big);
 }
 .foe img, .fighter img {
@@ -270,35 +270,6 @@
 .dlg-choice:active { background: var(--bg3); }
 
 /* ---- the guide reuses the same window ---- */
-.tut-prof .tut-bubble {
-  background: var(--bg1); color: var(--txt);
-  border: var(--px) solid var(--ink);
-  outline: var(--px) solid var(--parch);
-  outline-offset: calc(var(--px) * -2);
-  border-radius: 0;
-  box-shadow: 0 4px 0 var(--ink), 0 10px 24px rgba(0,0,0,.55);
-  margin-top: 9px;
-}
-.tut-prof .tut-bubble::after { display: none; }   /* the old soft tail */
-.tut-prof .tut-name {
-  position: absolute; top: -11px; left: 8px; margin: 0;
-  background: var(--gold); color: #2e1e02;
-  font-family: var(--display); font-size: var(--fs-label); font-weight: 700;
-  letter-spacing: .08em; text-transform: uppercase;
-  padding: 1px 8px;
-  border: var(--px) solid var(--ink);
-  box-shadow: 0 2px 0 var(--ink);
-}
-.tut-prof .tut-text { color: var(--txt); min-height: 3em; margin-top: 4px; }
-.tut-prof .dlg-tail { display: none; }
-.tut-prof .dlg-choices { margin-top: 8px; box-shadow: none; }
-.tut-sprite {
-  transform-origin: 50% 100%;
-  animation: toonbob 2.6s cubic-bezier(.45,0,.55,1) infinite;
-}
-.tut-prof[data-mood="up"]    .tut-sprite { animation-duration: 1.9s; }
-.tut-prof[data-mood="think"] .tut-sprite { animation: none; }
-.tut-prof[data-mood="cheer"] .tut-sprite { animation-duration: 1.3s; }
 
 @media (prefers-reduced-motion: reduce) {
   .foe img, .fighter img, #hero-beast { animation: none; }
@@ -314,9 +285,10 @@
 .banner .btag, .stag, .glyph-plus::before, .glyph-plus::after,
 .loot-chip, #offers-card .off-badge, .offrow, .offrow .off-go, .reflect-in,
 #boot img, .boot-bar, .boot-bar i, .acc-steps code, .accrow, .acc-in,
-.acc-code, #haste-btn, .tut-hole, .ar-rank, .ar-row, .ar-tag, .ar-chip,
-.tr-row, .si-card, .si-mark, .si-reward, .promo, .promo-cta,
-.dlg-box, .dlg-choices, .dlg-name, .tut-bubble, .tut-name, .toast {
+.acc-code, #haste-btn, .ar-rank, .ar-row, .ar-tag, .ar-chip,
+.tr-row, .si-mark, .promo, .promo-cta,
+.dlg-box, .dlg-choices, .dlg-name, .tk-row, .tk-box, .toast,
+.ev-tier, .ev-bar, .ev-ic, .si-reward, .boot-tip {
   border-radius: 0;
 }
 
@@ -354,25 +326,11 @@
 .hud-chip b.bumped { animation: countbump .28s steps(3); }
 #tabbar button.active .ico { animation: tabpop .24s steps(3); }
 
-/* the sign-in card is a panel, not a floating sheet */
-.si-card {
-  background: var(--bg1);
-  background-image: var(--grain);
-  border: var(--px) solid var(--ink);
-  outline: var(--px) solid var(--line);
-  outline-offset: calc(var(--px) * -2);
-  box-shadow: 0 5px 0 var(--ink), 0 14px 34px rgba(0,0,0,.55);
-  animation: sicard .24s steps(4) both;
-}
+/* the sign-in card wears the uploaded 9-slice frame (see style.css); all this
+   layer adds is the entrance, and it must not touch border or background or the
+   border-image is cancelled */
+.si-card { animation: sicard .24s steps(4) both; }
 @keyframes sicard { from { opacity: 0; transform: translateY(10px); } }
-.si-mark {
-  box-shadow: none;
-  border: var(--px) solid var(--ink);
-  outline: var(--px) solid var(--line);
-  outline-offset: calc(var(--px) * -2);
-  image-rendering: pixelated;
-}
-.si-reward { box-shadow: 0 3px 0 var(--ink); }
 .boot-bar { border: var(--px) solid var(--ink); background: #0a0e1c; height: 10px; }
 .boot-bar i { transition: width .2s steps(4); }
 #boot img.boot-beast { border: 0; outline: 0; }

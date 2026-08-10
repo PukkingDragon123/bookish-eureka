@@ -139,6 +139,10 @@ identical every session:
 - **Your dream, planned** — 12 dreams, each with an element affinity, four difficulty tiers
   of concrete focus tasks (60 per dream), and its own 10-name milestone ladder from
   *First Sound* to *Maestro*. The plan is editable any time from the Today hero.
+- **Vale's tasks** — the tutorial is a board, not a tour. Seven starter tasks from
+  Professor Vale, each a real thing to go and do, each paying gems and gold, all ticked
+  off by reading the game's own state rather than by watching you tap. Nothing dims the
+  screen and nothing has to be sat through; finishing the last one pays 100 gems.
 - **Personalized quests** — the daily quest board and the challenge-of-the-day are drawn
   from the tags your dream maps to, so a writer gets different work from a runner.
 - **Weekly events** — one of six events runs at a time and rotates every Monday, chosen by

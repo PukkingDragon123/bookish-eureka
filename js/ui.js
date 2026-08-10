@@ -80,12 +80,55 @@ const UI = (() => {
     renderHero();
     renderFocus();
     renderRhythm();
+    renderTasks();
     renderEvent();
     renderTodayQuests();
     renderChallengeInto($('#today-challenge'));
     renderPromo();
     renderOffers();
     renderJournal();
+  }
+
+  /* ---- Vale's tasks: the tutorial as a claimable board, not a tour ---- */
+  function renderTasks() {
+    const w = $('#tasks-card');
+    if (!w) return;
+    if (Tasks.done()) { w.classList.add('hidden'); w.innerHTML = ''; return; }
+    w.classList.remove('hidden');
+    const claimed = Tasks.state().claimed;
+    const rows = Tasks.LIST.map(t => {
+      const got = claimed.includes(t.key);
+      const ready = !got && t.done();
+      return `<div class="tk-row ${got ? 'got' : ready ? 'ready' : ''}">
+        <span class="tk-box">${got ? icon('star') : icon(t.icon)}</span>
+        <span class="tk-mid">
+          <b>${t.name}</b>
+          <span class="tk-hint">${got ? 'Done' : t.hint}</span>
+          <span class="tk-pay">${Tasks.rewardText(t)}</span>
+        </span>
+        <button class="pixbtn ${ready ? 'gold' : 'ghost'} tiny tk-btn"
+          data-tk="${t.key}" ${got ? 'disabled' : ''}>
+          ${got ? 'Taken' : ready ? '<b>Claim</b>' : 'Show me'}</button>
+      </div>`;
+    }).join('');
+
+    w.innerHTML = `
+      <div class="card-head">${icon('scroll')} Vale's tasks
+        <span class="tk-count">${Tasks.claimedCount()}/${Tasks.LIST.length}</span></div>
+      <div class="tk-intro">
+        <img class="tk-prof" src="${assetUrl('assets/ui/npc.png')}" alt="Professor Vale">
+        <span>Seven things to try. Each one pays, and the last pays
+          ${icon('gem')}100 on top.</span>
+      </div>
+      <div class="tk-list">${rows}</div>`;
+
+    $$('#tasks-card [data-tk]', w).forEach(b => {
+      const t = Tasks.LIST.find(x => x.key === b.dataset.tk);
+      b.onclick = () => {
+        if (t.done() && !Tasks.state().claimed.includes(t.key)) Tasks.claim(t.key, b);
+        else { Sound.click(); t.go(); }
+      };
+    });
   }
 
   /* ---- the week's event: what is running, how long is left, and the track ---- */
@@ -2404,8 +2447,7 @@ const UI = (() => {
   function maybeShowLogin() {
     // never interrupt the professor or the sign-in card: whatever owns the
     // screen keeps it, and this waits its turn
-    if ((typeof Tutor !== 'undefined' && Tutor.isActive()) ||
-        document.querySelector('.signin') || document.getElementById('boot')) {
+    if (document.querySelector('.signin') || document.getElementById('boot')) {
       setTimeout(maybeShowLogin, 1500);
       return;
     }
@@ -2636,8 +2678,8 @@ const UI = (() => {
       renderAll();
       const d = Dream.DREAMS[draft.key];
       toast(`${C_BY_ID[draft.starter].name} joins you. ${d.name} starts today.`, 'gold');
-      // the professor takes it from here — the login sheet can wait
-      setTimeout(() => Tutor.start(false), 900);
+      // Vale's task board is waiting on Today; nothing needs to interrupt
+      renderTasks();
     }
 
     draw();
@@ -3049,9 +3091,13 @@ const UI = (() => {
       save();
     };
     row.appendChild(hap);
-    const tut = el('button', 'pixbtn ghost sm', 'Replay the tutorial');
-    tut.onclick = () => { closeAllModals(); Tutor.start(true); };
-    row.appendChild(tut);
+    if (!Tasks.done()) {
+      const tut = el('button', 'pixbtn ghost sm', "Vale's tasks");
+      tut.onclick = () => { closeAllModals(); switchTab('today');
+        const c = $('#tasks-card');
+        if (c) c.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
+      row.appendChild(tut);
+    }
     const acct = el('button', 'pixbtn ghost sm', 'Account & backup');
     acct.onclick = () => { closeAllModals(); showAccount(); };
     row.appendChild(acct);
@@ -3195,7 +3241,7 @@ const UI = (() => {
     showDefeat, hideDefeat, showEncounter, renderQuestLog, renderUpgrades,
     renderCooldowns, tickCooldowns, renderPanels, togglePanel,
     renderMerge, mergeSpawnFx, mergeFuseFx, showMap,
-    renderOffers, renderPromo, renderEvent, showTipCard, showReflectOffer,
+    renderOffers, renderPromo, renderEvent, renderTasks, showTipCard, showReflectOffer,
     showAccount, renderAccount, showRestore, showArena, renderArena,
     renderBeasts, renderCollection, showCreature, showFeedPicker,
     renderFarm, waterGarden, showMealModal, showKcalTargetModal, renderFood,

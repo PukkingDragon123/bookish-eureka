@@ -59,6 +59,7 @@ const Farm = (() => {
     const inst = S.beasts[cid];
     if (!inst) return false;
     S.farm.food[el] = have - 1;
+    inst.fed = true;                 // Vale's task board reads this
     const c = C_BY_ID[cid];
     const match = c.types.includes(el);
     const xp = Math.round(beastXpNeed(inst.level) * (match ? 0.6 : 0.25));
