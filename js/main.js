@@ -56,7 +56,7 @@
   }
   UI.renderAll();
 
-  /* loading, then sign-in if it is owed, then the game. No main menu. */
+  /* loading, then straight into the game */
   Title.boot(() => {
     if (fresh) return UI.showOnboarding();
     if (greet) setTimeout(greet, 500);

@@ -113,12 +113,12 @@ const UI = (() => {
     }).join('');
 
     w.innerHTML = `
-      <div class="card-head">${icon('scroll')} Vale's tasks
+      <div class="card-head">${icon('scroll')} Vale's list
         <span class="tk-count">${Tasks.claimedCount()}/${Tasks.LIST.length}</span></div>
       <div class="tk-intro">
         <img class="tk-prof" src="${assetUrl('assets/ui/npc.png')}" alt="Professor Vale">
-        <span>Seven things to try. Each one pays, and the last pays
-          ${icon('gem')}100 on top.</span>
+        <span>Seven jobs to get you started. Finish all seven and I will add
+          ${icon('gem')}100.</span>
       </div>
       <div class="tk-list">${rows}</div>`;
 
@@ -207,7 +207,7 @@ const UI = (() => {
     const c = cards[Math.floor(Date.now() / 20000) % cards.length];
     w.innerHTML = `
       <button class="promo" data-go="${c.kind}">
-        <span class="promo-tag">from Hourling</span>
+        <span class="promo-tag">notice</span>
         <span class="promo-ic">${icon(c.icon)}</span>
         <span class="promo-txt"><b>${c.title}</b><span>${c.sub}</span></span>
         <span class="promo-cta">${c.cta}</span>
@@ -245,9 +245,8 @@ const UI = (() => {
     }).join('');
     const ins = Offers.isInsured();
     wrap.innerHTML = `
-      <div class="card-head"><i class="ico ico-chest"></i> Free rewards
+      <div class="card-head"><i class="ico ico-chest"></i> Odd jobs
         ${ready ? `<span class="off-badge">${ready}</span>` : ''}</div>
-      <p class="off-note">No adverts, nothing costs money. Fifteen seconds each.</p>
       ${rows}
       <button class="offrow ${ins ? 'done' : 'sink'}" data-off="insure" ${ins ? 'disabled' : ''}>
         <span class="off-ic">${icon('streak')}</span>
@@ -311,8 +310,8 @@ const UI = (() => {
 
   function showReflectOffer() {
     const box = el('div');
-    box.innerHTML = `<h3>${icon('scroll')} One honest line</h3>
-      <p class="subtle" style="text-align:center">How did practice actually go? Bad days count.</p>
+    box.innerHTML = `<h3>${icon('scroll')} Today's line</h3>
+      <p class="subtle" style="text-align:center">How did it go? Bad days count too.</p>
       <textarea class="reflect-in" rows="3" maxlength="120"
         placeholder="Fumbled the same bar ten times, got it on the eleventh."></textarea>
       <div class="mrow"></div>`;
@@ -2445,9 +2444,8 @@ const UI = (() => {
 
   /* ================= login modal on new day ================= */
   function maybeShowLogin() {
-    // never interrupt the professor or the sign-in card: whatever owns the
-    // screen keeps it, and this waits its turn
-    if (document.querySelector('.signin') || document.getElementById('boot')) {
+    // the loading screen owns the screen while it is up; wait its turn
+    if (document.getElementById('boot')) {
       setTimeout(maybeShowLogin, 1500);
       return;
     }
@@ -2517,9 +2515,9 @@ const UI = (() => {
     function drawIntro() {
       box.innerHTML = steps() + `
         <h2>Hourling</h2>
-        <p>Pick one thing you've always meant to get good at.</p>
-        <p style="margin-top:10px">You get <b>one task a day</b> and a real timer.
-        The minutes you put in are the only currency here.</p>
+        <p>Pick one thing you have always meant to get good at.</p>
+        <p style="margin-top:10px">You get <b>one task a day</b> and a timer.
+        Minutes at it are the only currency here.</p>
         <p style="margin-top:10px;color:var(--gold)">Six quick questions.</p>`;
       nav('Let\'s go', true, () => { step = 1; draw(); });
     }
@@ -2774,8 +2772,8 @@ const UI = (() => {
         </div>
       </div>
 
-      <p class="ar-honest">No server here, so no live matchmaking. Trade
-        <b>rival codes</b> to fight a friend's real team. The rest are generated.</p>
+      <p class="ar-honest">Swap a <b>rival code</b> with a friend and their team
+        shows up here to fight. Everyone else is a wandering challenger.</p>
 
       <div class="acc-btns">
         <button class="pixbtn sm" data-ar="mycode">Copy my rival code</button>
@@ -2924,7 +2922,7 @@ const UI = (() => {
     else Sound.quest();
   }
 
-  /* ================= account, profiles, backup, sign-in ================= */
+  /* ================= profiles and backup codes ================= */
   let accountBack = null;
   function showAccount() {
     const box = el('div', 'account');
@@ -2935,12 +2933,10 @@ const UI = (() => {
   function renderAccount() {
     const box = $('#modal-root .account');
     if (!box) return;
-    const g = Account.googleUser();
-    const cid = Account.clientId();
     const list = Account.profiles();
     const act = Account.activeId();
 
-    box.innerHTML = `<h3>${icon('book')} Account</h3>
+    box.innerHTML = `<h3>${icon('book')} Save &amp; profiles</h3>
 
       <div class="acc-sec">
         <div class="acc-h">Profiles <span class="subtle">on this device</span></div>
@@ -2958,36 +2954,12 @@ const UI = (() => {
 
       <div class="acc-sec">
         <div class="acc-h">Backup code</div>
-        <p class="acc-note">Your whole save as text. Paste it into another
-          browser to carry your progress across — there is no server here, so
-          this is the only way it travels.</p>
+        <p class="acc-note">Your whole save, as text you can paste into another
+          browser. Keep a copy somewhere safe.</p>
         <div class="acc-btns">
           <button class="pixbtn sm" data-act="export">Copy my code</button>
           <button class="pixbtn sm ghost" data-act="import">Paste a code</button>
         </div>
-      </div>
-
-      <div class="acc-sec">
-        <div class="acc-h">Google sign-in</div>
-        ${g ? `<p class="acc-note">Signed in as <b>${g.name || g.email}</b>.
-             This shows your name here and nothing else — see below.</p>
-           <div class="acc-btns"><button class="pixbtn ghost sm" data-act="signout">Sign out</button></div>`
-          : `<div class="gbtn-host"></div>
-             ${cid ? '' : `<p class="acc-note">Sign-in is dormant until you add
-               your own Google client ID. It takes three steps:</p>
-               <ol class="acc-steps">
-                 <li>Open Google Cloud Console → APIs &amp; Services → Credentials.</li>
-                 <li>Create an <b>OAuth client ID</b> of type “Web application”, and add
-                     <code>${/^https?:$/.test(location.protocol) ? location.origin
-                       : 'the https address you open this from'}</code>
-                     to Authorised JavaScript origins.</li>
-                 <li>Paste the client ID below.</li>
-               </ol>
-               <input class="acc-in" type="text" placeholder="…apps.googleusercontent.com" value="">
-               <div class="acc-btns"><button class="pixbtn sm" data-act="setcid">Save client ID</button></div>`}`}
-        <p class="acc-note warn">No server behind this app: signing in shows your
-          name and nothing else. Your save stays in this browser — use a backup
-          code to move it.</p>
       </div>`;
 
     $$('#modal-root [data-prof]', box).forEach(b => {
@@ -3009,26 +2981,10 @@ const UI = (() => {
           showCodeSheet(code);
         } else if (a === 'import') {
           showRestore();
-        } else if (a === 'signout') {
-          Account.signOut(); renderAccount();
-        } else if (a === 'setcid') {
-          const inp = box.querySelector('.acc-in');
-          if (Account.setClientId(inp ? inp.value : '')) { toast('Client ID saved'); renderAccount(); }
         }
       };
     });
 
-    const host = box.querySelector('.gbtn-host');
-    if (host) {
-      Account.mountButton(host).then(res => {
-        if (res === 'ok') return;
-        const why = res === 'no-client' ? '' :
-          res === 'file' ? 'Google will not run sign-in on a file:// page — open this over http(s).' :
-          res === 'blocked' ? 'Could not reach Google’s sign-in script from this network.' :
-          'Google’s sign-in script rejected this origin.';
-        if (why) host.innerHTML = `<p class="acc-note warn">${why}</p>`;
-      });
-    }
   }
 
   function showCodeSheet(code) {
@@ -3098,7 +3054,7 @@ const UI = (() => {
         if (c) c.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
       row.appendChild(tut);
     }
-    const acct = el('button', 'pixbtn ghost sm', 'Account & backup');
+    const acct = el('button', 'pixbtn ghost sm', 'Save & profiles');
     acct.onclick = () => { closeAllModals(); showAccount(); };
     row.appendChild(acct);
     const plan = el('button', 'pixbtn ghost sm', 'Change my plan');

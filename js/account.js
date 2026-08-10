@@ -1,34 +1,15 @@
-/* ============ account, profiles and sign-in ============
+/* ============ profiles and saves ============
 
-   Read this before assuming what sign-in does here, because the honest answer
-   is narrower than the button suggests.
+   Named saves live side by side in this browser's localStorage; switching
+   profiles writes the live one out and reloads against the other key.
 
-   There is no server. This app is one static file. That has hard consequences:
-
-     * PROFILES ARE LOCAL. Multiple named saves live side by side in this
-       browser's localStorage. They do not leave the device.
-     * A BACKUP CODE is the only real portability: your save, deflated and
-       base64'd, which you paste into another browser.
-     * GOOGLE SIGN-IN IS IDENTITY ONLY, AND NOT AUTHENTICATION. Google
-       Identity Services can render its real button and hand back a signed ID
-       token entirely client-side, so the name and email are genuine — but with
-       no backend the signature cannot be verified, so it proves nothing and is
-       therefore allowed to gate nothing. It also cannot sync anything: an ID
-       token grants no storage.
-     * IT NEEDS YOUR OWN OAUTH CLIENT ID. There is no shared one to ship, and
-       Google requires the exact serving origin to be registered. So sign-in
-       stays dormant until you paste a Client ID, and the setup card says so.
-     * It cannot work from file:// at all (origin is null).
-
-   Cross-device sync would need either a backend or Drive's appDataFolder with a
-   sensitive OAuth scope. Neither fits a single static file, so neither is
-   pretended at here.                                                        */
+   A backup code is how a save travels: the whole state, gzipped and base64'd,
+   short enough to paste into a message. There is no account system and nothing
+   leaves the device.                                                        */
 'use strict';
 
 const Account = (() => {
   const PROFILE_KEY = 'hourling-profiles';
-  const CLIENT_KEY = 'hourling-google-client';
-  const GIS_SRC = 'https://accounts.google.com/gsi/client';
 
   /* ---------------- local profiles ---------------- */
   function meta() {
@@ -37,7 +18,7 @@ const Account = (() => {
     if (!m || typeof m !== 'object' || !Array.isArray(m.list)) {
       // adopt whatever save already exists as the first profile, so an
       // existing player never sees an empty account screen
-      m = { list: [{ id: 'p1', name: 'Player 1', key: SAVE_KEY }], active: 'p1', google: null };
+      m = { list: [{ id: 'p1', name: 'Player 1', key: SAVE_KEY }], active: 'p1' };
     }
     return m;
   }
@@ -162,87 +143,6 @@ const Account = (() => {
     }
   }
 
-  /* ---------------- Google sign-in ---------------- */
-  function clientId() {
-    try { return localStorage.getItem(CLIENT_KEY) || ''; } catch (e) { return ''; }
-  }
-  function setClientId(id) {
-    id = String(id || '').trim();
-    if (id && !/\.apps\.googleusercontent\.com$/.test(id)) {
-      toast('That is not a Google client ID');
-      return false;
-    }
-    try { localStorage.setItem(CLIENT_KEY, id); } catch (e) {}
-    return true;
-  }
-
-  function googleUser() { return meta().google; }
-  function signOut() {
-    const m = meta();
-    m.google = null;
-    writeMeta(m);
-    toast('Signed out');
-    return true;
-  }
-
-  /* decode (NOT verify) the ID token payload. Verification needs a server, so
-     this is used for display only and must never gate anything. */
-  function decodeJwt(tok) {
-    try {
-      const part = tok.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-      return JSON.parse(decodeURIComponent(escape(atob(part))));
-    } catch (e) { return null; }
-  }
-
-  let loading = null;
-  function loadGis() {
-    if (window.google && window.google.accounts) return Promise.resolve(true);
-    if (loading) return loading;
-    loading = new Promise(res => {
-      const s = document.createElement('script');
-      s.src = GIS_SRC;
-      s.async = true;
-      s.onload = () => res(true);
-      s.onerror = () => res(false);
-      document.head.appendChild(s);
-    });
-    return loading;
-  }
-
-  function onCredential(resp) {
-    const claims = decodeJwt(resp && resp.credential);
-    if (!claims) { toast('Sign-in returned nothing usable'); return; }
-    const m = meta();
-    m.google = { sub: claims.sub, email: claims.email || '', name: claims.name || '' };
-    writeMeta(m);
-    toast(`Signed in as ${m.google.name || m.google.email}`, 'gold');
-    UI.renderAccount();
-  }
-
-  /* renders Google's real button into a host element, if it can */
-  function mountButton(host) {
-    const cid = clientId();
-    if (!cid) return Promise.resolve('no-client');
-    if (location.protocol === 'file:') return Promise.resolve('file');
-    return loadGis().then(ok => {
-      if (!ok) return 'blocked';
-      try {
-        google.accounts.id.initialize({
-          client_id: cid,
-          callback: onCredential,
-          auto_select: false,
-          cancel_on_tap_outside: true,
-        });
-        google.accounts.id.renderButton(host, {
-          theme: 'filled_black', size: 'large', shape: 'pill',
-          text: 'signin_with', logo_alignment: 'left', width: 260,
-        });
-        return 'ok';
-      } catch (e) { return 'error'; }
-    });
-  }
-
   return { profiles, activeId, active, create, rename, switchTo, remove, saveKey,
-           exportCode, importCode, clientId, setClientId, googleUser, signOut,
-           mountButton };
+           exportCode, importCode };
 })();

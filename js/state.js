@@ -80,7 +80,7 @@ function defaultState() {
     quests: { day: null, list: [] },
     summons: { total: 0, sinceRare: 0 },
     settings: { sound: true, panels: { upgrades: false, fusion: false },
-                signinSkipped: false, signinPaid: false, metArena: false },
+                welcomed: false, metArena: false },
     tutorial: {},
     lastSeen: Date.now(),
     starterCid: null,

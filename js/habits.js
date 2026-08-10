@@ -121,7 +121,7 @@ const Habits = (() => {
         toast('Meal logged');
       }
     } else {
-      toast('Meal logged — honesty is power');
+      toast('Meal logged');
       grantPlayerXp(4);
     }
     save();

@@ -7,9 +7,9 @@ day, a weekly rhythm you choose, and a 10-rung ladder measured in real practised
 Every minute you log becomes mana, XP and evolution essence for a world of 291 collectible
 pixel beasts, each with its own dex entry, skills, signature move and ultimate.
 
-No installs, no build step, no server. Open `index.html`, or grab the single-file build in
-`dist/hourling.html` and open that anywhere — every asset is inlined and it makes no network
-requests at all.
+No installs, no build step, no server, no sign-in. Open `index.html`, or grab the
+single-file build in `dist/hourling.html` and open that anywhere — every asset is inlined and
+it makes no network requests at all.
 
 ### Install it on a phone
 
@@ -20,26 +20,18 @@ requests at all.
   self-contained file. So treat Android as a bookmark, not an install.
 * Either way there is no offline cache: each cold start re-downloads the bundle.
 
-### Accounts, backup and sync
+### Saves
 
-* **Profiles are local.** Up to four named saves live side by side in one browser. They
-  never leave the device.
-* **A backup code is the only way progress travels** — your save, gzipped and base64'd
-  (about 1.3KB of text), which you paste into another browser.
-* **Google sign-in is identity only, and it is off until you supply your own OAuth client
-  ID.** There is no shared client ID to ship and Google requires the exact serving origin to
-  be registered. Even once it works, with no backend the ID token cannot be verified, so it
-  proves nothing, gates nothing and syncs nothing — it can show your name and that is all.
-  Real cross-device sync would need a server this app does not have.
+There is no sign-in and no account system. Up to four named profiles live side by side in
+one browser and never leave the device. A **backup code** is how a save travels: the whole
+state, gzipped and base64'd, about 1.3KB of text you paste into another browser.
 
-### About the "free rewards"
+### Odd jobs
 
-There are **no adverts in this app and nothing costs money**. The reward offers are served
-by Hourling itself: a fifteen-second practice tip, a daily double-up, and a reflection
-prompt that pays gems for one honest line about your practice. The tip card is labelled
-*not an ad* in its own markup, its timer only advances while the card is actually on screen,
-and skipping forfeits the reward. Real ad inventory is impossible here (no ad account, no
-controlled domain) and faking a sponsor would be dishonest, so neither is done.
+The reward cards on Today are the game's own: a fifteen-second practice tip, a daily
+double-up, and a prompt that pays gems for a line about how practice went. No adverts, no
+purchases, nothing to buy — the timer only advances while a card is on screen, and skipping
+forfeits the reward.
 
 | Today | Session timer | Onboarding |
 |---|---|---|

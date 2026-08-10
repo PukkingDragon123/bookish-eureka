@@ -6,8 +6,8 @@
      because disabling it is an accessibility failure, not a polish win -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#101529">
-<meta name="description" content="Hourling turns the hours you actually practise into a living party of beasts. Pick one thing to get good at, put in real minutes, and watch them grow.">
-<title>Hourling — the hours you put in grow into something alive</title>
+<meta name="description" content="An idle RPG that runs on the hours you actually practise. Pick one thing to get good at, put the time in, and your party grows with you.">
+<title>Hourling</title>
 
 <!-- installed-app behaviour on iOS: real standalone launch, dark status bar -->
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2773,113 +2773,6 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
 .tr-row .won { color: var(--good); font-weight: 600; }
 .tr-row .out { color: var(--txt-dim); text-decoration: line-through; }
 
-/* ============================================================
-   SIGN-IN — there is no main menu; loading hands straight to this screen
-   (once), and to the game after that.
-
-   Shape: art scene on top with the wordmark and two sprites standing on the
-   ground, controls in a framed panel pinned to the bottom. The plate is the
-   uploaded Sunwash Plains background, and the panel wears the uploaded gold
-   9-slice frame from assets/ui, so it reads as game furniture rather than a
-   web form on a gradient.
-   ============================================================ */
-.signin {
-  position: fixed; inset: 0; z-index: 880;
-  display: flex; flex-direction: column;
-  overflow: hidden;
-  background: var(--bg0) url(data:image/png;base64,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) center 34% / cover no-repeat;
-  image-rendering: pixelated;
-  opacity: 0; transition: opacity .24s steps(4);
-}
-.signin.in { opacity: 1; }
-.signin.out { opacity: 0; }
-.si-sky {                             /* scrim, so everything on top reads */
-  position: absolute; inset: 0;
-  background: linear-gradient(180deg, rgba(8,11,22,.42) 0%, rgba(8,11,22,.06) 30%,
-              rgba(8,11,22,.55) 62%, rgba(8,11,22,.95) 84%);
-}
-
-.si-scene {
-  position: relative; z-index: 1;
-  flex: 1; min-height: 0;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: calc(20px + env(safe-area-inset-top)) 14px 96px;
-}
-.si-logo { text-align: center; }
-.si-scene h1 {
-  font-family: var(--display); font-size: 40px; font-weight: 800; line-height: 1;
-  margin-top: 6px; color: var(--gold);
-  text-shadow: 0 2px 0 #6b4406, 0 4px 0 rgba(0,0,0,.6), 0 0 18px rgba(0,0,0,.5);
-}
-.si-sub {
-  margin-top: 6px; font-size: var(--fs-meta); color: #fff;
-  text-shadow: 1px 1px 0 rgba(0,0,0,.8);
-}
-/* the two sprites stand on the ground line, facing each other */
-.si-vale, .si-beast {
-  position: absolute; bottom: 0; image-rendering: pixelated;
-}
-.si-vale { left: 4%; width: 88px; animation: toonbob 2.8s cubic-bezier(.45,0,.55,1) infinite; }
-.si-beast {
-  right: 6%; width: auto; max-width: 92px; max-height: 84px;
-  transform: scaleX(-1);
-  animation: sibeast 2.2s cubic-bezier(.45,0,.55,1) infinite;
-}
-@keyframes sibeast {
-  0%,100% { transform: scaleX(-1) translateY(0) scale(1.04, .96); }
-  45%     { transform: scaleX(-1) translateY(-8px) scale(.97, 1.05); }
-}
-
-.si-card {
-  position: relative; z-index: 1; flex: none;
-  width: 100%; max-width: 420px; margin: 0 auto;
-  display: flex; flex-direction: column; align-items: center; gap: 7px;
-  /* the uploaded 48px frame, sliced 16/16/16 and drawn 1:1 so it stays crisp.
-     No `fill`: the frame's own centre is wood-brown, which fights the palette,
-     so the panel keeps the app's dark ground instead. */
-  border: 16px solid transparent;
-  border-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAyklEQVR4nO3aMQrCQBBG4YlYeIzgCVKJkC6H8AwWVh4klYVHEA9htyAeQryJFjKCsguKkOeu/1dF0szLlGPV1JOrZWxED/CtsT9s1jU4xudW/cXMStqAa7s5McfbwuH49Lu8DTxMl2Zm1s4WQ80SFU77+8N5G31f7gboL+98jrDrou+z34ACaAqgKYCmAJoCaAqgKYCmAJoCaAqgKYCmAJoCaAqgKYCWvA/4ZYS+E/zvhcaLU5eRwSS+vCtvA6932F+X/QYq/VsFdgPM5B7tJZbcxQAAAABJRU5ErkJggg==) 16 repeat;
-  background: var(--bg1);
-  background-image: var(--grain);
-  background-clip: padding-box;
-  padding: 4px 8px calc(8px + env(safe-area-inset-bottom));
-}
-.si-reward {
-  display: flex; align-items: center; gap: 6px;
-  padding: 4px 12px;
-  background: #0a1a20;
-  border: var(--px) solid var(--ink);
-  outline: var(--px) solid var(--gem); outline-offset: calc(var(--px) * -2);
-}
-.si-reward b { color: var(--gem); font-size: var(--fs-title); }
-.si-reward span {
-  font-size: var(--fs-micro); color: var(--txt-dim);
-  text-transform: uppercase; letter-spacing: .06em;
-}
-
-.si-google { min-height: 44px; width: 100%; display: flex; justify-content: center; }
-.si-google iframe, .si-google > div { margin: 0 auto; }
-.si-google .pixbtn { width: 100%; margin: 0; }
-.si-status {
-  font-size: var(--fs-micro); color: var(--txt-dim); text-align: center;
-  min-height: 13px; line-height: 1.4;
-}
-.si-guest { width: 100%; min-height: 50px; }
-.si-alt { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
-.si-alt .linkbtn { min-height: 38px; }
-.si-fine {
-  font-size: var(--fs-micro); color: var(--txt-dim);
-  text-align: center; line-height: 1.5; max-width: 300px;
-}
-@media (max-height: 720px) {
-  .si-scene { padding-bottom: 74px; }
-  .si-scene h1 { font-size: 30px; }
-  .si-vale { width: 64px; }
-  .si-beast { max-width: 68px; max-height: 62px; }
-  .si-fine { display: none; }
-  .si-card { gap: 5px; }
-}
-
 /* the house promo strip — the shape of a banner, but it only ever points at
    this app's own features, and the tag says where it came from */
 #promo-strip { margin: 10px 0; }
@@ -3050,7 +2943,7 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
     drop-shadow(0 calc(var(--toon-line) * -1) 0 var(--toon-ink));
 }
 /* the biggest sprites carry a heavier line */
-#hero-beast, .cimg-wrap img, .wish-beast img, .boot-beast, .si-vale {
+#hero-beast, .cimg-wrap img, .wish-beast img, .boot-beast {
   --toon-line: var(--toon-line-big);
 }
 .foe img, .fighter img {
@@ -3308,9 +3201,9 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
 .loot-chip, #offers-card .off-badge, .offrow, .offrow .off-go, .reflect-in,
 #boot img, .boot-bar, .boot-bar i, .acc-steps code, .accrow, .acc-in,
 .acc-code, #haste-btn, .ar-rank, .ar-row, .ar-tag, .ar-chip,
-.tr-row, .si-mark, .promo, .promo-cta,
+.tr-row, .promo, .promo-cta,
 .dlg-box, .dlg-choices, .dlg-name, .tk-row, .tk-box, .toast,
-.ev-tier, .ev-bar, .ev-ic, .si-reward, .boot-tip {
+.ev-tier, .ev-bar, .ev-ic, .boot-tip {
   border-radius: 0;
 }
 
@@ -3348,11 +3241,6 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
 .hud-chip b.bumped { animation: countbump .28s steps(3); }
 #tabbar button.active .ico { animation: tabpop .24s steps(3); }
 
-/* the sign-in card wears the uploaded 9-slice frame (see style.css); all this
-   layer adds is the entrance, and it must not touch border or background or the
-   border-image is cancelled */
-.si-card { animation: sicard .24s steps(4) both; }
-@keyframes sicard { from { opacity: 0; transform: translateY(10px); } }
 .boot-bar { border: var(--px) solid var(--ink); background: #0a0e1c; height: 10px; }
 .boot-bar i { transition: width .2s steps(4); }
 #boot img.boot-beast { border: 0; outline: 0; }
@@ -3379,7 +3267,7 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
       <button id="btn-settings" class="hud-chip icon-btn" title="Settings" aria-label="Settings"><span class="glyph-dots"></span></button>
     </div>
     <div class="hud-row">
-      <div class="hud-chip mana-chip" title="Mana — earned by real practice">
+      <div class="hud-chip mana-chip" title="Mana · earned by practising">
         <i class="ico ico-mana"></i>
         <span class="pixbar mana"><i id="hud-mana-fill"></i></span>
         <b id="hud-mana">0</b>
@@ -3869,37 +3757,18 @@ function closeAllModals() {
 
 </script>
 <script>
-/* ============ account, profiles and sign-in ============
+/* ============ profiles and saves ============
 
-   Read this before assuming what sign-in does here, because the honest answer
-   is narrower than the button suggests.
+   Named saves live side by side in this browser's localStorage; switching
+   profiles writes the live one out and reloads against the other key.
 
-   There is no server. This app is one static file. That has hard consequences:
-
-     * PROFILES ARE LOCAL. Multiple named saves live side by side in this
-       browser's localStorage. They do not leave the device.
-     * A BACKUP CODE is the only real portability: your save, deflated and
-       base64'd, which you paste into another browser.
-     * GOOGLE SIGN-IN IS IDENTITY ONLY, AND NOT AUTHENTICATION. Google
-       Identity Services can render its real button and hand back a signed ID
-       token entirely client-side, so the name and email are genuine — but with
-       no backend the signature cannot be verified, so it proves nothing and is
-       therefore allowed to gate nothing. It also cannot sync anything: an ID
-       token grants no storage.
-     * IT NEEDS YOUR OWN OAUTH CLIENT ID. There is no shared one to ship, and
-       Google requires the exact serving origin to be registered. So sign-in
-       stays dormant until you paste a Client ID, and the setup card says so.
-     * It cannot work from file:// at all (origin is null).
-
-   Cross-device sync would need either a backend or Drive's appDataFolder with a
-   sensitive OAuth scope. Neither fits a single static file, so neither is
-   pretended at here.                                                        */
+   A backup code is how a save travels: the whole state, gzipped and base64'd,
+   short enough to paste into a message. There is no account system and nothing
+   leaves the device.                                                        */
 'use strict';
 
 const Account = (() => {
   const PROFILE_KEY = 'hourling-profiles';
-  const CLIENT_KEY = 'hourling-google-client';
-  const GIS_SRC = 'https://accounts.google.com/gsi/client';
 
   /* ---------------- local profiles ---------------- */
   function meta() {
@@ -3908,7 +3777,7 @@ const Account = (() => {
     if (!m || typeof m !== 'object' || !Array.isArray(m.list)) {
       // adopt whatever save already exists as the first profile, so an
       // existing player never sees an empty account screen
-      m = { list: [{ id: 'p1', name: 'Player 1', key: SAVE_KEY }], active: 'p1', google: null };
+      m = { list: [{ id: 'p1', name: 'Player 1', key: SAVE_KEY }], active: 'p1' };
     }
     return m;
   }
@@ -4033,89 +3902,8 @@ const Account = (() => {
     }
   }
 
-  /* ---------------- Google sign-in ---------------- */
-  function clientId() {
-    try { return localStorage.getItem(CLIENT_KEY) || ''; } catch (e) { return ''; }
-  }
-  function setClientId(id) {
-    id = String(id || '').trim();
-    if (id && !/\.apps\.googleusercontent\.com$/.test(id)) {
-      toast('That is not a Google client ID');
-      return false;
-    }
-    try { localStorage.setItem(CLIENT_KEY, id); } catch (e) {}
-    return true;
-  }
-
-  function googleUser() { return meta().google; }
-  function signOut() {
-    const m = meta();
-    m.google = null;
-    writeMeta(m);
-    toast('Signed out');
-    return true;
-  }
-
-  /* decode (NOT verify) the ID token payload. Verification needs a server, so
-     this is used for display only and must never gate anything. */
-  function decodeJwt(tok) {
-    try {
-      const part = tok.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-      return JSON.parse(decodeURIComponent(escape(atob(part))));
-    } catch (e) { return null; }
-  }
-
-  let loading = null;
-  function loadGis() {
-    if (window.google && window.google.accounts) return Promise.resolve(true);
-    if (loading) return loading;
-    loading = new Promise(res => {
-      const s = document.createElement('script');
-      s.src = GIS_SRC;
-      s.async = true;
-      s.onload = () => res(true);
-      s.onerror = () => res(false);
-      document.head.appendChild(s);
-    });
-    return loading;
-  }
-
-  function onCredential(resp) {
-    const claims = decodeJwt(resp && resp.credential);
-    if (!claims) { toast('Sign-in returned nothing usable'); return; }
-    const m = meta();
-    m.google = { sub: claims.sub, email: claims.email || '', name: claims.name || '' };
-    writeMeta(m);
-    toast(`Signed in as ${m.google.name || m.google.email}`, 'gold');
-    UI.renderAccount();
-  }
-
-  /* renders Google's real button into a host element, if it can */
-  function mountButton(host) {
-    const cid = clientId();
-    if (!cid) return Promise.resolve('no-client');
-    if (location.protocol === 'file:') return Promise.resolve('file');
-    return loadGis().then(ok => {
-      if (!ok) return 'blocked';
-      try {
-        google.accounts.id.initialize({
-          client_id: cid,
-          callback: onCredential,
-          auto_select: false,
-          cancel_on_tap_outside: true,
-        });
-        google.accounts.id.renderButton(host, {
-          theme: 'filled_black', size: 'large', shape: 'pill',
-          text: 'signin_with', logo_alignment: 'left', width: 260,
-        });
-        return 'ok';
-      } catch (e) { return 'error'; }
-    });
-  }
-
   return { profiles, activeId, active, create, rename, switchTo, remove, saveKey,
-           exportCode, importCode, clientId, setClientId, googleUser, signOut,
-           mountButton };
+           exportCode, importCode };
 })();
 
 </script>
@@ -4571,7 +4359,7 @@ function defaultState() {
     quests: { day: null, list: [] },
     summons: { total: 0, sinceRare: 0 },
     settings: { sound: true, panels: { upgrades: false, fusion: false },
-                signinSkipped: false, signinPaid: false, metArena: false },
+                welcomed: false, metArena: false },
     tutorial: {},
     lastSeen: Date.now(),
     starterCid: null,
@@ -6907,7 +6695,7 @@ const Habits = (() => {
         toast('Meal logged');
       }
     } else {
-      toast('Meal logged — honesty is power');
+      toast('Meal logged');
       grantPlayerXp(4);
     }
     save();
@@ -7048,7 +6836,7 @@ const Quests = (() => {
       { key: 'summon', icon: 'mana', name: 'Perform a summon', target: 1, reward: { gems: 4, lp: 2 } },
       { key: 'merge', icon: 'relic', name: 'Fuse 4 items on the board', target: 4, reward: { gems: 4, lp: 2 } },
       { key: 'session', icon: 'star', name: 'Complete a practice session', target: 1, reward: { gems: 8, lp: 5 } },
-      { key: 'session_mins', icon: 'timer', name: 'Practise for 25 real minutes', target: 25, reward: { gems: 6, lp: 4 } },
+      { key: 'session_mins', icon: 'timer', name: 'Practise for 25 minutes', target: 25, reward: { gems: 6, lp: 4 } },
       { key: 'feed', icon: 'meal', name: 'Feed your beasts 3 times', target: 3, reward: { gems: 4, seeds: 1 } },
       { key: 'harvest', icon: 'seed', name: 'Harvest 4 crops', target: 4, reward: { gems: 4, lp: 2 } },
     ],
@@ -7064,7 +6852,7 @@ const Quests = (() => {
     { name: '20 squats, music on', desc: 'One song, twenty squats, no negotiating with the chorus.', tags: ['fitness'], icon: 'muscle' },
     { name: 'Learn "good morning" in 3 languages', desc: 'Say all three to someone (a pet counts) tomorrow morning.', tags: ['mind'], icon: 'sunrise' },
     { name: 'Write a six-word story', desc: 'Exactly six. Make one word do crimes.', tags: ['create'], icon: 'scroll' },
-    { name: 'Beat your best typing speed', desc: 'One honest run. Warm up your hands first.', link: 'https://monkeytype.com', tags: ['mind', 'create'], icon: 'bolt' },
+    { name: 'Beat your best typing speed', desc: 'One clean run. Warm your hands up first.', link: 'https://monkeytype.com', tags: ['mind', 'create'], icon: 'bolt' },
     { name: 'Cook one thing you cannot pronounce', desc: 'Find a recipe whose name you must practice saying. Attempt both.', tags: ['nutrition'], icon: 'cook' },
     { name: 'Walk somewhere you have never stood', desc: 'Even 200m away. New ground under your feet today.', tags: ['fitness'], icon: 'walk' },
     { name: 'Draw your starter beast from memory', desc: 'No peeking at the dex. Compare after. Apologise to it.', tags: ['create'], icon: 'paw' },
@@ -7226,7 +7014,7 @@ const Quests = (() => {
 <script>
 /* ============ Offers — the free-reward slot ============
    This is the "watch an ad for currency" loop that mobile games run, done
-   honestly. There is no ad network here and nothing is sold: every offer is
+   plainly. There is no ad network here and nothing is sold: every offer is
    served by the app itself and every one of them asks for either fifteen
    seconds of attention on a real practice tip, or a small real-life action.
    Nothing here impersonates a third-party advert, and no offer takes money.
@@ -7274,8 +7062,8 @@ const Offers = (() => {
       },
     },
     reflect: {
-      name: 'One honest line', icon: 'scroll', cap: 1,
-      blurb: 'Write what today\'s practice was actually like',
+      name: 'Write today down', icon: 'scroll', cap: 1,
+      blurb: 'One line about how practice went',
       reward: () => `+8 gems`,          // granted after the write, in submit()
     },
   };
@@ -7558,7 +7346,7 @@ const Arena = (() => {
       cid, lv: (S.beasts[cid] && S.beasts[cid].level) | 0 || 1,
     }));
     return {
-      name: (Account.googleUser() && Account.googleUser().name) || Account.active().name || 'Player',
+      name: Account.active().name || 'Player',
       power: Battle.combatPower(),
       lvl: S.player.level,
       members,
@@ -7751,37 +7539,31 @@ const Arena = (() => {
 
 </script>
 <script>
-/* ============ boot: a loading screen, then sign-in ============
+/* ============ boot ============
 
-   There is no main menu. A phone game that makes you tap "Play" before it will
-   start is wasting a tap, so the loading screen hands straight over: either to
-   the sign-in card (once) or to the game itself.
+   One screen before the game: a loading screen that hands straight over. No
+   main menu, no sign-in, nothing to tap through.
 
-   The loading bar measures actual work — decoding the sprite atlases and fonts
-   that are already inlined in the bundle — rather than animating a fake
-   percentage. On a fast device that finishes almost immediately, so there is a
-   small floor on the duration; it is honest about what it waits for, it just
-   doesn't flash past.
-
-   The sign-in card is deliberately narrow about what it claims. Signing in with
-   Google is identity only (see account.js) so it cannot promise sync, and it
-   says so in one line. The reward for signing in is real, because gems are
-   local anyway. Restoring a backup code is the one thing here that genuinely
-   moves a save between devices, so it sits on the same card.               */
+   The bar measures actual work — decoding the sprite atlases and fonts already
+   inlined in the bundle — rather than animating a fake percentage. On a fast
+   device that finishes almost at once, so there is a small floor on it; the bar
+   is honest about what it waits for, it just doesn't flash past.           */
 'use strict';
 
 const Title = (() => {
   const TIPS = [
-    'Practice minutes are the only way to earn mana.',
-    'Feed a beast its own element and the XP doubles.',
-    'Two of the same gear at the same tier fuse into the next one.',
-    'A missed day is one day. Two in a row is a new habit.',
-    'Bosses hit hardest — bring the type they are weak to.',
+    'Mana comes from practice. Nothing else makes it.',
+    'Feed a beast its own element for double XP.',
+    'Two of the same gear, same tier, fuse into the next one.',
+    'A missed day is one day. Two in a row is a habit.',
+    'Bosses hit hard. Bring the type they are weak to.',
     'Gems buy five minutes of triple-speed combat.',
-    'Rivals are real teams, sent to you as codes by friends.',
-    'Scrapping junk gear pays shards. Shards push a good piece further.',
+    'Rival codes let you fight a friend\'s team.',
+    'Scrap junk gear for shards. Shards push a good piece further.',
+    'Watering the garden is free. Practice does it for you.',
+    'Type advantage beats levels more often than you would think.',
   ];
-  const SIGNIN_GEMS = 150;
+  const GIFT_GEMS = 150;
 
   let onDone = null;
 
@@ -7858,14 +7640,23 @@ const Title = (() => {
 
   /* ---------------- hand-off ---------------- */
   function afterLoad() {
-    if (needsSignIn()) return showSignIn();
     clearBoot();
+    gift();
     finish();
   }
 
-  function needsSignIn() {
-    if (Account.googleUser()) return false;         // already signed in
-    return !(S.settings && S.settings.signinSkipped);
+  /* The old sign-in card paid gems for signing in. There is no sign-in now, so
+     the gems are simply a gift on the first launch — same value, one fewer
+     screen, and nothing to click through. */
+  function gift() {
+    if (S.settings.welcomed) return;
+    S.settings.welcomed = true;
+    S.player.gems += GIFT_GEMS;
+    save();
+    setTimeout(() => {
+      Sound.coin();
+      toast(`Welcome gift: ${GIFT_GEMS} gems`, 'gold');
+    }, 900);
   }
 
   function finish() {
@@ -7875,112 +7666,7 @@ const Title = (() => {
     f();
   }
 
-  /* ---------------- sign-in ---------------- */
-  function showSignIn() {
-    const root = el('div', 'signin');
-    const profs = Account.profiles();
-    const paid = !!(S.settings && S.settings.signinPaid);
-    // scene on top (art, wordmark, Vale standing on the ground), controls in a
-    // framed panel at the bottom — the shape every phone game's title uses
-    root.innerHTML = `
-      <div class="si-sky"></div>
-      <div class="si-scene">
-        <div class="si-logo">
-          <h1>Hourling</h1>
-          <p class="si-sub">${paid ? 'Sign back in, or carry on.' : 'Sign in and claim your welcome gems'}</p>
-        </div>
-        <img class="si-vale" src="${assetUrl('assets/ui/npc.png')}" alt="">
-        <img class="si-beast" src="${assetUrl(beastFile())}" alt="">
-      </div>
-      <div class="si-card">
-        ${paid ? '' : `<div class="si-reward">${icon('gem')}<b>${SIGNIN_GEMS}</b><span>welcome bonus</span></div>`}
-
-        <div class="si-google"></div>
-        <div class="si-status"></div>
-
-        <button class="pixbtn primary si-guest"><b>Continue without an account</b></button>
-
-        <div class="si-alt">
-          <button class="linkbtn" data-si="code">I have a backup code</button>
-          ${profs.length > 1 ? '<button class="linkbtn" data-si="prof">Switch profile</button>' : ''}
-        </div>
-
-        <p class="si-fine">No server here: signing in shows your name and pays the
-          gems. Your save lives in this browser — a backup code is how it moves.</p>
-      </div>`;
-    document.body.appendChild(root);
-    clearBoot();
-    requestAnimationFrame(() => root.classList.add('in'));
-
-    const status = root.querySelector('.si-status');
-    const host = root.querySelector('.si-google');
-
-    Account.mountButton(host).then(res => {
-      if (res === 'ok') { status.textContent = ''; return; }
-      // no client ID / file:// / blocked: say which, and offer the real fix
-      host.innerHTML = `<button class="pixbtn ghost wide" data-si="setup">
-        <b>Set up Google sign-in</b></button>`;
-      status.textContent = {
-        'no-client': 'Google sign-in needs your own client ID.',
-        file: 'Google sign-in cannot run from a local file.',
-        blocked: 'Google sign-in did not load on this connection.',
-      }[res] || 'Google sign-in is unavailable here.';
-      host.querySelector('[data-si="setup"]').onclick = () => {
-        Sound.click();
-        leave(() => { finish(); UI.showAccount(); });
-      };
-    });
-
-    // GIS calls back into Account, not into us, so watch for the result
-    const watch = setInterval(() => {
-      if (!Account.googleUser()) return;
-      clearInterval(watch);
-      grantSigninBonus();
-      leave(finish);
-    }, 400);
-
-    root.querySelector('.si-guest').onclick = () => {
-      Sound.click();
-      S.settings.signinSkipped = true;
-      save();
-      clearInterval(watch);
-      leave(finish);
-    };
-    root.querySelectorAll('[data-si]').forEach(b => {
-      if (b.dataset.si === 'setup') return;
-      b.onclick = () => {
-        Sound.click();
-        clearInterval(watch);
-        S.settings.signinSkipped = true;
-        save();
-        const which = b.dataset.si;
-        leave(() => {
-          finish();
-          if (which === 'code') UI.showRestore();
-          else UI.showAccount();
-        });
-      };
-    });
-
-    function leave(then) {
-      root.classList.add('out');
-      setTimeout(() => root.remove(), 320);
-      setTimeout(then, 180);
-    }
-  }
-
-  /* paid once, ever — signing out and back in does not re-pay */
-  function grantSigninBonus() {
-    if (S.settings.signinPaid) return;
-    S.settings.signinPaid = true;
-    S.settings.signinSkipped = true;
-    S.player.gems += SIGNIN_GEMS;
-    save();
-    Sound.coin();
-    toast(`Welcome — ${SIGNIN_GEMS} gems added`, 'gold');
-  }
-
-  return { boot, grantSigninBonus, SIGNIN_GEMS };
+  return { boot };
 })();
 
 </script>
@@ -8491,12 +8177,12 @@ const UI = (() => {
     }).join('');
 
     w.innerHTML = `
-      <div class="card-head">${icon('scroll')} Vale's tasks
+      <div class="card-head">${icon('scroll')} Vale's list
         <span class="tk-count">${Tasks.claimedCount()}/${Tasks.LIST.length}</span></div>
       <div class="tk-intro">
         <img class="tk-prof" src="${assetUrl('assets/ui/npc.png')}" alt="Professor Vale">
-        <span>Seven things to try. Each one pays, and the last pays
-          ${icon('gem')}100 on top.</span>
+        <span>Seven jobs to get you started. Finish all seven and I will add
+          ${icon('gem')}100.</span>
       </div>
       <div class="tk-list">${rows}</div>`;
 
@@ -8585,7 +8271,7 @@ const UI = (() => {
     const c = cards[Math.floor(Date.now() / 20000) % cards.length];
     w.innerHTML = `
       <button class="promo" data-go="${c.kind}">
-        <span class="promo-tag">from Hourling</span>
+        <span class="promo-tag">notice</span>
         <span class="promo-ic">${icon(c.icon)}</span>
         <span class="promo-txt"><b>${c.title}</b><span>${c.sub}</span></span>
         <span class="promo-cta">${c.cta}</span>
@@ -8623,9 +8309,8 @@ const UI = (() => {
     }).join('');
     const ins = Offers.isInsured();
     wrap.innerHTML = `
-      <div class="card-head"><i class="ico ico-chest"></i> Free rewards
+      <div class="card-head"><i class="ico ico-chest"></i> Odd jobs
         ${ready ? `<span class="off-badge">${ready}</span>` : ''}</div>
-      <p class="off-note">No adverts, nothing costs money. Fifteen seconds each.</p>
       ${rows}
       <button class="offrow ${ins ? 'done' : 'sink'}" data-off="insure" ${ins ? 'disabled' : ''}>
         <span class="off-ic">${icon('streak')}</span>
@@ -8689,8 +8374,8 @@ const UI = (() => {
 
   function showReflectOffer() {
     const box = el('div');
-    box.innerHTML = `<h3>${icon('scroll')} One honest line</h3>
-      <p class="subtle" style="text-align:center">How did practice actually go? Bad days count.</p>
+    box.innerHTML = `<h3>${icon('scroll')} Today's line</h3>
+      <p class="subtle" style="text-align:center">How did it go? Bad days count too.</p>
       <textarea class="reflect-in" rows="3" maxlength="120"
         placeholder="Fumbled the same bar ten times, got it on the eleventh."></textarea>
       <div class="mrow"></div>`;
@@ -10823,9 +10508,8 @@ const UI = (() => {
 
   /* ================= login modal on new day ================= */
   function maybeShowLogin() {
-    // never interrupt the professor or the sign-in card: whatever owns the
-    // screen keeps it, and this waits its turn
-    if (document.querySelector('.signin') || document.getElementById('boot')) {
+    // the loading screen owns the screen while it is up; wait its turn
+    if (document.getElementById('boot')) {
       setTimeout(maybeShowLogin, 1500);
       return;
     }
@@ -10895,9 +10579,9 @@ const UI = (() => {
     function drawIntro() {
       box.innerHTML = steps() + `
         <h2>Hourling</h2>
-        <p>Pick one thing you've always meant to get good at.</p>
-        <p style="margin-top:10px">You get <b>one task a day</b> and a real timer.
-        The minutes you put in are the only currency here.</p>
+        <p>Pick one thing you have always meant to get good at.</p>
+        <p style="margin-top:10px">You get <b>one task a day</b> and a timer.
+        Minutes at it are the only currency here.</p>
         <p style="margin-top:10px;color:var(--gold)">Six quick questions.</p>`;
       nav('Let\'s go', true, () => { step = 1; draw(); });
     }
@@ -11152,8 +10836,8 @@ const UI = (() => {
         </div>
       </div>
 
-      <p class="ar-honest">No server here, so no live matchmaking. Trade
-        <b>rival codes</b> to fight a friend's real team. The rest are generated.</p>
+      <p class="ar-honest">Swap a <b>rival code</b> with a friend and their team
+        shows up here to fight. Everyone else is a wandering challenger.</p>
 
       <div class="acc-btns">
         <button class="pixbtn sm" data-ar="mycode">Copy my rival code</button>
@@ -11302,7 +10986,7 @@ const UI = (() => {
     else Sound.quest();
   }
 
-  /* ================= account, profiles, backup, sign-in ================= */
+  /* ================= profiles and backup codes ================= */
   let accountBack = null;
   function showAccount() {
     const box = el('div', 'account');
@@ -11313,12 +10997,10 @@ const UI = (() => {
   function renderAccount() {
     const box = $('#modal-root .account');
     if (!box) return;
-    const g = Account.googleUser();
-    const cid = Account.clientId();
     const list = Account.profiles();
     const act = Account.activeId();
 
-    box.innerHTML = `<h3>${icon('book')} Account</h3>
+    box.innerHTML = `<h3>${icon('book')} Save &amp; profiles</h3>
 
       <div class="acc-sec">
         <div class="acc-h">Profiles <span class="subtle">on this device</span></div>
@@ -11336,36 +11018,12 @@ const UI = (() => {
 
       <div class="acc-sec">
         <div class="acc-h">Backup code</div>
-        <p class="acc-note">Your whole save as text. Paste it into another
-          browser to carry your progress across — there is no server here, so
-          this is the only way it travels.</p>
+        <p class="acc-note">Your whole save, as text you can paste into another
+          browser. Keep a copy somewhere safe.</p>
         <div class="acc-btns">
           <button class="pixbtn sm" data-act="export">Copy my code</button>
           <button class="pixbtn sm ghost" data-act="import">Paste a code</button>
         </div>
-      </div>
-
-      <div class="acc-sec">
-        <div class="acc-h">Google sign-in</div>
-        ${g ? `<p class="acc-note">Signed in as <b>${g.name || g.email}</b>.
-             This shows your name here and nothing else — see below.</p>
-           <div class="acc-btns"><button class="pixbtn ghost sm" data-act="signout">Sign out</button></div>`
-          : `<div class="gbtn-host"></div>
-             ${cid ? '' : `<p class="acc-note">Sign-in is dormant until you add
-               your own Google client ID. It takes three steps:</p>
-               <ol class="acc-steps">
-                 <li>Open Google Cloud Console → APIs &amp; Services → Credentials.</li>
-                 <li>Create an <b>OAuth client ID</b> of type “Web application”, and add
-                     <code>${/^https?:$/.test(location.protocol) ? location.origin
-                       : 'the https address you open this from'}</code>
-                     to Authorised JavaScript origins.</li>
-                 <li>Paste the client ID below.</li>
-               </ol>
-               <input class="acc-in" type="text" placeholder="…apps.googleusercontent.com" value="">
-               <div class="acc-btns"><button class="pixbtn sm" data-act="setcid">Save client ID</button></div>`}`}
-        <p class="acc-note warn">No server behind this app: signing in shows your
-          name and nothing else. Your save stays in this browser — use a backup
-          code to move it.</p>
       </div>`;
 
     $$('#modal-root [data-prof]', box).forEach(b => {
@@ -11387,26 +11045,10 @@ const UI = (() => {
           showCodeSheet(code);
         } else if (a === 'import') {
           showRestore();
-        } else if (a === 'signout') {
-          Account.signOut(); renderAccount();
-        } else if (a === 'setcid') {
-          const inp = box.querySelector('.acc-in');
-          if (Account.setClientId(inp ? inp.value : '')) { toast('Client ID saved'); renderAccount(); }
         }
       };
     });
 
-    const host = box.querySelector('.gbtn-host');
-    if (host) {
-      Account.mountButton(host).then(res => {
-        if (res === 'ok') return;
-        const why = res === 'no-client' ? '' :
-          res === 'file' ? 'Google will not run sign-in on a file:// page — open this over http(s).' :
-          res === 'blocked' ? 'Could not reach Google’s sign-in script from this network.' :
-          'Google’s sign-in script rejected this origin.';
-        if (why) host.innerHTML = `<p class="acc-note warn">${why}</p>`;
-      });
-    }
   }
 
   function showCodeSheet(code) {
@@ -11476,7 +11118,7 @@ const UI = (() => {
         if (c) c.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
       row.appendChild(tut);
     }
-    const acct = el('button', 'pixbtn ghost sm', 'Account & backup');
+    const acct = el('button', 'pixbtn ghost sm', 'Save & profiles');
     acct.onclick = () => { closeAllModals(); showAccount(); };
     row.appendChild(acct);
     const plan = el('button', 'pixbtn ghost sm', 'Change my plan');
@@ -11660,7 +11302,7 @@ const PWA = (() => {
       const m = {
         name: 'Hourling',
         short_name: 'Hourling',
-        description: 'The hours you actually practise grow into something alive.',
+        description: 'An idle RPG powered by the hours you practise.',
         display: 'standalone',
         orientation: 'portrait',
         background_color: '#101529',
@@ -11762,7 +11404,7 @@ const PWA = (() => {
   }
   UI.renderAll();
 
-  /* loading, then sign-in if it is owed, then the game. No main menu. */
+  /* loading, then straight into the game */
   Title.boot(() => {
     if (fresh) return UI.showOnboarding();
     if (greet) setTimeout(greet, 500);

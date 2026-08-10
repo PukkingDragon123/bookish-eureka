@@ -28,7 +28,7 @@
     drop-shadow(0 calc(var(--toon-line) * -1) 0 var(--toon-ink));
 }
 /* the biggest sprites carry a heavier line */
-#hero-beast, .cimg-wrap img, .wish-beast img, .boot-beast, .si-vale {
+#hero-beast, .cimg-wrap img, .wish-beast img, .boot-beast {
   --toon-line: var(--toon-line-big);
 }
 .foe img, .fighter img {
@@ -286,9 +286,9 @@
 .loot-chip, #offers-card .off-badge, .offrow, .offrow .off-go, .reflect-in,
 #boot img, .boot-bar, .boot-bar i, .acc-steps code, .accrow, .acc-in,
 .acc-code, #haste-btn, .ar-rank, .ar-row, .ar-tag, .ar-chip,
-.tr-row, .si-mark, .promo, .promo-cta,
+.tr-row, .promo, .promo-cta,
 .dlg-box, .dlg-choices, .dlg-name, .tk-row, .tk-box, .toast,
-.ev-tier, .ev-bar, .ev-ic, .si-reward, .boot-tip {
+.ev-tier, .ev-bar, .ev-ic, .boot-tip {
   border-radius: 0;
 }
 
@@ -326,11 +326,6 @@
 .hud-chip b.bumped { animation: countbump .28s steps(3); }
 #tabbar button.active .ico { animation: tabpop .24s steps(3); }
 
-/* the sign-in card wears the uploaded 9-slice frame (see style.css); all this
-   layer adds is the entrance, and it must not touch border or background or the
-   border-image is cancelled */
-.si-card { animation: sicard .24s steps(4) both; }
-@keyframes sicard { from { opacity: 0; transform: translateY(10px); } }
 .boot-bar { border: var(--px) solid var(--ink); background: #0a0e1c; height: 10px; }
 .boot-bar i { transition: width .2s steps(4); }
 #boot img.boot-beast { border: 0; outline: 0; }

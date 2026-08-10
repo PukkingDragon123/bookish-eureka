@@ -1,6 +1,6 @@
 /* ============ Offers — the free-reward slot ============
    This is the "watch an ad for currency" loop that mobile games run, done
-   honestly. There is no ad network here and nothing is sold: every offer is
+   plainly. There is no ad network here and nothing is sold: every offer is
    served by the app itself and every one of them asks for either fifteen
    seconds of attention on a real practice tip, or a small real-life action.
    Nothing here impersonates a third-party advert, and no offer takes money.
@@ -48,8 +48,8 @@ const Offers = (() => {
       },
     },
     reflect: {
-      name: 'One honest line', icon: 'scroll', cap: 1,
-      blurb: 'Write what today\'s practice was actually like',
+      name: 'Write today down', icon: 'scroll', cap: 1,
+      blurb: 'One line about how practice went',
       reward: () => `+8 gems`,          // granted after the write, in submit()
     },
   };

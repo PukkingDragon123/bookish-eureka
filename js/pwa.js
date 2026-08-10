@@ -25,7 +25,7 @@ const PWA = (() => {
       const m = {
         name: 'Hourling',
         short_name: 'Hourling',
-        description: 'The hours you actually practise grow into something alive.',
+        description: 'An idle RPG powered by the hours you practise.',
         display: 'standalone',
         orientation: 'portrait',
         background_color: '#101529',

@@ -52,7 +52,7 @@ const Arena = (() => {
       cid, lv: (S.beasts[cid] && S.beasts[cid].level) | 0 || 1,
     }));
     return {
-      name: (Account.googleUser() && Account.googleUser().name) || Account.active().name || 'Player',
+      name: Account.active().name || 'Player',
       power: Battle.combatPower(),
       lvl: S.player.level,
       members,
