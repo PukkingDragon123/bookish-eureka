@@ -108,8 +108,12 @@ function defaultState() {
              minutes: 0, sessions: 0, todayMinutes: 0, lastDone: null,
              taskSkips: 0, log: [], _lastRung: 0, started: Date.now() },
     session: null,   // {mins, startedAt, paused, pausedAt, elapsedBefore}
-    /* --- v5: the running weekly event and its reward track --- */
-    event: { week: 0, points: 0, claimed: [] },
+    /* --- v5 --- */
+    event: { week: 0, points: 0, claimed: [] },       // this week's event track
+    achv: { claimed: [] },                            // achievements taken
+    stats: { questsClaimed: 0, duels: 0 },            // counters achievements read
+    sideGoals: [],                                    // extra goals, max 3
+    comeback: { lastDay: null },                      // return-after-a-break bonus
   };
 }
 
@@ -141,13 +145,17 @@ function sanitize() {
   if (!S.party.length && Object.keys(S.beasts).length) S.party = [Object.keys(S.beasts)[0]];
   if (S.starterCid && !C_BY_ID[S.starterCid]) S.starterCid = null;
   const d = defaultState();
-  for (const k of ['upgrades', 'merge', 'farm', 'lab', 'login', 'challenge', 'regionProgress', 'dream', 'offers', 'arena', 'event']) {
+  for (const k of ['upgrades', 'merge', 'farm', 'lab', 'login', 'challenge', 'regionProgress', 'dream', 'offers', 'arena', 'event', 'achv', 'stats', 'comeback']) {
     if (typeof S[k] !== 'object' || S[k] === null) S[k] = d[k];
   }
   if (typeof S.merge.up !== 'object' || S.merge.up === null) S.merge.up = { slots: 0, tier: 0, luck: 0, energy: 0, rarity: 0 };
   for (const k of Object.keys(MERGE_UPGRADES)) {
     S.merge.up[k] = clamp(S.merge.up[k] | 0, 0, MERGE_UPGRADES[k].max);
   }
+  if (!Array.isArray(S.sideGoals)) S.sideGoals = [];
+  S.sideGoals = S.sideGoals
+    .filter(g => g && Dream.DREAMS[g.key] && g.key !== S.dream.key)
+    .slice(0, 3);
   S.merge.shards = Math.max(0, S.merge.shards | 0);
   if (!Array.isArray(S.merge.board)) S.merge.board = [];
   // the board grows with the slots upgrade, so resize instead of resetting

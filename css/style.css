@@ -1167,33 +1167,103 @@ button.hud-chip:active { transform: translateY(2px); }
   display: flex; flex-direction: column; gap: 9px;
   padding: 0 10px 8px;
 }
+/* A banner is the shop window of a gacha, so it gets built like one: the
+   element gradient behind a slow diagonal sheen, the beast standing proud of
+   the frame, the name on its own dark plate so it always reads, the limited tag
+   pinned to the corner, and the pity meter right where you decide to pull. */
 .banner {
+  position: relative; overflow: hidden;
+  min-height: 166px; display: flex; flex-direction: column;
+  padding: 9px;
+  background:
+    linear-gradient(150deg, var(--b-from, #333) 0%, var(--b-to, #111) 100%);
   border: var(--px) solid var(--ink);
-  outline: var(--px) solid var(--line-hi);
+  outline: var(--px) solid var(--gold);
   outline-offset: calc(var(--px) * -2);
-  padding: 10px; position: relative; overflow: hidden;
-  min-height: 132px; display: flex; flex-direction: column;
-  animation: bannerin var(--t-med) var(--pop) both;
+  box-shadow: 0 5px 0 var(--ink), inset 0 0 0 6px rgba(0,0,0,.22);
+  animation: bannerin var(--t-med) steps(4) both;
 }
-@keyframes bannerin { from { opacity: 0; transform: translateY(10px); } }
-.banner .bname { font-size: 18px; color: #fff; text-shadow: 2px 2px 0 var(--ink); display: flex; gap: 6px; align-items: center; }
-.banner .bsub { font-size: 12.5px; color: rgba(255,255,255,.78); text-shadow: 1px 1px 0 var(--ink); margin-top: 2px; }
-.banner .bsub .elem { width: 18px; height: 18px; vertical-align: -4px; margin-right: 1px; }
-.banner .btag {
-  font-family: var(--ui); font-size: 10.5px; font-weight: 800; letter-spacing: .06em;
-  background: var(--gold); color: var(--ink);
-  padding: 2px 6px; border-radius: 2px; text-shadow: none;
-  animation: tagpulse 2.2s var(--ease) infinite;
-}
-@keyframes tagpulse { 50% { filter: brightness(1.25); } }
-.banner .bstars { position: absolute; right: 8px; top: 6px; display: flex; flex-direction: column; gap: 2px; }
-.banner .bshow { position: absolute; right: 4px; bottom: 2px; }
-.banner .bshow img { filter: drop-shadow(2px 3px 0 rgba(0,0,0,.4)); }
-.banner .bbtns { margin-top: auto; display: flex; gap: 6px; z-index: 1; }
+@keyframes bannerin { from { opacity: 0; transform: translateY(8px); } }
+/* the pixel grain and a sheen that crawls across once in a while */
 .banner::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
   background-image: repeating-linear-gradient(135deg, rgba(255,255,255,.05) 0 3px, transparent 3px 9px);
 }
+.banner .bsheen {
+  position: absolute; top: 0; bottom: 0; width: 60px; left: -80px;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.22), transparent);
+  animation: bsheen 5.5s linear infinite;
+  pointer-events: none;
+}
+@keyframes bsheen { 0%, 65% { left: -80px; } 100% { left: 110%; } }
+
+/* the name plate: hard-edged, dark, so white text never fights the gradient */
+.banner .bplate {
+  position: relative; z-index: 2; align-self: flex-start;
+  max-width: 63%;
+  background: rgba(8,11,22,.74);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid rgba(255,255,255,.18);
+  outline-offset: calc(var(--px) * -2);
+  padding: 5px 8px;
+}
+.banner .bname {
+  font-family: var(--display); font-size: var(--fs-lead); color: #fff;
+  text-shadow: 2px 2px 0 var(--ink); display: flex; gap: 6px; align-items: center;
+  line-height: 1.1;
+}
+.banner .bsub { font-size: var(--fs-meta); color: var(--parch-lo); margin-top: 2px; }
+.banner .bsub .elem { width: 18px; height: 18px; vertical-align: -4px; margin-right: 1px; }
+
+/* limited tag, pinned to the top-right corner of the frame */
+.banner .btag {
+  position: absolute; top: 0; right: 0; z-index: 3;
+  font-family: var(--display); font-size: var(--fs-micro); font-weight: 800;
+  letter-spacing: .1em; text-transform: uppercase;
+  background: var(--gold); color: #2e1e02;
+  padding: 3px 9px;
+  border-left: var(--px) solid var(--ink);
+  border-bottom: var(--px) solid var(--ink);
+  animation: tagpulse 1.8s steps(1) infinite;
+}
+@keyframes tagpulse { 50% { background: #fff0c2; } }
+
+/* the beast sits in the top-right, clear of the plate and of the rows below */
+.banner .bshow {
+  position: absolute; right: 6px; top: 6px; z-index: 1;
+  width: 34%; display: flex; justify-content: flex-end;
+  animation: bshow 3s cubic-bezier(.45,0,.55,1) infinite;
+}
+.banner .bshow img {
+  image-rendering: pixelated;
+  max-width: 100%; max-height: 82px; width: auto; height: auto;
+  filter:
+    drop-shadow(2px 0 0 var(--ink)) drop-shadow(-2px 0 0 var(--ink))
+    drop-shadow(0 2px 0 var(--ink)) drop-shadow(0 -2px 0 var(--ink))
+    drop-shadow(0 8px 10px rgba(0,0,0,.45));
+}
+@keyframes bshow {
+  0%,100% { transform: translateY(0) scale(1.02, .98); }
+  50%     { transform: translateY(-6px) scale(.98, 1.03); }
+}
+
+/* pity meter: the number that actually decides whether you pull. In flow, not
+   floating, so it can never end up underneath the sprite. */
+.banner .bpity {
+  position: relative; z-index: 2;
+  margin: auto 0 6px; display: flex; align-items: center; gap: 6px;
+  background: rgba(8,11,22,.72);
+  border: var(--px) solid var(--ink);
+  padding: 3px 6px;
+}
+.banner .bpity .pixbar { height: 7px; flex: 1; background: #0a0e1c; }
+.banner .bpity .pixbar > i { background: var(--gem); }
+.banner .bpity b {
+  font-size: var(--fs-micro); color: #fff; white-space: nowrap;
+  text-shadow: 1px 1px 0 var(--ink); letter-spacing: .04em; text-transform: uppercase;
+}
+.banner .bbtns { display: flex; gap: 6px; z-index: 3; }
+.banner .bbtns .pixbtn { flex: 1; }
 #pity-note { font-size: 12.5px; padding: 0 12px 4px; }
 #lab-panel { }
 #relic-shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(82px, 1fr)); gap: 6px; padding: 0 10px; }
@@ -2523,3 +2593,101 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
 .tk-row.got { opacity: .5; }
 .tk-row.got .tk-box .ico { filter: none; }
 .tk-row.got .tk-hint { color: var(--good); }
+
+/* ============================================================
+   OTHER GOALS · ACHIEVEMENTS · BONUS DUTY · STREAK PAYOFF
+   ============================================================ */
+#goals-card { outline-color: var(--leaf); }
+.sg-count, .av-count {
+  margin-left: auto; color: var(--gold); font-variant-numeric: tabular-nums;
+  letter-spacing: normal; text-transform: none;
+}
+.sg-list { display: flex; flex-direction: column; gap: 4px; }
+.sg-row {
+  display: flex; align-items: center; gap: 8px; padding: 6px;
+  background: var(--bg1);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--line); outline-offset: calc(var(--px) * -2);
+}
+.sg-ic {
+  flex: none; width: 36px; height: 36px; display: grid; place-items: center;
+  background: var(--bg0); border: var(--px) solid var(--ink);
+}
+.sg-ic .hob { transform: scale(.8); }
+.sg-mid { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.sg-mid b { font-size: var(--fs-body); }
+.sg-task { font-size: var(--fs-micro); color: var(--txt-dim); line-height: 1.4; }
+.sg-meta { font-size: var(--fs-micro); color: var(--brass); font-variant-numeric: tabular-nums; }
+.sg-go { flex: none; min-height: 40px; }
+.sg-row.done { opacity: .6; }
+.sg-row.done .sg-task { color: var(--good); }
+
+.goalgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 8px; }
+.goalcard {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 9px 6px; min-height: 96px; cursor: pointer;
+  background: var(--bg2); color: var(--txt);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--line); outline-offset: calc(var(--px) * -2);
+  font: inherit; text-align: center;
+}
+.goalcard:active { transform: translateY(3px); }
+.goalcard b { font-size: var(--fs-meta); }
+.goalcard span:last-child { font-size: var(--fs-micro); color: var(--txt-dim); line-height: 1.35; }
+
+#achv-card { outline-color: var(--gold); }
+.av-list { display: flex; flex-direction: column; gap: 4px; }
+.av-row {
+  display: flex; align-items: center; gap: 8px; padding: 6px;
+  background: var(--bg1);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--line); outline-offset: calc(var(--px) * -2);
+}
+.av-ic {
+  flex: none; width: 34px; height: 34px; display: grid; place-items: center;
+  background: var(--bg0); border: var(--px) solid var(--ink);
+}
+.av-ic .ico { filter: grayscale(.7) brightness(.8); }
+.av-mid { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.av-mid b { font-size: var(--fs-meta); }
+.av-bar {
+  position: relative; display: block; height: 12px;
+  background: #0a0e1c; border: 1px solid var(--ink); overflow: hidden;
+}
+.av-bar > i { display: block; height: 100%; background: var(--gold-lo); }
+.av-bar > em {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-style: normal; font-size: var(--fs-micro); color: #fff;
+  text-shadow: 1px 1px 0 var(--ink); font-variant-numeric: tabular-nums;
+}
+.av-pay { font-size: var(--fs-micro); color: var(--gold); display: flex; gap: 7px; }
+.av-pay .ico { width: 14px; height: 14px; vertical-align: -2px; }
+.av-row.ready { outline-color: var(--gold); animation: tkready 1.1s steps(1) infinite; }
+.av-row.ready .av-ic .ico { filter: none; }
+.av-row.ready .av-mid b { color: var(--gold); }
+
+.bonus-row {
+  display: flex; align-items: center; gap: 8px; margin-top: 6px; padding: 8px;
+  background: var(--bg1);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--line); outline-offset: calc(var(--px) * -2);
+}
+.bonus-row.hot { outline-color: var(--gold); animation: tkready 1.1s steps(1) infinite; }
+.bonus-row .bn-txt { flex: 1; font-size: var(--fs-meta); color: var(--txt-dim); line-height: 1.45; }
+.bonus-row .bn-txt b { color: var(--gold); }
+.bonus-row .ico { width: 16px; height: 16px; vertical-align: -3px; }
+
+.quest.bonusq { outline: var(--px) solid var(--gold); outline-offset: calc(var(--px) * -2); }
+.qbonus {
+  font-family: var(--display); font-size: var(--fs-micro); font-weight: 800;
+  background: var(--gold); color: #2e1e02; padding: 0 5px; letter-spacing: .08em;
+}
+
+.rstat.hot { outline: var(--px) solid var(--gold); outline-offset: calc(var(--px) * -2); }
+.rstat.hot b { color: var(--good); }
+.streak-note {
+  margin-top: 7px; padding-top: 6px; font-size: var(--fs-meta); color: var(--txt-dim);
+  border-top: var(--px) solid var(--line);
+}
+.streak-note b { color: var(--gold); }
+.streak-note .ico { width: 16px; height: 16px; vertical-align: -3px; }

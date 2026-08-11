@@ -300,7 +300,81 @@ const Dream = (() => {
     return out;
   }
 
+  /* ---------- side goals ----------
+     The main dream drives the ladder, the hero card and the element affinity.
+     Side goals are lighter: each keeps its own task, minutes and streak of
+     sessions, and pays a fraction of a main session. Three is the cap because a
+     fourth stops being a goal and starts being a list.                      */
+  const SIDE_MAX = 3;
+  const SIDE_PAY = 0.6;
+
+  function sideGoals() {
+    if (!Array.isArray(S.sideGoals)) S.sideGoals = [];
+    return S.sideGoals;
+  }
+  function sideRoom() { return Math.max(0, SIDE_MAX - sideGoals().length); }
+  function sideAvailable() {
+    const taken = { [S.dream.key]: 1 };
+    sideGoals().forEach(g => { taken[g.key] = 1; });
+    return Object.keys(DREAMS).filter(k => !taken[k]);
+  }
+  function addSide(key, level, mins) {
+    if (!DREAMS[key] || sideRoom() <= 0) return false;
+    if (key === S.dream.key || sideGoals().some(g => g.key === key)) return false;
+    S.sideGoals.push({ key, level: clamp(level | 0, 0, 3), mins: clamp(mins | 0, 5, 180) || 15,
+                       minutes: 0, sessions: 0, lastDone: null, taskSkips: 0 });
+    save();
+    Quests.generateToday();      // an extra goal earns an extra daily quest
+    return true;
+  }
+  function dropSide(key) {
+    S.sideGoals = sideGoals().filter(g => g.key !== key);
+    save();
+    return true;
+  }
+  function sideDef(g) { return DREAMS[g.key] || DREAMS.music; }
+  function sideTask(g) {
+    const d = sideDef(g);
+    const pool = d.tasks[g.level] || d.tasks[0];
+    const day = todayStr();
+    let h = 7;
+    for (let i = 0; i < day.length; i++) h = (h * 31 + day.charCodeAt(i)) >>> 0;
+    for (let i = 0; i < g.key.length; i++) h = (h * 31 + g.key.charCodeAt(i)) >>> 0;
+    return pool[(h + (g.taskSkips || 0)) % pool.length];
+  }
+  function sideDoneToday(g) { return g.lastDone === todayStr(); }
+
   /* ---------- completing a session ---------- */
+  /* goalKey names a side goal; omit it for the main dream */
+  function completeSide(key, mins, note) {
+    const g = sideGoals().find(x => x.key === key);
+    if (!g) return completeSession(mins, note);
+    const today = todayStr();
+    g.minutes = (g.minutes || 0) + mins;
+    g.sessions = (g.sessions || 0) + 1;
+    g.lastDone = today;
+    bumpStreakToday();
+
+    const k = SIDE_PAY;
+    const mana = grantMana(Math.round(mins * 2.2 * k * streakMult()));
+    const xp = grantPlayerXp(Math.round(mins * 3.5 * k * streakMult()));
+    const ess = grantEssence(Math.max(1, Math.round(mins / 5 * k)));
+    const seeds = grantSeeds(Math.max(1, Math.round(mins / 8 * k)));
+    const gold = grantGold(Math.round(mins * 14 * k * Math.pow(1.12, globalStage())));
+    Farm.waterAll(Math.max(2, Math.round(mins / 3)));
+    const el = sideDef(g).element;
+    for (const cid of S.party) {
+      const c = C_BY_ID[cid];
+      grantBeastXpTo(cid, Math.round(mins * (c && c.types.includes(el) ? 6 : 3)));
+    }
+    Quests.progress('session', 1);
+    Quests.progress('session_mins', mins);
+    Quests.progress('any_habit', 1);
+    Events.add(Math.round(mins * k) + 8, 'side');
+    save();
+    return { mana, xp, ess, seeds, gold, mins, side: sideDef(g).name, rungUp: null };
+  }
+
   function completeSession(mins, note) {
     const today = todayStr();
     if (S.dream.lastDone !== today) S.dream.todayMinutes = 0;
@@ -371,8 +445,10 @@ const Dream = (() => {
     return out;
   }
 
-  return { DREAMS, LEVELS, DAY_NAMES, LADDER_HOURS,
+  return { DREAMS, LEVELS, DAY_NAMES, LADDER_HOURS, SIDE_MAX,
            def, levelDef, scheduledToday, hoursLogged, rung, rungName, nextRung,
            todaysTask, rerollTask, doneToday, minutesToday, weekMinutes,
-           completeSession, setup, starterOptions };
+           completeSession, setup, starterOptions,
+           sideGoals, sideRoom, sideAvailable, addSide, dropSide,
+           sideDef, sideTask, sideDoneToday, completeSide };
 })();

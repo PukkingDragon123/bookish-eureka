@@ -54,6 +54,26 @@
       greet = UI.maybeShowLogin;
     }
   }
+  /* Been away a while? Say so and pay for it, once per return. A comeback gift
+     is the difference between opening the app after a bad week and not. */
+  if (hadSave && S.onboarded) {
+    const days = Math.floor((Date.now() - S.lastSeen) / 86400000);
+    if (days >= 2 && S.comeback.lastDay !== todayStr()) {
+      S.comeback.lastDay = todayStr();
+      const gems = Math.min(200, 40 * days);
+      const gold = Math.min(30000, 2500 * days);
+      grantGems(gems);
+      grantGold(gold);
+      const prev = greet;
+      greet = () => {
+        toast(`Welcome back — ${days} days away. +${gems} gems, +${fmt(gold)} gold`, 'gold');
+        confetti(40);
+        Sound.levelup();
+        if (prev) setTimeout(prev, 1400);
+      };
+      save();
+    }
+  }
   UI.renderAll();
 
   /* loading, then straight into the game */

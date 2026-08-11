@@ -135,6 +135,21 @@ identical every session:
   Professor Vale, each a real thing to go and do, each paying gems and gold, all ticked
   off by reading the game's own state rather than by watching you tap. Nothing dims the
   screen and nothing has to be sat through; finishing the last one pays 100 gems.
+- **Several goals at once** — one main dream drives the ladder, the hero card and the
+  element affinity; up to three side goals run alongside it, each with its own daily task,
+  its own timer, its own logged hours and its own daily quest. A side session pays 60% of a
+  main one, so breadth costs something but is never wasted.
+- **45 achievements** in twelve tiered families — beasts defeated, bosses, streak length,
+  hours practised, dex filled, party size, level, sessions, forge tier, duels, quests
+  claimed, goals running at once. They read straight off the save, so an existing player
+  opens the list with everything already earned waiting to be claimed, and each family only
+  shows its next rung until that one is taken.
+- **Bonus duty** — clearing the daily board pays 20 gems and unlocks up to three extra sets
+  of two harder quests, offered rather than forced. Finishing your quests opens more of them
+  instead of ending the day.
+- **Coming back matters** — a 14-day login ladder that climbs to a 200-gem grand chest, a
+  streak bonus up to +50% on mana and XP with tomorrow's figure shown on the rhythm card,
+  and a comeback gift scaled to how long you were away.
 - **Personalized quests** — the daily quest board and the challenge-of-the-day are drawn
   from the tags your dream maps to, so a writer gets different work from a runner.
 - **Weekly events** — one of six events runs at a time and rotates every Monday, chosen by

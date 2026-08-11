@@ -1556,33 +1556,103 @@ button.hud-chip:active { transform: translateY(2px); }
   display: flex; flex-direction: column; gap: 9px;
   padding: 0 10px 8px;
 }
+/* A banner is the shop window of a gacha, so it gets built like one: the
+   element gradient behind a slow diagonal sheen, the beast standing proud of
+   the frame, the name on its own dark plate so it always reads, the limited tag
+   pinned to the corner, and the pity meter right where you decide to pull. */
 .banner {
+  position: relative; overflow: hidden;
+  min-height: 166px; display: flex; flex-direction: column;
+  padding: 9px;
+  background:
+    linear-gradient(150deg, var(--b-from, #333) 0%, var(--b-to, #111) 100%);
   border: var(--px) solid var(--ink);
-  outline: var(--px) solid var(--line-hi);
+  outline: var(--px) solid var(--gold);
   outline-offset: calc(var(--px) * -2);
-  padding: 10px; position: relative; overflow: hidden;
-  min-height: 132px; display: flex; flex-direction: column;
-  animation: bannerin var(--t-med) var(--pop) both;
+  box-shadow: 0 5px 0 var(--ink), inset 0 0 0 6px rgba(0,0,0,.22);
+  animation: bannerin var(--t-med) steps(4) both;
 }
-@keyframes bannerin { from { opacity: 0; transform: translateY(10px); } }
-.banner .bname { font-size: 18px; color: #fff; text-shadow: 2px 2px 0 var(--ink); display: flex; gap: 6px; align-items: center; }
-.banner .bsub { font-size: 12.5px; color: rgba(255,255,255,.78); text-shadow: 1px 1px 0 var(--ink); margin-top: 2px; }
-.banner .bsub .elem { width: 18px; height: 18px; vertical-align: -4px; margin-right: 1px; }
-.banner .btag {
-  font-family: var(--ui); font-size: 10.5px; font-weight: 800; letter-spacing: .06em;
-  background: var(--gold); color: var(--ink);
-  padding: 2px 6px; border-radius: 2px; text-shadow: none;
-  animation: tagpulse 2.2s var(--ease) infinite;
-}
-@keyframes tagpulse { 50% { filter: brightness(1.25); } }
-.banner .bstars { position: absolute; right: 8px; top: 6px; display: flex; flex-direction: column; gap: 2px; }
-.banner .bshow { position: absolute; right: 4px; bottom: 2px; }
-.banner .bshow img { filter: drop-shadow(2px 3px 0 rgba(0,0,0,.4)); }
-.banner .bbtns { margin-top: auto; display: flex; gap: 6px; z-index: 1; }
+@keyframes bannerin { from { opacity: 0; transform: translateY(8px); } }
+/* the pixel grain and a sheen that crawls across once in a while */
 .banner::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
   background-image: repeating-linear-gradient(135deg, rgba(255,255,255,.05) 0 3px, transparent 3px 9px);
 }
+.banner .bsheen {
+  position: absolute; top: 0; bottom: 0; width: 60px; left: -80px;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.22), transparent);
+  animation: bsheen 5.5s linear infinite;
+  pointer-events: none;
+}
+@keyframes bsheen { 0%, 65% { left: -80px; } 100% { left: 110%; } }
+
+/* the name plate: hard-edged, dark, so white text never fights the gradient */
+.banner .bplate {
+  position: relative; z-index: 2; align-self: flex-start;
+  max-width: 63%;
+  background: rgba(8,11,22,.74);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid rgba(255,255,255,.18);
+  outline-offset: calc(var(--px) * -2);
+  padding: 5px 8px;
+}
+.banner .bname {
+  font-family: var(--display); font-size: var(--fs-lead); color: #fff;
+  text-shadow: 2px 2px 0 var(--ink); display: flex; gap: 6px; align-items: center;
+  line-height: 1.1;
+}
+.banner .bsub { font-size: var(--fs-meta); color: var(--parch-lo); margin-top: 2px; }
+.banner .bsub .elem { width: 18px; height: 18px; vertical-align: -4px; margin-right: 1px; }
+
+/* limited tag, pinned to the top-right corner of the frame */
+.banner .btag {
+  position: absolute; top: 0; right: 0; z-index: 3;
+  font-family: var(--display); font-size: var(--fs-micro); font-weight: 800;
+  letter-spacing: .1em; text-transform: uppercase;
+  background: var(--gold); color: #2e1e02;
+  padding: 3px 9px;
+  border-left: var(--px) solid var(--ink);
+  border-bottom: var(--px) solid var(--ink);
+  animation: tagpulse 1.8s steps(1) infinite;
+}
+@keyframes tagpulse { 50% { background: #fff0c2; } }
+
+/* the beast sits in the top-right, clear of the plate and of the rows below */
+.banner .bshow {
+  position: absolute; right: 6px; top: 6px; z-index: 1;
+  width: 34%; display: flex; justify-content: flex-end;
+  animation: bshow 3s cubic-bezier(.45,0,.55,1) infinite;
+}
+.banner .bshow img {
+  image-rendering: pixelated;
+  max-width: 100%; max-height: 82px; width: auto; height: auto;
+  filter:
+    drop-shadow(2px 0 0 var(--ink)) drop-shadow(-2px 0 0 var(--ink))
+    drop-shadow(0 2px 0 var(--ink)) drop-shadow(0 -2px 0 var(--ink))
+    drop-shadow(0 8px 10px rgba(0,0,0,.45));
+}
+@keyframes bshow {
+  0%,100% { transform: translateY(0) scale(1.02, .98); }
+  50%     { transform: translateY(-6px) scale(.98, 1.03); }
+}
+
+/* pity meter: the number that actually decides whether you pull. In flow, not
+   floating, so it can never end up underneath the sprite. */
+.banner .bpity {
+  position: relative; z-index: 2;
+  margin: auto 0 6px; display: flex; align-items: center; gap: 6px;
+  background: rgba(8,11,22,.72);
+  border: var(--px) solid var(--ink);
+  padding: 3px 6px;
+}
+.banner .bpity .pixbar { height: 7px; flex: 1; background: #0a0e1c; }
+.banner .bpity .pixbar > i { background: var(--gem); }
+.banner .bpity b {
+  font-size: var(--fs-micro); color: #fff; white-space: nowrap;
+  text-shadow: 1px 1px 0 var(--ink); letter-spacing: .04em; text-transform: uppercase;
+}
+.banner .bbtns { display: flex; gap: 6px; z-index: 3; }
+.banner .bbtns .pixbtn { flex: 1; }
 #pity-note { font-size: 12.5px; padding: 0 12px 4px; }
 #lab-panel { }
 #relic-shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(82px, 1fr)); gap: 6px; padding: 0 10px; }
@@ -2913,6 +2983,104 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
 .tk-row.got .tk-box .ico { filter: none; }
 .tk-row.got .tk-hint { color: var(--good); }
 
+/* ============================================================
+   OTHER GOALS · ACHIEVEMENTS · BONUS DUTY · STREAK PAYOFF
+   ============================================================ */
+#goals-card { outline-color: var(--leaf); }
+.sg-count, .av-count {
+  margin-left: auto; color: var(--gold); font-variant-numeric: tabular-nums;
+  letter-spacing: normal; text-transform: none;
+}
+.sg-list { display: flex; flex-direction: column; gap: 4px; }
+.sg-row {
+  display: flex; align-items: center; gap: 8px; padding: 6px;
+  background: var(--bg1);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--line); outline-offset: calc(var(--px) * -2);
+}
+.sg-ic {
+  flex: none; width: 36px; height: 36px; display: grid; place-items: center;
+  background: var(--bg0); border: var(--px) solid var(--ink);
+}
+.sg-ic .hob { transform: scale(.8); }
+.sg-mid { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.sg-mid b { font-size: var(--fs-body); }
+.sg-task { font-size: var(--fs-micro); color: var(--txt-dim); line-height: 1.4; }
+.sg-meta { font-size: var(--fs-micro); color: var(--brass); font-variant-numeric: tabular-nums; }
+.sg-go { flex: none; min-height: 40px; }
+.sg-row.done { opacity: .6; }
+.sg-row.done .sg-task { color: var(--good); }
+
+.goalgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 8px; }
+.goalcard {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 9px 6px; min-height: 96px; cursor: pointer;
+  background: var(--bg2); color: var(--txt);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--line); outline-offset: calc(var(--px) * -2);
+  font: inherit; text-align: center;
+}
+.goalcard:active { transform: translateY(3px); }
+.goalcard b { font-size: var(--fs-meta); }
+.goalcard span:last-child { font-size: var(--fs-micro); color: var(--txt-dim); line-height: 1.35; }
+
+#achv-card { outline-color: var(--gold); }
+.av-list { display: flex; flex-direction: column; gap: 4px; }
+.av-row {
+  display: flex; align-items: center; gap: 8px; padding: 6px;
+  background: var(--bg1);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--line); outline-offset: calc(var(--px) * -2);
+}
+.av-ic {
+  flex: none; width: 34px; height: 34px; display: grid; place-items: center;
+  background: var(--bg0); border: var(--px) solid var(--ink);
+}
+.av-ic .ico { filter: grayscale(.7) brightness(.8); }
+.av-mid { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.av-mid b { font-size: var(--fs-meta); }
+.av-bar {
+  position: relative; display: block; height: 12px;
+  background: #0a0e1c; border: 1px solid var(--ink); overflow: hidden;
+}
+.av-bar > i { display: block; height: 100%; background: var(--gold-lo); }
+.av-bar > em {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-style: normal; font-size: var(--fs-micro); color: #fff;
+  text-shadow: 1px 1px 0 var(--ink); font-variant-numeric: tabular-nums;
+}
+.av-pay { font-size: var(--fs-micro); color: var(--gold); display: flex; gap: 7px; }
+.av-pay .ico { width: 14px; height: 14px; vertical-align: -2px; }
+.av-row.ready { outline-color: var(--gold); animation: tkready 1.1s steps(1) infinite; }
+.av-row.ready .av-ic .ico { filter: none; }
+.av-row.ready .av-mid b { color: var(--gold); }
+
+.bonus-row {
+  display: flex; align-items: center; gap: 8px; margin-top: 6px; padding: 8px;
+  background: var(--bg1);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--line); outline-offset: calc(var(--px) * -2);
+}
+.bonus-row.hot { outline-color: var(--gold); animation: tkready 1.1s steps(1) infinite; }
+.bonus-row .bn-txt { flex: 1; font-size: var(--fs-meta); color: var(--txt-dim); line-height: 1.45; }
+.bonus-row .bn-txt b { color: var(--gold); }
+.bonus-row .ico { width: 16px; height: 16px; vertical-align: -3px; }
+
+.quest.bonusq { outline: var(--px) solid var(--gold); outline-offset: calc(var(--px) * -2); }
+.qbonus {
+  font-family: var(--display); font-size: var(--fs-micro); font-weight: 800;
+  background: var(--gold); color: #2e1e02; padding: 0 5px; letter-spacing: .08em;
+}
+
+.rstat.hot { outline: var(--px) solid var(--gold); outline-offset: calc(var(--px) * -2); }
+.rstat.hot b { color: var(--good); }
+.streak-note {
+  margin-top: 7px; padding-top: 6px; font-size: var(--fs-meta); color: var(--txt-dim);
+  border-top: var(--px) solid var(--line);
+}
+.streak-note b { color: var(--gold); }
+.streak-note .ico { width: 16px; height: 16px; vertical-align: -3px; }
+
 /* ============ the cartoon layer ============
 
    Loaded last, on purpose. Everything here is presentation: a hand-inked
@@ -3314,6 +3482,8 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
 
       <div id="today-challenge"></div>
 
+      <div id="goals-card" class="card"></div>
+
       <div id="tasks-card" class="card"></div>
 
       <div id="event-card" class="card"></div>
@@ -3451,6 +3621,8 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
       <h2 class="tab-title">Your own</h2>
       <div id="custom-list"></div>
       <button id="btn-add-custom" class="pixbtn ghost wide"><span class="glyph-plus"></span> Create a habit</button>
+      <div id="achv-card" class="card"></div>
+
       <h2 class="tab-title">Milestones</h2>
       <div id="journey-panel"></div>
     </section>
@@ -4387,8 +4559,12 @@ function defaultState() {
              minutes: 0, sessions: 0, todayMinutes: 0, lastDone: null,
              taskSkips: 0, log: [], _lastRung: 0, started: Date.now() },
     session: null,   // {mins, startedAt, paused, pausedAt, elapsedBefore}
-    /* --- v5: the running weekly event and its reward track --- */
-    event: { week: 0, points: 0, claimed: [] },
+    /* --- v5 --- */
+    event: { week: 0, points: 0, claimed: [] },       // this week's event track
+    achv: { claimed: [] },                            // achievements taken
+    stats: { questsClaimed: 0, duels: 0 },            // counters achievements read
+    sideGoals: [],                                    // extra goals, max 3
+    comeback: { lastDay: null },                      // return-after-a-break bonus
   };
 }
 
@@ -4420,13 +4596,17 @@ function sanitize() {
   if (!S.party.length && Object.keys(S.beasts).length) S.party = [Object.keys(S.beasts)[0]];
   if (S.starterCid && !C_BY_ID[S.starterCid]) S.starterCid = null;
   const d = defaultState();
-  for (const k of ['upgrades', 'merge', 'farm', 'lab', 'login', 'challenge', 'regionProgress', 'dream', 'offers', 'arena', 'event']) {
+  for (const k of ['upgrades', 'merge', 'farm', 'lab', 'login', 'challenge', 'regionProgress', 'dream', 'offers', 'arena', 'event', 'achv', 'stats', 'comeback']) {
     if (typeof S[k] !== 'object' || S[k] === null) S[k] = d[k];
   }
   if (typeof S.merge.up !== 'object' || S.merge.up === null) S.merge.up = { slots: 0, tier: 0, luck: 0, energy: 0, rarity: 0 };
   for (const k of Object.keys(MERGE_UPGRADES)) {
     S.merge.up[k] = clamp(S.merge.up[k] | 0, 0, MERGE_UPGRADES[k].max);
   }
+  if (!Array.isArray(S.sideGoals)) S.sideGoals = [];
+  S.sideGoals = S.sideGoals
+    .filter(g => g && Dream.DREAMS[g.key] && g.key !== S.dream.key)
+    .slice(0, 3);
   S.merge.shards = Math.max(0, S.merge.shards | 0);
   if (!Array.isArray(S.merge.board)) S.merge.board = [];
   // the board grows with the slots upgrade, so resize instead of resetting
@@ -5082,7 +5262,81 @@ const Dream = (() => {
     return out;
   }
 
+  /* ---------- side goals ----------
+     The main dream drives the ladder, the hero card and the element affinity.
+     Side goals are lighter: each keeps its own task, minutes and streak of
+     sessions, and pays a fraction of a main session. Three is the cap because a
+     fourth stops being a goal and starts being a list.                      */
+  const SIDE_MAX = 3;
+  const SIDE_PAY = 0.6;
+
+  function sideGoals() {
+    if (!Array.isArray(S.sideGoals)) S.sideGoals = [];
+    return S.sideGoals;
+  }
+  function sideRoom() { return Math.max(0, SIDE_MAX - sideGoals().length); }
+  function sideAvailable() {
+    const taken = { [S.dream.key]: 1 };
+    sideGoals().forEach(g => { taken[g.key] = 1; });
+    return Object.keys(DREAMS).filter(k => !taken[k]);
+  }
+  function addSide(key, level, mins) {
+    if (!DREAMS[key] || sideRoom() <= 0) return false;
+    if (key === S.dream.key || sideGoals().some(g => g.key === key)) return false;
+    S.sideGoals.push({ key, level: clamp(level | 0, 0, 3), mins: clamp(mins | 0, 5, 180) || 15,
+                       minutes: 0, sessions: 0, lastDone: null, taskSkips: 0 });
+    save();
+    Quests.generateToday();      // an extra goal earns an extra daily quest
+    return true;
+  }
+  function dropSide(key) {
+    S.sideGoals = sideGoals().filter(g => g.key !== key);
+    save();
+    return true;
+  }
+  function sideDef(g) { return DREAMS[g.key] || DREAMS.music; }
+  function sideTask(g) {
+    const d = sideDef(g);
+    const pool = d.tasks[g.level] || d.tasks[0];
+    const day = todayStr();
+    let h = 7;
+    for (let i = 0; i < day.length; i++) h = (h * 31 + day.charCodeAt(i)) >>> 0;
+    for (let i = 0; i < g.key.length; i++) h = (h * 31 + g.key.charCodeAt(i)) >>> 0;
+    return pool[(h + (g.taskSkips || 0)) % pool.length];
+  }
+  function sideDoneToday(g) { return g.lastDone === todayStr(); }
+
   /* ---------- completing a session ---------- */
+  /* goalKey names a side goal; omit it for the main dream */
+  function completeSide(key, mins, note) {
+    const g = sideGoals().find(x => x.key === key);
+    if (!g) return completeSession(mins, note);
+    const today = todayStr();
+    g.minutes = (g.minutes || 0) + mins;
+    g.sessions = (g.sessions || 0) + 1;
+    g.lastDone = today;
+    bumpStreakToday();
+
+    const k = SIDE_PAY;
+    const mana = grantMana(Math.round(mins * 2.2 * k * streakMult()));
+    const xp = grantPlayerXp(Math.round(mins * 3.5 * k * streakMult()));
+    const ess = grantEssence(Math.max(1, Math.round(mins / 5 * k)));
+    const seeds = grantSeeds(Math.max(1, Math.round(mins / 8 * k)));
+    const gold = grantGold(Math.round(mins * 14 * k * Math.pow(1.12, globalStage())));
+    Farm.waterAll(Math.max(2, Math.round(mins / 3)));
+    const el = sideDef(g).element;
+    for (const cid of S.party) {
+      const c = C_BY_ID[cid];
+      grantBeastXpTo(cid, Math.round(mins * (c && c.types.includes(el) ? 6 : 3)));
+    }
+    Quests.progress('session', 1);
+    Quests.progress('session_mins', mins);
+    Quests.progress('any_habit', 1);
+    Events.add(Math.round(mins * k) + 8, 'side');
+    save();
+    return { mana, xp, ess, seeds, gold, mins, side: sideDef(g).name, rungUp: null };
+  }
+
   function completeSession(mins, note) {
     const today = todayStr();
     if (S.dream.lastDone !== today) S.dream.todayMinutes = 0;
@@ -5153,10 +5407,12 @@ const Dream = (() => {
     return out;
   }
 
-  return { DREAMS, LEVELS, DAY_NAMES, LADDER_HOURS,
+  return { DREAMS, LEVELS, DAY_NAMES, LADDER_HOURS, SIDE_MAX,
            def, levelDef, scheduledToday, hoursLogged, rung, rungName, nextRung,
            todaysTask, rerollTask, doneToday, minutesToday, weekMinutes,
-           completeSession, setup, starterOptions };
+           completeSession, setup, starterOptions,
+           sideGoals, sideRoom, sideAvailable, addSide, dropSide,
+           sideDef, sideTask, sideDoneToday, completeSide };
 })();
 
 </script>
@@ -6811,36 +7067,63 @@ const Quests = (() => {
 
   const TEMPLATES = {
     fitness: [
-      { key: 'habit_exercise', icon: 'muscle', name: 'Complete an exercise session', target: 1, reward: { gems: 6, lp: 3 } },
-      { key: 'habit_walk', icon: 'walk', name: 'Finish a walk timer', target: 1, reward: { gems: 4, seeds: 1 } },
-      { key: 'timer_mins', icon: 'timer', name: 'Put in 20 active minutes', target: 20, reward: { gems: 5, lp: 2 } },
+      { key: 'habit_exercise', icon: 'muscle', name: 'Complete an exercise session', target: 1, reward: { gems: 8, seeds: 2 } },
+      { key: 'habit_walk', icon: 'walk', name: 'Finish a walk timer', target: 1, reward: { gems: 6, seeds: 2 } },
+      { key: 'timer_mins', icon: 'timer', name: 'Put in 20 active minutes', target: 20, reward: { gems: 7, seeds: 1 } },
+      { key: 'habit_water', icon: 'water', name: 'Drink 4 glasses of water', target: 4, reward: { gems: 5, seeds: 1 } },
+      { key: 'habit_exercise', icon: 'muscle', name: 'Two exercise sessions', target: 2, reward: { gems: 12, ess: 15 } },
     ],
     nutrition: [
-      { key: 'habit_meal', icon: 'meal', name: 'Eat 2 healthy meals', target: 2, reward: { gems: 5, seeds: 2 } },
-      { key: 'meals_logged', icon: 'scroll', name: 'Log 3 foods in the tracker', target: 3, reward: { gems: 4, seeds: 2 } },
-      { key: 'habit_cook', icon: 'cook', name: 'Cook something yourself', target: 1, reward: { gems: 5, lp: 2 } },
+      { key: 'habit_meal', icon: 'meal', name: 'Eat 2 good meals', target: 2, reward: { gems: 7, seeds: 3 } },
+      { key: 'meals_logged', icon: 'scroll', name: 'Log 3 foods', target: 3, reward: { gems: 6, seeds: 3 } },
+      { key: 'habit_cook', icon: 'cook', name: 'Cook something yourself', target: 1, reward: { gems: 8, seeds: 2 } },
+      { key: 'meals_logged', icon: 'scroll', name: 'Log everything you eat today', target: 5, reward: { gems: 11, seeds: 4 } },
+      { key: 'feed', icon: 'meal', name: 'Feed your beasts twice', target: 2, reward: { gems: 5, seeds: 2 } },
     ],
     mind: [
-      { key: 'habit_wake', icon: 'sunrise', name: 'Do your morning check-in', target: 1, reward: { gems: 4, lp: 2 } },
-      { key: 'habit_water', icon: 'water', name: 'Drink 5 glasses of water', target: 5, reward: { gems: 5, seeds: 1 } },
-      { key: 'any_habit', icon: 'paw', name: 'Complete 4 daily quests', target: 4, reward: { gems: 6, lp: 3 } },
+      { key: 'habit_wake', icon: 'sunrise', name: 'Morning check-in', target: 1, reward: { gems: 6, ess: 10 } },
+      { key: 'habit_water', icon: 'water', name: 'Drink 5 glasses of water', target: 5, reward: { gems: 7, seeds: 1 } },
+      { key: 'any_habit', icon: 'paw', name: 'Clear 4 daily quests', target: 4, reward: { gems: 10, ess: 20 } },
+      { key: 'session', icon: 'star', name: 'One quiet session, no phone', target: 1, reward: { gems: 9, ess: 15 } },
+      { key: 'reflect', icon: 'scroll', name: 'Write today down', target: 1, reward: { gems: 6, ess: 10 } },
     ],
     create: [
-      { key: 'habit_create', icon: 'palette', name: 'Finish a create session', target: 1, reward: { gems: 6, lp: 3 } },
-      { key: 'timer_mins', icon: 'timer', name: 'Spend 25 minutes in deep work', target: 25, reward: { gems: 5, lp: 2 } },
-      { key: 'any_habit', icon: 'star', name: 'Complete 3 daily quests', target: 3, reward: { gems: 4, seeds: 1 } },
+      { key: 'habit_create', icon: 'palette', name: 'Finish a making session', target: 1, reward: { gems: 8, ess: 15 } },
+      { key: 'timer_mins', icon: 'timer', name: '25 minutes of deep work', target: 25, reward: { gems: 7, ess: 12 } },
+      { key: 'any_habit', icon: 'star', name: 'Clear 3 daily quests', target: 3, reward: { gems: 7, seeds: 2 } },
+      { key: 'session_mins', icon: 'timer', name: 'Practise 40 minutes total', target: 40, reward: { gems: 12, ess: 25 } },
+      { key: 'reflect', icon: 'scroll', name: 'Note one thing that worked', target: 1, reward: { gems: 6, ess: 10 } },
     ],
     battle: [
-      { key: 'kills', icon: 'sword', name: 'Defeat 40 wild beasts', target: 40, reward: { gold: true, gems: 3 } },
-      { key: 'boss', icon: 'skull', name: 'Defeat a boss', target: 1, reward: { gems: 5, lp: 3 } },
-      { key: 'summon', icon: 'mana', name: 'Perform a summon', target: 1, reward: { gems: 4, lp: 2 } },
-      { key: 'merge', icon: 'relic', name: 'Fuse 4 items on the board', target: 4, reward: { gems: 4, lp: 2 } },
-      { key: 'session', icon: 'star', name: 'Complete a practice session', target: 1, reward: { gems: 8, lp: 5 } },
-      { key: 'session_mins', icon: 'timer', name: 'Practise for 25 minutes', target: 25, reward: { gems: 6, lp: 4 } },
-      { key: 'feed', icon: 'meal', name: 'Feed your beasts 3 times', target: 3, reward: { gems: 4, seeds: 1 } },
-      { key: 'harvest', icon: 'seed', name: 'Harvest 4 crops', target: 4, reward: { gems: 4, lp: 2 } },
+      { key: 'kills', icon: 'sword', name: 'Defeat 40 wild beasts', target: 40, reward: { gold: true, gems: 5 } },
+      { key: 'kills', icon: 'sword', name: 'Defeat 150 wild beasts', target: 150, reward: { gold: true, gems: 9 } },
+      { key: 'boss', icon: 'skull', name: 'Defeat a boss', target: 1, reward: { gems: 8, ess: 15 } },
+      { key: 'summon', icon: 'mana', name: 'Perform a summon', target: 1, reward: { gems: 6, ess: 10 } },
+      { key: 'merge', icon: 'relic', name: 'Fuse 4 pieces of gear', target: 4, reward: { gems: 7, seeds: 1 } },
+      { key: 'levelup_beast', icon: 'star', name: 'Level a beast twice', target: 2, reward: { gems: 6, gold: true } },
+      { key: 'duel', icon: 'sword', name: 'Win a duel in the Arena', target: 1, reward: { gems: 10, gold: true } },
+      { key: 'harvest', icon: 'seed', name: 'Harvest 4 crops', target: 4, reward: { gems: 6, seeds: 2 } },
+    ],
+    core: [
+      { key: 'session', icon: 'play', name: 'Complete a practice session', target: 1, reward: { gems: 12, ess: 20 } },
+      { key: 'session_mins', icon: 'timer', name: 'Practise for 25 minutes', target: 25, reward: { gems: 9, ess: 15 } },
     ],
   };
+
+  /* Bonus duty: unlocked only once every daily quest is claimed, then offered
+     in sets. Finishing your quests is supposed to open more of them, not end
+     the day — that is the whole point of coming back in the evening. */
+  const BONUS = [
+    { key: 'kills', icon: 'sword', name: 'Clear 80 more beasts', target: 80, reward: { gems: 14, gold: true } },
+    { key: 'session_mins', icon: 'timer', name: 'Another 15 minutes', target: 15, reward: { gems: 18, ess: 25 } },
+    { key: 'merge', icon: 'relic', name: 'Fuse 3 more pieces', target: 3, reward: { gems: 12, seeds: 3 } },
+    { key: 'harvest', icon: 'seed', name: 'Harvest 3 more crops', target: 3, reward: { gems: 12, seeds: 4 } },
+    { key: 'boss', icon: 'skull', name: 'Take down one more boss', target: 1, reward: { gems: 20, ess: 30 } },
+    { key: 'summon', icon: 'mana', name: 'One more summon', target: 1, reward: { gems: 14, ess: 20 } },
+    { key: 'any_habit', icon: 'paw', name: 'Two more habits', target: 2, reward: { gems: 16, gold: true } },
+    { key: 'feed', icon: 'meal', name: 'Feed the party twice more', target: 2, reward: { gems: 12, seeds: 3 } },
+  ];
+  const BONUS_SETS = 3;              // per day, so the well is deep but not endless
 
   /* ---- challenge of the day: real, odd, fun. link opens in a new tab ---- */
   const CHALLENGES = [
@@ -6864,15 +7147,26 @@ const Quests = (() => {
   const CHALLENGE_REWARD = { lp: 8, gems: 12 };
 
   /* ---- 7-day login row ---- */
+  /* Two weeks, not one, and it climbs. Day 14 is worth showing up fourteen
+     times for; the cycle then repeats so a long-term player keeps a reason to
+     open the app first thing. */
   const LOGIN = [
-    { icon: 'gold',    text: '1,200 gold',  grant: () => grantGold(1200) },
-    { icon: 'seed',    text: '6 seeds',     grant: () => grantSeeds(6) },
-    { icon: 'gem',     text: '30 gems',     grant: () => grantGems(30) },
-    { icon: 'essence', text: '60 essence',  grant: () => grantEssence(60) },
-    { icon: 'gem',     text: '45 gems',     grant: () => grantGems(45) },
-    { icon: 'mana',    text: '180 mana',    grant: () => grantMana(180) },
+    { icon: 'gold',    text: '1,200 gold', grant: () => grantGold(1200) },
+    { icon: 'seed',    text: '6 seeds',    grant: () => grantSeeds(6) },
+    { icon: 'gem',     text: '30 gems',    grant: () => grantGems(30) },
+    { icon: 'essence', text: '60 essence', grant: () => grantEssence(60) },
+    { icon: 'gem',     text: '45 gems',    grant: () => grantGems(45) },
+    { icon: 'mana',    text: '180 mana',   grant: () => grantMana(180) },
+    { icon: 'chest',   text: 'Week chest',
+      grant: () => { grantGems(90); grantSeeds(8); grantGold(5000); } },
+    { icon: 'gold',    text: '4,000 gold', grant: () => grantGold(4000) },
+    { icon: 'seed',    text: '12 seeds',   grant: () => grantSeeds(12) },
+    { icon: 'gem',     text: '70 gems',    grant: () => grantGems(70) },
+    { icon: 'essence', text: '180 essence', grant: () => grantEssence(180) },
+    { icon: 'gem',     text: '90 gems',    grant: () => grantGems(90) },
+    { icon: 'mana',    text: '400 mana',   grant: () => grantMana(400) },
     { icon: 'chest',   text: 'Grand chest',
-      grant: () => { grantGems(120); grantSeeds(10); grantGold(8000); grantEssence(150); } },
+      grant: () => { grantGems(200); grantSeeds(16); grantGold(14000); grantEssence(250); } },
   ];
 
   /* which quest pools and challenge tags suit the chosen dream */
@@ -6906,13 +7200,25 @@ const Quests = (() => {
     goals.forEach((g, i) => {
       goalPool.push(...seededShuffle(TEMPLATES[g] || [], seed + i).slice(0, 2));
     });
-    const battle = seededShuffle(TEMPLATES.battle, seed + 7).slice(0, 3);
-    const list = [...goalPool.slice(0, 2), ...battle].map((t, i) => ({
-      qid: day + '_' + i,
-      key: t.key, icon: t.icon, name: t.name, target: t.target,
-      progress: 0, claimed: false, reward: t.reward,
-    }));
-    S.quests = { day, list };
+    // every extra goal the player is running adds its own quest to the board
+    (S.sideGoals || []).forEach((sg, i) => {
+      const tags = DREAM_TAGS[sg.key] || [];
+      tags.slice(0, 1).forEach(t => {
+        goalPool.push(...seededShuffle(TEMPLATES[t] || [], seed + 40 + i).slice(0, 1));
+      });
+    });
+    const core = seededShuffle(TEMPLATES.core, seed + 3).slice(0, 1);
+    const battle = seededShuffle(TEMPLATES.battle, seed + 7).slice(0, 4);
+    const picked = [...core, ...goalPool.slice(0, 4), ...battle];
+    // the same key twice on one board would double-count every progress call
+    const seen = {};
+    const list = picked.filter(t => (seen[t.key + t.target] ? false : (seen[t.key + t.target] = 1)))
+      .map((t, i) => ({
+        qid: day + '_' + i,
+        key: t.key, icon: t.icon, name: t.name, target: t.target,
+        progress: 0, claimed: false, reward: t.reward,
+      }));
+    S.quests = { day, list, bonusSets: 0, bonus: [] };
 
     // challenge of the day, biased toward the player's goals
     const fits = CHALLENGES.map((c, i) => ({ c, i }))
@@ -6945,13 +7251,42 @@ const Quests = (() => {
     UI.renderHud();
   }
 
+  /* ---- bonus duty ---- */
+  function dailiesCleared() {
+    const l = S.quests.list || [];
+    return l.length > 0 && l.every(q => q.claimed);
+  }
+  function bonusLeft() {
+    return Math.max(0, BONUS_SETS - (S.quests.bonusSets || 0));
+  }
+  /* hand out the next set of two. Called from the UI, never automatically, so
+     the player chooses to take on more rather than being handed a new list. */
+  function drawBonus() {
+    if (!dailiesCleared() || bonusLeft() <= 0) return false;
+    const n = S.quests.bonusSets || 0;
+    const seed = parseInt(todayStr().replace(/-/g, ''), 10) + 100 + n * 13;
+    const picked = seededShuffle(BONUS, seed).slice(0, 2);
+    S.quests.bonus = (S.quests.bonus || []);
+    picked.forEach((t, i) => {
+      S.quests.list.push({
+        qid: todayStr() + '_b' + n + '_' + i, bonus: true,
+        key: t.key, icon: t.icon, name: t.name, target: t.target,
+        progress: 0, claimed: false, reward: t.reward,
+      });
+    });
+    S.quests.bonusSets = n + 1;
+    Sound.quest();
+    save();
+    return true;
+  }
+
   /* login rewards: returns today's claimable index or -1 */
   function loginClaimable() {
-    return S.login.lastDay === todayStr() ? -1 : (S.login.cycle % 7);
+    return S.login.lastDay === todayStr() ? -1 : (S.login.cycle % LOGIN.length);
   }
   function claimLogin() {
     if (loginClaimable() < 0) return null;
-    const idx = S.login.cycle % 7;
+    const idx = S.login.cycle % LOGIN.length;
     LOGIN[idx].grant();
     S.login.cycle++;
     S.login.lastDay = todayStr();
@@ -6990,6 +7325,7 @@ const Quests = (() => {
     if (r.lp) { grantGems(r.lp); bits.push(`+${r.lp} gems`); }
     if (r.seeds) { grantSeeds(r.seeds); bits.push(`+${r.seeds} seeds`); }
     if (r.mana) { grantMana(r.mana); bits.push(`+${r.mana} mana`); }
+    if (r.ess) { grantEssence(r.ess); bits.push(`+${r.ess} essence`); }
     const g = grantGold(140 * Math.pow(1.2, globalStage()));
     bits.push(`+${fmt(g)} gold`);
     Sound.quest();
@@ -6999,15 +7335,28 @@ const Quests = (() => {
     grantPlayerXp(45);
     Farm.waterAll(5);
     Events.add(14, 'quest');
+    S.stats = S.stats || {};
+    S.stats.questsClaimed = (S.stats.questsClaimed || 0) + 1;
     save();
     UI.renderQuests();
     UI.renderQuestLog();
     UI.renderHud();
-    if (S.quests.list.every(x => x.claimed)) UI.markQuestDot(false);
+    if (S.quests.list.every(x => x.claimed)) {
+      UI.markQuestDot(false);
+      // clearing the board is its own event, and it opens bonus duty
+      if (bonusLeft() > 0) {
+        confetti(50);
+        Sound.levelup();
+        grantGems(20);
+        toast('Board cleared! +20 gems, and Vale has more work', 'gold');
+      }
+    }
+    UI.renderAchievements();
   }
 
   return { generateToday, progress, claim, todaysChallenge, completeChallenge,
-           loginClaimable, claimLogin, LOGIN, CHALLENGE_REWARD };
+           loginClaimable, claimLogin, LOGIN, CHALLENGE_REWARD,
+           dailiesCleared, bonusLeft, drawBonus, BONUS_SETS };
 })();
 
 </script>
@@ -7288,6 +7637,139 @@ const Events = (() => {
 
   return { EVENTS, TIERS, current, endsAt, msLeft, track, mult, add,
            claim, readyCount, progressPct };
+})();
+
+</script>
+<script>
+/* ============ achievements ============
+
+   Permanent, one-off, and read straight off the save. Nothing here needs a
+   hook in another module: every row is a counter already being kept, so an
+   existing save opens the list with whatever it has already earned ready to
+   claim rather than starting from zero.
+
+   Tiered on purpose. "Defeat 100 beasts" is a first-week reward; "defeat
+   100,000" is a reason to still be here in a month. Claiming is manual because
+   a reward you press for lands harder than one that appears.               */
+'use strict';
+
+const Achievements = (() => {
+  /* tiers(name, icon, stat, [thresholds], rewardFor) expands into one row per
+     threshold, so the table below stays readable */
+  function tiers(id, icon, name, stat, marks, pay) {
+    return marks.map((n, i) => ({
+      key: id + i, icon, name: name(n), need: n, stat,
+      gems: pay(i).gems, gold: pay(i).gold, ess: pay(i).ess, seeds: pay(i).seeds,
+    }));
+  }
+  const step = (g, o, e, s) => i => ({
+    gems: Math.round(g * Math.pow(2.1, i)),
+    gold: o ? Math.round(o * Math.pow(2.6, i)) : 0,
+    ess: e ? Math.round(e * Math.pow(2.2, i)) : 0,
+    seeds: s ? Math.round(s * Math.pow(1.8, i)) : 0,
+  });
+
+  const LIST = [].concat(
+    tiers('kill', 'sword', n => `Defeat ${fmt(n)} beasts`, () => S.kills,
+          [100, 1000, 10000, 100000], step(20, 800)),
+    tiers('boss', 'skull', n => n === 1 ? 'Beat your first boss' : `Beat ${n} bosses`,
+          () => S.bossKills,
+          [1, 10, 50, 200], step(30, 1200, 30)),
+    tiers('streak', 'streak', n => `Keep a ${n}-day streak`, () => S.streak.count,
+          [3, 7, 30, 100], step(40, 1500, 0, 4)),
+    tiers('hours', 'timer', n => n === 1 ? 'Practise for a full hour'
+                               : `Practise for ${n} hours`,
+          () => Math.floor((S.dream.minutes || 0) / 60),
+          [1, 10, 50, 200], step(50, 2000, 40)),
+    tiers('dex', 'book', n => `Meet ${n} different beasts`, () => Object.keys(S.dex).length,
+          [10, 50, 120, 288], step(25, 900, 25)),
+    tiers('own', 'paw', n => `Bond with ${n} beasts`,
+          () => Object.keys(S.beasts).length,
+          [3, 15, 40, 100], step(30, 1000, 20)),
+    tiers('level', 'star', n => `Reach level ${n}`, () => S.player.level,
+          [5, 20, 50, 100], step(35, 1400)),
+    tiers('sess', 'play', n => n === 1 ? 'Finish your first session'
+                              : `Finish ${fmt(n)} practice sessions`,
+          () => (S.dream.sessions || 0),
+          [1, 10, 50, 200], step(30, 1100, 0, 3)),
+    tiers('tier', 'relic', n => `Forge a tier-${n} piece`,
+          () => Math.max(0, ...(S.merge.board || []).map(i => (i && i.tier) || 0)),
+          [3, 5, 7, 9], step(30, 1000)),
+    tiers('arena', 'sword', n => n === 1 ? 'Win your first duel' : `Win ${n} duels`,
+          () => (S.arena.wins || 0),
+          [1, 10, 50], step(35, 1200)),
+    tiers('quest', 'scroll', n => `Claim ${n} quests`, () => (S.stats.questsClaimed || 0),
+          [10, 100, 500], step(30, 1100, 0, 3)),
+    tiers('goal', 'sunrise', n => `Run ${n} goals at once`, () => 1 + (S.sideGoals || []).length,
+          [2, 3, 4], step(60, 2200))
+  );
+
+  function stateOf() {
+    S.achv = S.achv || {};
+    if (!Array.isArray(S.achv.claimed)) S.achv.claimed = [];
+    return S.achv;
+  }
+  const isClaimed = k => stateOf().claimed.includes(k);
+  function progress(a) {
+    try { return a.stat() | 0; } catch (e) { return 0; }
+  }
+  const isDone = a => progress(a) >= a.need;
+  function readyCount() { return LIST.filter(a => !isClaimed(a.key) && isDone(a)).length; }
+  function claimedCount() { return stateOf().claimed.length; }
+  function total() { return LIST.length; }
+
+  /* the next unearned tier of each family, so the list shows a goal rather
+     than forty rows the player cannot touch yet */
+  function visible() {
+    const seen = {};
+    const out = [];
+    for (const a of LIST) {
+      const fam = a.key.replace(/\d+$/, '');
+      if (isClaimed(a.key)) continue;
+      if (isDone(a)) { out.push(a); continue; }        // claimable, always show
+      if (seen[fam]) continue;                          // one locked row per family
+      seen[fam] = 1;
+      out.push(a);
+    }
+    // claimable first, then closest to done
+    return out.sort((x, y) => {
+      const dx = isDone(x) ? 0 : 1, dy = isDone(y) ? 0 : 1;
+      if (dx !== dy) return dx - dy;
+      return (progress(y) / y.need) - (progress(x) / x.need);
+    });
+  }
+
+  function reward(a) {
+    const bits = [];
+    if (a.gems) bits.push(`${icon('gem')}${a.gems}`);
+    if (a.gold) bits.push(`${icon('gold')}${fmt(a.gold)}`);
+    if (a.ess) bits.push(`${icon('essence')}${a.ess}`);
+    if (a.seeds) bits.push(`${icon('seed')}${a.seeds}`);
+    return bits.join(' ');
+  }
+
+  function claim(key, btnEl) {
+    const a = LIST.find(x => x.key === key);
+    if (!a || isClaimed(key) || !isDone(a)) return false;
+    stateOf().claimed.push(key);
+    if (a.gems) grantGems(a.gems);
+    if (a.gold) grantGold(a.gold);
+    if (a.ess) grantEssence(a.ess);
+    if (a.seeds) grantSeeds(a.seeds);
+    grantPlayerXp(60);
+    Events.add(8, 'achievement');
+    Sound.levelup();
+    confetti(34);
+    if (btnEl) coinBurst(btnEl, 6);
+    toast(a.name, 'gold');
+    save();
+    UI.renderAchievements();
+    UI.renderHud();
+    return true;
+  }
+
+  return { LIST, visible, claim, readyCount, claimedCount, total,
+           progress, isDone, isClaimed, reward };
 })();
 
 </script>
@@ -8144,6 +8626,7 @@ const UI = (() => {
     renderHero();
     renderFocus();
     renderRhythm();
+    renderSideGoals();
     renderTasks();
     renderEvent();
     renderTodayQuests();
@@ -8151,6 +8634,136 @@ const UI = (() => {
     renderPromo();
     renderOffers();
     renderJournal();
+  }
+
+  /* ---- extra goals: up to three, each with its own task and timer ---- */
+  function renderSideGoals() {
+    const w = $('#goals-card');
+    if (!w || !S.dream || !S.dream.key) return;
+    const gs = Dream.sideGoals();
+    const room = Dream.sideRoom();
+
+    const rows = gs.map(g => {
+      const d = Dream.sideDef(g);
+      const done = Dream.sideDoneToday(g);
+      return `<div class="sg-row ${done ? 'done' : ''}">
+        <span class="sg-ic"><span class="hob h-${d.art}"></span></span>
+        <span class="sg-mid">
+          <b>${d.name}</b>
+          <span class="sg-task">${done ? `${g.minutes} min logged in total` : Dream.sideTask(g)}</span>
+          <span class="sg-meta">${(g.sessions || 0)} session${g.sessions === 1 ? '' : 's'} ·
+            ${Math.floor((g.minutes || 0) / 60)}h ${(g.minutes || 0) % 60}m</span>
+        </span>
+        <button class="pixbtn ${done ? 'ghost' : 'good'} tiny sg-go" data-goal="${g.key}">
+          ${done ? 'Again' : '<b>Start</b>'}</button>
+      </div>`;
+    }).join('');
+
+    w.innerHTML = `
+      <div class="card-head">${icon('sunrise')} Other goals
+        <span class="sg-count">${gs.length}/${Dream.SIDE_MAX}</span></div>
+      ${gs.length ? `<div class="sg-list">${rows}</div>`
+        : '<p class="hint-line">Chasing more than one thing? Add up to three side goals. Each brings its own daily task, its own quest, and pays 60% of a main session.</p>'}
+      ${room > 0 ? `<button class="pixbtn ghost wide" data-goal-add="1">
+        <span class="glyph-plus"></span> Add a goal</button>` : ''}`;
+
+    $$('#goals-card [data-goal]', w).forEach(b => {
+      b.onclick = () => { Sound.click(); showSessionSetup(b.dataset.goal); };
+    });
+    const add = w.querySelector('[data-goal-add]');
+    if (add) add.onclick = () => showGoalPicker();
+  }
+
+  function showGoalPicker() {
+    const box = el('div');
+    const opts = Dream.sideAvailable();
+    box.innerHTML = `<h3>${icon('sunrise')} Add a goal</h3>
+      <p class="subtle" style="text-align:center">It gets its own daily task and
+        counts toward everything. ${Dream.sideRoom()} slot${Dream.sideRoom() === 1 ? '' : 's'} left.</p>
+      <div class="goalgrid">${opts.map(k => {
+        const d = Dream.DREAMS[k];
+        return `<button class="goalcard" data-pick="${k}">
+          <span class="hob h-${d.art}"></span>
+          <b>${d.name}</b><span>${d.blurb}</span></button>`;
+      }).join('')}</div>
+      ${Dream.sideGoals().length ? `<div class="sectitle">Drop one</div>
+        <div class="mrow">${Dream.sideGoals().map(g =>
+          `<button class="pixbtn ghost sm danger" data-drop="${g.key}">${Dream.sideDef(g).name}</button>`
+        ).join('')}</div>` : ''}`;
+    const back = openModal(box);
+    $$('#modal-root [data-pick]', box).forEach(b => {
+      b.onclick = () => {
+        if (Dream.addSide(b.dataset.pick, S.dream.level, 15)) {
+          Sound.quest();
+          confetti(24);
+          toast(`${Dream.DREAMS[b.dataset.pick].name} added`, 'gold');
+          closeModal(back);
+          renderSideGoals();
+          renderQuests();
+          renderAchievements();
+        }
+      };
+    });
+    $$('#modal-root [data-drop]', box).forEach(b => {
+      b.onclick = () => {
+        Dream.dropSide(b.dataset.drop);
+        closeModal(back);
+        renderSideGoals();
+      };
+    });
+  }
+
+  /* ---- achievements: permanent, tiered, claimed by hand ---- */
+  /* Clearing the board is not the end of the day: Vale will hand out more.
+     Three sets, offered rather than forced, so an evening check-in has
+     something to do that the morning one did not. */
+  function renderBonusRow(wrap) {
+    const cleared = Quests.dailiesCleared();
+    const left = Quests.bonusLeft();
+    const row = el('div', 'bonus-row' + (cleared && left ? ' hot' : ''));
+    if (!cleared) {
+      row.innerHTML = `<span class="bn-txt">${icon('chest')} Clear the board to unlock
+        bonus duty <b>+20${icon('gem')}</b></span>`;
+    } else if (left > 0) {
+      row.innerHTML = `<span class="bn-txt">${icon('chest')} Vale has more work.
+        <b>${left} set${left > 1 ? 's' : ''}</b> left today.</span>`;
+      const b = el('button', 'pixbtn gold sm', '<b>Take it on</b>');
+      b.onclick = () => {
+        if (Quests.drawBonus()) { confetti(20); renderQuests(); }
+      };
+      row.appendChild(b);
+    } else {
+      row.innerHTML = `<span class="bn-txt">${icon('star')} Everything done today.
+        Come back tomorrow for a fresh board.</span>`;
+    }
+    wrap.appendChild(row);
+  }
+
+  function renderAchievements() {
+    const w = $('#achv-card');
+    if (!w) return;
+    const rows = Achievements.visible().slice(0, 8).map(a => {
+      const p = Achievements.progress(a);
+      const done = Achievements.isDone(a);
+      const pct = Math.min(100, 100 * p / a.need);
+      return `<div class="av-row ${done ? 'ready' : ''}">
+        <span class="av-ic">${icon(a.icon)}</span>
+        <span class="av-mid">
+          <b>${a.name}</b>
+          <span class="av-bar"><i style="width:${pct}%"></i><em>${fmt(Math.min(p, a.need))} / ${fmt(a.need)}</em></span>
+          <span class="av-pay">${Achievements.reward(a)}</span>
+        </span>
+        <button class="pixbtn ${done ? 'gold' : 'ghost'} tiny" data-av="${a.key}"
+          ${done ? '' : 'disabled'}>${done ? '<b>Claim</b>' : 'Locked'}</button>
+      </div>`;
+    }).join('');
+    w.innerHTML = `
+      <div class="card-head">${icon('star')} Achievements
+        <span class="av-count">${Achievements.claimedCount()}/${Achievements.total()}</span></div>
+      <div class="av-list">${rows || '<p class="hint-line">All done. Every single one.</p>'}</div>`;
+    $$('#achv-card [data-av]', w).forEach(b => {
+      b.onclick = () => Achievements.claim(b.dataset.av, b);
+    });
   }
 
   /* ---- Vale's tasks: the tutorial as a claimable board, not a tour ---- */
@@ -8508,12 +9121,24 @@ const UI = (() => {
     const stats = $('#rhythm-stats');
     stats.innerHTML = '';
     const wk = week.reduce((a, b) => a + b, 0);
+    const bonus = Math.round((streakMult() - 1) * 100);
     [[S.streak.count, 'day streak'],
-     [Dream.hoursLogged().toFixed(1) + 'h', 'total'],
+     ['+' + bonus + '%', 'streak bonus'],
      [wk + 'm', 'this week'],
-     [S.dream.sessions || 0, 'sessions']].forEach(([v, k]) => {
-      stats.appendChild(el('div', 'rstat', `<b>${v}</b><span>${k}</span>`));
+     [S.dream.sessions || 0, 'sessions']].forEach(([v, k], i) => {
+      stats.appendChild(el('div', 'rstat' + (i === 1 && bonus > 0 ? ' hot' : ''),
+                           `<b>${v}</b><span>${k}</span>`));
     });
+    // what tomorrow is worth, so the streak is a reason to come back.
+    // rebuilt each render, so drop the previous one instead of stacking them
+    const old = $('#rhythm-card .streak-note');
+    if (old) old.remove();
+    const next = Math.round(Math.min(0.5, S.streak.count * 0.05) * 100);
+    const note = el('div', 'streak-note');
+    note.innerHTML = S.streak.count >= 10
+      ? `${icon('streak')} Streak bonus is maxed at +50%. Keep it.`
+      : `${icon('streak')} Practise tomorrow and the bonus goes to <b>+${next}%</b>.`;
+    stats.parentNode.appendChild(note);
   }
 
   function renderTodayQuests() {
@@ -8570,30 +9195,33 @@ const UI = (() => {
     return Math.max(0, S.session.mins * 60000 - sessionElapsed());
   }
 
-  function showSessionSetup() {
-    const d = Dream.def();
+  function showSessionSetup(goalKey) {
+    const g = goalKey && Dream.sideGoals().find(x => x.key === goalKey);
+    const d = g ? Dream.sideDef(g) : Dream.def();
     const box = el('div', 'timer-wrap');
     box.innerHTML = `<h3><span class="hob h-${d.art}"></span> ${d.name}</h3>
-      <p class="subtle" style="text-align:center">${Dream.todaysTask()}</p>
+      <p class="subtle" style="text-align:center">${g ? Dream.sideTask(g) : Dream.todaysTask()}</p>
       <label style="margin-top:10px">How long?</label>
       <div class="preset-row"></div>
       <div class="mrow"></div>`;
     const row = box.querySelector('.preset-row');
-    const opts = [...new Set([5, 10, 15, S.dream.mins, 30, 45, 60])].sort((a, b) => a - b);
-    let sel = S.dream.mins;
+    const want = g ? g.mins : S.dream.mins;
+    const opts = [...new Set([5, 10, 15, want, 30, 45, 60])].sort((a, b) => a - b);
+    let sel = want;
     for (const m of opts) {
       const p = el('button', 'preset' + (m === sel ? ' on' : ''), m + 'm');
       p.onclick = () => { sel = m; $$('.preset', row).forEach(x => x.classList.remove('on')); p.classList.add('on'); };
       row.appendChild(p);
     }
     const start = el('button', 'pixbtn primary', `<b>Begin</b>`);
-    start.onclick = () => { closeAllModals(); startSession(sel); };
+    start.onclick = () => { closeAllModals(); startSession(sel, goalKey); };
     box.querySelector('.mrow').appendChild(start);
     openModal(box);
   }
 
-  function startSession(mins) {
+  function startSession(mins, goalKey) {
     S.session = { mins, startedAt: Date.now(), paused: false, elapsedBefore: 0,
+                  goal: goalKey || null,
                   kills0: S.kills, gold0: S.player.gold };
     save();
     Sound.quest();
@@ -8756,7 +9384,8 @@ const UI = (() => {
     const ok = el('button', 'pixbtn gold', '<b>Collect</b>');
     ok.onclick = e => {
       const note = box.querySelector('#s-note').value.trim();
-      const r = Dream.completeSession(mins, note);
+      const gk = S.session && S.session.goal;
+      const r = gk ? Dream.completeSide(gk, mins, note) : Dream.completeSession(mins, note);
       coinBurst(e.currentTarget, 8);
       closeAllModals();
       showSessionRewards(r);
@@ -10149,19 +10778,29 @@ const UI = (() => {
       if (b.id === 'duo') art = ELEM_BANNER_ART[b.elems[0]] || BANNER_ART.radiant;
       if (!art) art = BANNER_ART.radiant;
       const card = el('div', 'banner');
-      card.style.background = `linear-gradient(150deg, ${art.from}, ${art.to})`;
+      card.style.setProperty('--b-from', art.from);
+      card.style.setProperty('--b-to', art.to);
       const tag = art.tag ? `<span class="btag">${art.tag}</span>` : '';
       const extra = b.elems ? b.elems.map(e => elemIcon(e)).join('') : '';
       // element banners wear their own element art, not a stand-in ui icon
       const head = b.elem ? elemIcon(b.elem)
         : b.elems ? elemIcon(b.elems[0]) : icon(b.icon);
+      const pityLeft = Summon.PITY_EVERY - (S.summons.sinceRare % Summon.PITY_EVERY);
+      const pityPct = 100 * (S.summons.sinceRare % Summon.PITY_EVERY) / Summon.PITY_EVERY;
       card.innerHTML = `
-        <div class="bname">${head} ${b.name}${tag}</div>
-        <div class="bsub">${extra} ${b.sub}</div>
-        <div class="bstars"></div>
+        <div class="bsheen"></div>
+        <div class="bplate">
+          <div class="bname">${head} ${b.name}</div>
+          <div class="bsub">${extra} ${b.sub}</div>
+        </div>
+        ${tag}
         <div class="bshow"><img src="${assetUrl('assets/creatures/' + C_BY_ID[art.cid].file)}"></div>
+        <div class="bpity" title="Guaranteed rare or better within ${pityLeft}">
+          <span class="pixbar"><i style="width:${pityPct}%"></i></span>
+          <b>rare in ${pityLeft}</b>
+        </div>
         <div class="bbtns"></div>`;
-      fitSprite(card.querySelector('.bshow img'), art.cid, 104);
+      fitSprite(card.querySelector('.bshow img'), art.cid, 82);
       const btns = card.querySelector('.bbtns');
       const curIcon = b.cur === 'mana' ? 'mana' : b.cur === 'essence' ? 'essence' : 'gem';
       const btnKind = b.cur === 'mana' ? 'primary' : b.cur === 'essence' ? 'good' : 'gem';
@@ -10285,17 +10924,18 @@ const UI = (() => {
     wrap.innerHTML = '';
     for (const q of S.quests.list) {
       const done = q.progress >= q.target;
-      const card = el('div', 'quest' + (done ? ' done' : ''));
+      const card = el('div', 'quest' + (done ? ' done' : '') + (q.bonus ? ' bonusq' : ''));
       const rw = [];
       if (q.reward.gems) rw.push(icon('gem') + q.reward.gems);
-      if (q.reward.lp) rw.push(icon('flask') + q.reward.lp);
+      if (q.reward.lp) rw.push(icon('gem') + q.reward.lp);
       if (q.reward.seeds) rw.push(icon('seed') + q.reward.seeds);
+      if (q.reward.ess) rw.push(icon('essence') + q.reward.ess);
       if (q.reward.mana) rw.push(icon('mana') + q.reward.mana);
       if (q.reward.gold) rw.push(icon('gold'));
       card.innerHTML = `
         <div class="qic">${icon(q.icon)}</div>
         <div class="qmain">
-          <div class="qname">${q.name}</div>
+          <div class="qname">${q.bonus ? '<span class="qbonus">BONUS</span> ' : ''}${q.name}</div>
           <span class="pixbar good"><i style="width:${100 * Math.min(1, q.progress / q.target)}%"></i></span>
           <div class="qprog-txt">${q.progress}/${q.target} ${rw.join(' ')}</div>
         </div>`;
@@ -10305,6 +10945,8 @@ const UI = (() => {
       card.appendChild(btn);
       wrap.appendChild(card);
     }
+    renderBonusRow(wrap);
+    renderAchievements();
     const j = $('#journey-panel');
     j.innerHTML = '';
     const stats = [
@@ -11261,7 +11903,8 @@ const UI = (() => {
     showDefeat, hideDefeat, showEncounter, renderQuestLog, renderUpgrades,
     renderCooldowns, tickCooldowns, renderPanels, togglePanel,
     renderMerge, mergeSpawnFx, mergeFuseFx, showMap,
-    renderOffers, renderPromo, renderEvent, renderTasks, showTipCard, showReflectOffer,
+    renderOffers, renderPromo, renderEvent, renderTasks, renderSideGoals,
+    renderAchievements, showTipCard, showReflectOffer,
     showAccount, renderAccount, showRestore, showArena, renderArena,
     renderBeasts, renderCollection, showCreature, showFeedPicker,
     renderFarm, waterGarden, showMealModal, showKcalTargetModal, renderFood,
@@ -11400,6 +12043,26 @@ const PWA = (() => {
       else greet = UI.maybeShowLogin;
     } else {
       greet = UI.maybeShowLogin;
+    }
+  }
+  /* Been away a while? Say so and pay for it, once per return. A comeback gift
+     is the difference between opening the app after a bad week and not. */
+  if (hadSave && S.onboarded) {
+    const days = Math.floor((Date.now() - S.lastSeen) / 86400000);
+    if (days >= 2 && S.comeback.lastDay !== todayStr()) {
+      S.comeback.lastDay = todayStr();
+      const gems = Math.min(200, 40 * days);
+      const gold = Math.min(30000, 2500 * days);
+      grantGems(gems);
+      grantGold(gold);
+      const prev = greet;
+      greet = () => {
+        toast(`Welcome back — ${days} days away. +${gems} gems, +${fmt(gold)} gold`, 'gold');
+        confetti(40);
+        Sound.levelup();
+        if (prev) setTimeout(prev, 1400);
+      };
+      save();
     }
   }
   UI.renderAll();

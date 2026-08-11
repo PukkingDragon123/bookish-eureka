@@ -80,6 +80,7 @@ const UI = (() => {
     renderHero();
     renderFocus();
     renderRhythm();
+    renderSideGoals();
     renderTasks();
     renderEvent();
     renderTodayQuests();
@@ -87,6 +88,136 @@ const UI = (() => {
     renderPromo();
     renderOffers();
     renderJournal();
+  }
+
+  /* ---- extra goals: up to three, each with its own task and timer ---- */
+  function renderSideGoals() {
+    const w = $('#goals-card');
+    if (!w || !S.dream || !S.dream.key) return;
+    const gs = Dream.sideGoals();
+    const room = Dream.sideRoom();
+
+    const rows = gs.map(g => {
+      const d = Dream.sideDef(g);
+      const done = Dream.sideDoneToday(g);
+      return `<div class="sg-row ${done ? 'done' : ''}">
+        <span class="sg-ic"><span class="hob h-${d.art}"></span></span>
+        <span class="sg-mid">
+          <b>${d.name}</b>
+          <span class="sg-task">${done ? `${g.minutes} min logged in total` : Dream.sideTask(g)}</span>
+          <span class="sg-meta">${(g.sessions || 0)} session${g.sessions === 1 ? '' : 's'} ·
+            ${Math.floor((g.minutes || 0) / 60)}h ${(g.minutes || 0) % 60}m</span>
+        </span>
+        <button class="pixbtn ${done ? 'ghost' : 'good'} tiny sg-go" data-goal="${g.key}">
+          ${done ? 'Again' : '<b>Start</b>'}</button>
+      </div>`;
+    }).join('');
+
+    w.innerHTML = `
+      <div class="card-head">${icon('sunrise')} Other goals
+        <span class="sg-count">${gs.length}/${Dream.SIDE_MAX}</span></div>
+      ${gs.length ? `<div class="sg-list">${rows}</div>`
+        : '<p class="hint-line">Chasing more than one thing? Add up to three side goals. Each brings its own daily task, its own quest, and pays 60% of a main session.</p>'}
+      ${room > 0 ? `<button class="pixbtn ghost wide" data-goal-add="1">
+        <span class="glyph-plus"></span> Add a goal</button>` : ''}`;
+
+    $$('#goals-card [data-goal]', w).forEach(b => {
+      b.onclick = () => { Sound.click(); showSessionSetup(b.dataset.goal); };
+    });
+    const add = w.querySelector('[data-goal-add]');
+    if (add) add.onclick = () => showGoalPicker();
+  }
+
+  function showGoalPicker() {
+    const box = el('div');
+    const opts = Dream.sideAvailable();
+    box.innerHTML = `<h3>${icon('sunrise')} Add a goal</h3>
+      <p class="subtle" style="text-align:center">It gets its own daily task and
+        counts toward everything. ${Dream.sideRoom()} slot${Dream.sideRoom() === 1 ? '' : 's'} left.</p>
+      <div class="goalgrid">${opts.map(k => {
+        const d = Dream.DREAMS[k];
+        return `<button class="goalcard" data-pick="${k}">
+          <span class="hob h-${d.art}"></span>
+          <b>${d.name}</b><span>${d.blurb}</span></button>`;
+      }).join('')}</div>
+      ${Dream.sideGoals().length ? `<div class="sectitle">Drop one</div>
+        <div class="mrow">${Dream.sideGoals().map(g =>
+          `<button class="pixbtn ghost sm danger" data-drop="${g.key}">${Dream.sideDef(g).name}</button>`
+        ).join('')}</div>` : ''}`;
+    const back = openModal(box);
+    $$('#modal-root [data-pick]', box).forEach(b => {
+      b.onclick = () => {
+        if (Dream.addSide(b.dataset.pick, S.dream.level, 15)) {
+          Sound.quest();
+          confetti(24);
+          toast(`${Dream.DREAMS[b.dataset.pick].name} added`, 'gold');
+          closeModal(back);
+          renderSideGoals();
+          renderQuests();
+          renderAchievements();
+        }
+      };
+    });
+    $$('#modal-root [data-drop]', box).forEach(b => {
+      b.onclick = () => {
+        Dream.dropSide(b.dataset.drop);
+        closeModal(back);
+        renderSideGoals();
+      };
+    });
+  }
+
+  /* ---- achievements: permanent, tiered, claimed by hand ---- */
+  /* Clearing the board is not the end of the day: Vale will hand out more.
+     Three sets, offered rather than forced, so an evening check-in has
+     something to do that the morning one did not. */
+  function renderBonusRow(wrap) {
+    const cleared = Quests.dailiesCleared();
+    const left = Quests.bonusLeft();
+    const row = el('div', 'bonus-row' + (cleared && left ? ' hot' : ''));
+    if (!cleared) {
+      row.innerHTML = `<span class="bn-txt">${icon('chest')} Clear the board to unlock
+        bonus duty <b>+20${icon('gem')}</b></span>`;
+    } else if (left > 0) {
+      row.innerHTML = `<span class="bn-txt">${icon('chest')} Vale has more work.
+        <b>${left} set${left > 1 ? 's' : ''}</b> left today.</span>`;
+      const b = el('button', 'pixbtn gold sm', '<b>Take it on</b>');
+      b.onclick = () => {
+        if (Quests.drawBonus()) { confetti(20); renderQuests(); }
+      };
+      row.appendChild(b);
+    } else {
+      row.innerHTML = `<span class="bn-txt">${icon('star')} Everything done today.
+        Come back tomorrow for a fresh board.</span>`;
+    }
+    wrap.appendChild(row);
+  }
+
+  function renderAchievements() {
+    const w = $('#achv-card');
+    if (!w) return;
+    const rows = Achievements.visible().slice(0, 8).map(a => {
+      const p = Achievements.progress(a);
+      const done = Achievements.isDone(a);
+      const pct = Math.min(100, 100 * p / a.need);
+      return `<div class="av-row ${done ? 'ready' : ''}">
+        <span class="av-ic">${icon(a.icon)}</span>
+        <span class="av-mid">
+          <b>${a.name}</b>
+          <span class="av-bar"><i style="width:${pct}%"></i><em>${fmt(Math.min(p, a.need))} / ${fmt(a.need)}</em></span>
+          <span class="av-pay">${Achievements.reward(a)}</span>
+        </span>
+        <button class="pixbtn ${done ? 'gold' : 'ghost'} tiny" data-av="${a.key}"
+          ${done ? '' : 'disabled'}>${done ? '<b>Claim</b>' : 'Locked'}</button>
+      </div>`;
+    }).join('');
+    w.innerHTML = `
+      <div class="card-head">${icon('star')} Achievements
+        <span class="av-count">${Achievements.claimedCount()}/${Achievements.total()}</span></div>
+      <div class="av-list">${rows || '<p class="hint-line">All done. Every single one.</p>'}</div>`;
+    $$('#achv-card [data-av]', w).forEach(b => {
+      b.onclick = () => Achievements.claim(b.dataset.av, b);
+    });
   }
 
   /* ---- Vale's tasks: the tutorial as a claimable board, not a tour ---- */
@@ -444,12 +575,24 @@ const UI = (() => {
     const stats = $('#rhythm-stats');
     stats.innerHTML = '';
     const wk = week.reduce((a, b) => a + b, 0);
+    const bonus = Math.round((streakMult() - 1) * 100);
     [[S.streak.count, 'day streak'],
-     [Dream.hoursLogged().toFixed(1) + 'h', 'total'],
+     ['+' + bonus + '%', 'streak bonus'],
      [wk + 'm', 'this week'],
-     [S.dream.sessions || 0, 'sessions']].forEach(([v, k]) => {
-      stats.appendChild(el('div', 'rstat', `<b>${v}</b><span>${k}</span>`));
+     [S.dream.sessions || 0, 'sessions']].forEach(([v, k], i) => {
+      stats.appendChild(el('div', 'rstat' + (i === 1 && bonus > 0 ? ' hot' : ''),
+                           `<b>${v}</b><span>${k}</span>`));
     });
+    // what tomorrow is worth, so the streak is a reason to come back.
+    // rebuilt each render, so drop the previous one instead of stacking them
+    const old = $('#rhythm-card .streak-note');
+    if (old) old.remove();
+    const next = Math.round(Math.min(0.5, S.streak.count * 0.05) * 100);
+    const note = el('div', 'streak-note');
+    note.innerHTML = S.streak.count >= 10
+      ? `${icon('streak')} Streak bonus is maxed at +50%. Keep it.`
+      : `${icon('streak')} Practise tomorrow and the bonus goes to <b>+${next}%</b>.`;
+    stats.parentNode.appendChild(note);
   }
 
   function renderTodayQuests() {
@@ -506,30 +649,33 @@ const UI = (() => {
     return Math.max(0, S.session.mins * 60000 - sessionElapsed());
   }
 
-  function showSessionSetup() {
-    const d = Dream.def();
+  function showSessionSetup(goalKey) {
+    const g = goalKey && Dream.sideGoals().find(x => x.key === goalKey);
+    const d = g ? Dream.sideDef(g) : Dream.def();
     const box = el('div', 'timer-wrap');
     box.innerHTML = `<h3><span class="hob h-${d.art}"></span> ${d.name}</h3>
-      <p class="subtle" style="text-align:center">${Dream.todaysTask()}</p>
+      <p class="subtle" style="text-align:center">${g ? Dream.sideTask(g) : Dream.todaysTask()}</p>
       <label style="margin-top:10px">How long?</label>
       <div class="preset-row"></div>
       <div class="mrow"></div>`;
     const row = box.querySelector('.preset-row');
-    const opts = [...new Set([5, 10, 15, S.dream.mins, 30, 45, 60])].sort((a, b) => a - b);
-    let sel = S.dream.mins;
+    const want = g ? g.mins : S.dream.mins;
+    const opts = [...new Set([5, 10, 15, want, 30, 45, 60])].sort((a, b) => a - b);
+    let sel = want;
     for (const m of opts) {
       const p = el('button', 'preset' + (m === sel ? ' on' : ''), m + 'm');
       p.onclick = () => { sel = m; $$('.preset', row).forEach(x => x.classList.remove('on')); p.classList.add('on'); };
       row.appendChild(p);
     }
     const start = el('button', 'pixbtn primary', `<b>Begin</b>`);
-    start.onclick = () => { closeAllModals(); startSession(sel); };
+    start.onclick = () => { closeAllModals(); startSession(sel, goalKey); };
     box.querySelector('.mrow').appendChild(start);
     openModal(box);
   }
 
-  function startSession(mins) {
+  function startSession(mins, goalKey) {
     S.session = { mins, startedAt: Date.now(), paused: false, elapsedBefore: 0,
+                  goal: goalKey || null,
                   kills0: S.kills, gold0: S.player.gold };
     save();
     Sound.quest();
@@ -692,7 +838,8 @@ const UI = (() => {
     const ok = el('button', 'pixbtn gold', '<b>Collect</b>');
     ok.onclick = e => {
       const note = box.querySelector('#s-note').value.trim();
-      const r = Dream.completeSession(mins, note);
+      const gk = S.session && S.session.goal;
+      const r = gk ? Dream.completeSide(gk, mins, note) : Dream.completeSession(mins, note);
       coinBurst(e.currentTarget, 8);
       closeAllModals();
       showSessionRewards(r);
@@ -2085,19 +2232,29 @@ const UI = (() => {
       if (b.id === 'duo') art = ELEM_BANNER_ART[b.elems[0]] || BANNER_ART.radiant;
       if (!art) art = BANNER_ART.radiant;
       const card = el('div', 'banner');
-      card.style.background = `linear-gradient(150deg, ${art.from}, ${art.to})`;
+      card.style.setProperty('--b-from', art.from);
+      card.style.setProperty('--b-to', art.to);
       const tag = art.tag ? `<span class="btag">${art.tag}</span>` : '';
       const extra = b.elems ? b.elems.map(e => elemIcon(e)).join('') : '';
       // element banners wear their own element art, not a stand-in ui icon
       const head = b.elem ? elemIcon(b.elem)
         : b.elems ? elemIcon(b.elems[0]) : icon(b.icon);
+      const pityLeft = Summon.PITY_EVERY - (S.summons.sinceRare % Summon.PITY_EVERY);
+      const pityPct = 100 * (S.summons.sinceRare % Summon.PITY_EVERY) / Summon.PITY_EVERY;
       card.innerHTML = `
-        <div class="bname">${head} ${b.name}${tag}</div>
-        <div class="bsub">${extra} ${b.sub}</div>
-        <div class="bstars"></div>
+        <div class="bsheen"></div>
+        <div class="bplate">
+          <div class="bname">${head} ${b.name}</div>
+          <div class="bsub">${extra} ${b.sub}</div>
+        </div>
+        ${tag}
         <div class="bshow"><img src="${assetUrl('assets/creatures/' + C_BY_ID[art.cid].file)}"></div>
+        <div class="bpity" title="Guaranteed rare or better within ${pityLeft}">
+          <span class="pixbar"><i style="width:${pityPct}%"></i></span>
+          <b>rare in ${pityLeft}</b>
+        </div>
         <div class="bbtns"></div>`;
-      fitSprite(card.querySelector('.bshow img'), art.cid, 104);
+      fitSprite(card.querySelector('.bshow img'), art.cid, 82);
       const btns = card.querySelector('.bbtns');
       const curIcon = b.cur === 'mana' ? 'mana' : b.cur === 'essence' ? 'essence' : 'gem';
       const btnKind = b.cur === 'mana' ? 'primary' : b.cur === 'essence' ? 'good' : 'gem';
@@ -2221,17 +2378,18 @@ const UI = (() => {
     wrap.innerHTML = '';
     for (const q of S.quests.list) {
       const done = q.progress >= q.target;
-      const card = el('div', 'quest' + (done ? ' done' : ''));
+      const card = el('div', 'quest' + (done ? ' done' : '') + (q.bonus ? ' bonusq' : ''));
       const rw = [];
       if (q.reward.gems) rw.push(icon('gem') + q.reward.gems);
-      if (q.reward.lp) rw.push(icon('flask') + q.reward.lp);
+      if (q.reward.lp) rw.push(icon('gem') + q.reward.lp);
       if (q.reward.seeds) rw.push(icon('seed') + q.reward.seeds);
+      if (q.reward.ess) rw.push(icon('essence') + q.reward.ess);
       if (q.reward.mana) rw.push(icon('mana') + q.reward.mana);
       if (q.reward.gold) rw.push(icon('gold'));
       card.innerHTML = `
         <div class="qic">${icon(q.icon)}</div>
         <div class="qmain">
-          <div class="qname">${q.name}</div>
+          <div class="qname">${q.bonus ? '<span class="qbonus">BONUS</span> ' : ''}${q.name}</div>
           <span class="pixbar good"><i style="width:${100 * Math.min(1, q.progress / q.target)}%"></i></span>
           <div class="qprog-txt">${q.progress}/${q.target} ${rw.join(' ')}</div>
         </div>`;
@@ -2241,6 +2399,8 @@ const UI = (() => {
       card.appendChild(btn);
       wrap.appendChild(card);
     }
+    renderBonusRow(wrap);
+    renderAchievements();
     const j = $('#journey-panel');
     j.innerHTML = '';
     const stats = [
@@ -3197,7 +3357,8 @@ const UI = (() => {
     showDefeat, hideDefeat, showEncounter, renderQuestLog, renderUpgrades,
     renderCooldowns, tickCooldowns, renderPanels, togglePanel,
     renderMerge, mergeSpawnFx, mergeFuseFx, showMap,
-    renderOffers, renderPromo, renderEvent, renderTasks, showTipCard, showReflectOffer,
+    renderOffers, renderPromo, renderEvent, renderTasks, renderSideGoals,
+    renderAchievements, showTipCard, showReflectOffer,
     showAccount, renderAccount, showRestore, showArena, renderArena,
     renderBeasts, renderCollection, showCreature, showFeedPicker,
     renderFarm, waterGarden, showMealModal, showKcalTargetModal, renderFood,
