@@ -99,9 +99,9 @@ const Tasks = (() => {
     if (btnEl) coinBurst(btnEl, 5);
     if (done()) {
       grantGems(100);
-      confetti(70);
-      Sound.levelup();
-      toast('All of Vale\'s tasks done — 100 bonus gems', 'gold');
+      UI.celebrate({ icon: 'chest', title: 'Every task done',
+        sub: "That is Vale's whole list. The rest is up to you.",
+        rewards: [`${icon('gem')}100`], cta: 'Onward' });
     } else {
       toast(`${t.name} — reward taken`, 'gold');
     }

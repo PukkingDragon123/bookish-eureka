@@ -12,6 +12,7 @@
   $$('#tabbar button').forEach(b => b.onclick = () => UI.switchTab(b.dataset.tab));
   $('#btn-settings').onclick = () => UI.showSettings();
   $('#hud-level').onclick = () => toast(`${fmt(S.player.xp)} / ${fmt(xpForLevel(S.player.level))} XP to next level`);
+  $('#hud-streak-btn').onclick = () => UI.showStreak();
   $('#btn-boss').onclick = () => { Battle.challengeBoss(); Sound.click(); };
   $('#btn-map').onclick = () => UI.showMap();
   $('#btn-arena').onclick = () => UI.showArena();
@@ -34,6 +35,9 @@
      bug. `greet` is whatever should happen the moment the app is visible. */
   const fresh = !hadSave || !S.dream || !S.dream.key;
   let greet = null;
+  /* the streak is settled before anything reads it: a missed day either spends
+     a freeze or ends the run, and either way the player is told once */
+  const streakNews = hadSave ? Streak.checkOnOpen() : null;
   if (fresh) {
     UI.renderSceneBg();
   } else {
@@ -73,6 +77,21 @@
       };
       save();
     }
+  }
+  if (streakNews) {
+    const prev = greet;
+    greet = () => {
+      if (streakNews.froze) {
+        UI.celebrate({ icon: 'streak', kind: 'freeze', title: 'Streak frozen',
+          sub: `You missed a day and a freeze covered it. ${streakNews.left} left.`,
+          rewards: [] });
+      } else {
+        UI.celebrate({ icon: 'streak', kind: 'broke', title: 'Streak ended',
+          sub: `${streakNews.lost} days. Today is day one of the next one.`,
+          rewards: [] });
+      }
+      if (prev) setTimeout(prev, 900);
+    };
   }
   UI.renderAll();
 

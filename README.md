@@ -147,6 +147,12 @@ identical every session:
 - **Bonus duty** — clearing the daily board pays 20 gems and unlocks up to three extra sets
   of two harder quests, offered rather than forced. Finishing your quests opens more of them
   instead of ending the day.
+- **The streak** — tap the flame in the HUD for the full sheet: the count at 62px, your best
+  run, the live bonus, a five-week calendar of the days you actually turned up, the next
+  milestone with a progress bar, and **streak freezes**. A freeze costs 60 gems, you can hold
+  three, and one is spent automatically when you miss a single day so the run survives.
+  Eight milestones from 3 days to a full year, each paying and each getting a full-screen
+  moment once.
 - **Coming back matters** — a 14-day login ladder that climbs to a 200-gem grand chest, a
   streak bonus up to +50% on mana and XP with tomorrow's figure shown on the rhythm card,
   and a comeback gift scaled to how long you were away.
@@ -161,6 +167,24 @@ identical every session:
   the week turns over.
 - **Offline progress** — your party keeps fighting while you're away (up to 12h); an active
   exercise boost multiplies it.
+
+## The feel
+
+The look is pixel — hard edges, no soft corners, one palette. The *feel* is borrowed from
+the habit apps that get it right, in `css/juice.css`, loaded last:
+
+* One spring curve (`cubic-bezier(.18,1.62,.42,1)`) used for every scale and position
+  change in the app, so the whole thing bounces on the same rhythm. Colour, borders and
+  layout never ease, so nothing picks up the softness of a web UI kit.
+* Buttons press 5px down and spring back. The primary action on a screen nudges every few
+  seconds so the eye finds it.
+* Progress bars overshoot as they fill and flash once when they top out.
+* Every currency number squashes and pops when it changes.
+* Claimable rows hop. Claiming stamps a **CLAIMED** plate that springs out of the button —
+  on `<body>`, so the list re-rendering underneath cannot wipe it.
+* One full-screen celebration used for every "you did a thing" beat: streak milestones, a
+  broken run, a new rung on the ladder, Vale's list finished. Spinning stepped rays, a
+  bouncing icon, the reward plates landing one after another.
 
 ## Look and feel
 

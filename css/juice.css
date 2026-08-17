@@ -1,0 +1,279 @@
+/* ============ juice ============
+
+   Loaded last. The look stays pixel — hard edges, no soft corners, the same
+   palette — but the *feel* borrows from the habit apps that get this right: a
+   spring on everything you press, a bar that overshoots as it fills, a number
+   that pops when it changes, and a full-screen moment when something matters.
+
+   Springs are used for scale and position only. Colour, borders and layout
+   never ease, so nothing acquires the soft look of a web UI kit.          */
+
+:root {
+  /* one spring, used everywhere, so the whole app bounces on the same curve */
+  --spring: cubic-bezier(.18,1.62,.42,1);
+  --spring-soft: cubic-bezier(.22,1.34,.44,1);
+}
+
+/* ---------- buttons: press down, spring back ---------- */
+.pixbtn {
+  transition: transform .16s var(--spring), filter .1s linear, box-shadow .1s linear;
+}
+.pixbtn:active:not(:disabled) {
+  transform: translateY(5px) scale(.97);
+  box-shadow: 0 0 0 var(--ink);
+}
+/* the primary action on a screen breathes so the eye lands on it */
+.pixbtn.huge:not(:disabled), .qclaim:not(:disabled), .ev-tier.ready,
+.tk-row.ready .tk-btn, .av-row.ready .pixbtn {
+  animation: jnudge 2.4s var(--spring-soft) infinite;
+}
+@keyframes jnudge {
+  0%, 82%, 100% { transform: none; }
+  88%  { transform: translateY(-3px) scale(1.03); }
+  94%  { transform: translateY(0) scale(.99); }
+}
+
+/* ---------- bars: fill with an overshoot ---------- */
+.pixbar > i, .ev-bar > i, .av-bar > i, .boot-bar i, .sk-next .pixbar > i {
+  transition: width .5s var(--spring-soft);
+}
+/* a bar that just reached the end flashes once */
+.pixbar.full > i, .av-bar.full > i, .ev-bar.full > i { animation: jfull .5s steps(1) 2; }
+@keyframes jfull { 50% { filter: brightness(1.7); } }
+
+/* ---------- numbers: pop when they change ---------- */
+.hud-chip b.bumped { animation: jpop .38s var(--spring); display: inline-block; }
+@keyframes jpop {
+  0%   { transform: scale(1.5, .78); }
+  40%  { transform: scale(.9, 1.14); }
+  70%  { transform: scale(1.06, .97); }
+  100% { transform: scale(1); }
+}
+
+/* ---------- rows that just became claimable ---------- */
+.tk-row.ready, .av-row.ready, .ev-tier.ready, .bonus-row.hot {
+  animation: jready 1.6s var(--spring-soft) infinite;
+}
+@keyframes jready {
+  0%, 70%, 100% { transform: none; }
+  78% { transform: translateY(-2px); }
+  86% { transform: translateY(0); }
+}
+
+/* ---------- claiming: the row squashes as it pays out ---------- */
+.claimed-pop { animation: jclaim .44s var(--spring) both; }
+@keyframes jclaim {
+  0%   { transform: scale(1); }
+  28%  { transform: scale(1.06, .9); }
+  60%  { transform: scale(.96, 1.06); }
+  100% { transform: scale(1); }
+}
+
+/* ---------- tabs: the icon hops ---------- */
+#tabbar button.active .ico { animation: jhop .42s var(--spring); }
+@keyframes jhop {
+  0%   { transform: translateY(3px) scale(.8, 1.2); }
+  45%  { transform: translateY(-7px) scale(1.16, .88); }
+  75%  { transform: translateY(-1px) scale(.96, 1.04); }
+  100% { transform: translateY(-2px) scale(1); }
+}
+.tab.active { animation: jtab .3s var(--spring-soft) !important; }
+@keyframes jtab { from { opacity: .35; transform: translateY(12px); } }
+
+/* cards land with a small bounce rather than a slide */
+.card, .cdcard, .dexcard { animation: jland .34s var(--spring-soft) both; }
+@keyframes jland { from { transform: translateY(12px) scale(.98); opacity: 0; } }
+
+/* ============ the streak sheet ============ */
+.streaksheet { text-align: center; }
+.sk-hero {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  padding: 12px 0 10px;
+}
+.sk-flame { display: block; transform-origin: 50% 100%; }
+.sk-flame .ico {
+  width: 56px; height: 56px; image-rendering: pixelated;
+  filter: grayscale(.85) brightness(.7);
+}
+.sk-hero.alive .sk-flame { animation: jflame 1.5s var(--spring-soft) infinite; }
+.sk-hero.alive .sk-flame .ico {
+  filter: drop-shadow(0 0 10px rgba(255,157,77,.75));
+}
+@keyframes jflame {
+  0%,100% { transform: scale(1, 1) translateY(0); }
+  45%     { transform: scale(.94, 1.09) translateY(-5px); }
+  72%     { transform: scale(1.05, .95) translateY(0); }
+}
+.sk-num {
+  font-family: var(--display); font-size: 62px; font-weight: 800; line-height: 1;
+  color: #ff9d4d;
+  text-shadow: 0 3px 0 #7a3c0a, 0 6px 0 rgba(0,0,0,.5);
+  font-variant-numeric: tabular-nums;
+  animation: jnum .6s var(--spring) both;
+}
+@keyframes jnum { from { transform: scale(.3); opacity: 0; } }
+.sk-word {
+  font-size: var(--fs-meta); color: var(--txt-dim);
+  text-transform: uppercase; letter-spacing: .1em;
+}
+
+.sk-stats { display: flex; gap: 5px; margin: 4px 0 10px; }
+.sk-stat {
+  flex: 1; padding: 6px 2px;
+  background: var(--bg1);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--line); outline-offset: calc(var(--px) * -2);
+}
+.sk-stat b {
+  display: block; font-family: var(--display); font-size: var(--fs-lead);
+  color: var(--gold); font-variant-numeric: tabular-nums;
+}
+.sk-stat span {
+  font-size: var(--fs-micro); color: var(--txt-dim);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+
+.sk-cal {
+  background: var(--bg1);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--line); outline-offset: calc(var(--px) * -2);
+  padding: 7px 6px;
+}
+.sk-dows, .sk-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.sk-dows { margin-bottom: 4px; }
+.sk-dows span {
+  font-size: var(--fs-micro); color: var(--txt-dim);
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.sk-week + .sk-week { margin-top: 3px; }
+.sk-day {
+  aspect-ratio: 1; display: grid; place-items: center;
+  font-size: var(--fs-micro); color: var(--txt-dim);
+  background: var(--bg0); border: 1px solid var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.sk-day.hit {
+  background: #b8571a; color: #fff;
+  animation: jday .4s var(--spring) both;
+}
+.sk-day.froze { background: #1d5f7a; color: #cdf0ff; }
+.sk-day.today { outline: var(--px) solid var(--gold); outline-offset: -1px; }
+.sk-day.future { opacity: .32; }
+@keyframes jday { from { transform: scale(.2); } }
+
+.sk-next {
+  margin-top: 10px; font-size: var(--fs-meta); color: var(--txt-dim);
+  text-align: left; line-height: 1.6;
+}
+.sk-next b { color: var(--gold); }
+.sk-next .ico { width: 15px; height: 15px; vertical-align: -3px; }
+.sk-next .pixbar { margin-top: 5px; height: 10px; }
+
+.sk-freeze {
+  display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 8px;
+  text-align: left;
+  background: var(--bg1);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--gem); outline-offset: calc(var(--px) * -2);
+}
+.sk-fz-txt { flex: 1; font-size: var(--fs-meta); color: var(--txt-dim); line-height: 1.5; }
+.sk-fz-txt b { color: var(--gem); }
+.sk-freeze .pixbtn { flex: none; min-height: 42px; }
+
+/* ============ the celebration ============ */
+.celebrate {
+  position: fixed; inset: 0; z-index: 940;
+  display: flex; align-items: center; justify-content: center;
+  padding: 22px;
+  background: rgba(6,9,20,.9);
+  opacity: 0; transition: opacity .2s linear;
+}
+.celebrate.in { opacity: 1; }
+.celebrate.out { opacity: 0; }
+/* stepped rays, spinning slowly behind the icon */
+.cb-rays {
+  position: absolute; width: 150vmax; height: 150vmax;
+  background: repeating-conic-gradient(from 0deg,
+    rgba(255,194,71,.11) 0deg 7deg, transparent 7deg 20deg);
+  animation: cbspin 26s linear infinite;
+  pointer-events: none;
+}
+@keyframes cbspin { to { transform: rotate(360deg); } }
+.celebrate.broke .cb-rays { display: none; }
+.cb-inner {
+  position: relative; z-index: 1; width: 100%; max-width: 340px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  background: var(--bg1);
+  background-image: var(--grain);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--gold); outline-offset: calc(var(--px) * -2);
+  box-shadow: 0 6px 0 var(--ink), 0 18px 40px rgba(0,0,0,.6);
+  padding: 18px 16px 16px;
+  transform: scale(.7) translateY(20px);
+  transition: transform .42s var(--spring);
+}
+.celebrate.in .cb-inner { transform: none; }
+.celebrate.broke .cb-inner { outline-color: var(--line); }
+.cb-icon .ico {
+  width: 66px; height: 66px; image-rendering: pixelated;
+  animation: cbicon 1.5s var(--spring-soft) infinite;
+}
+@keyframes cbicon {
+  0%,100% { transform: scale(1) rotate(0); }
+  40%     { transform: scale(1.14, .9) rotate(-5deg); }
+  70%     { transform: scale(.96, 1.06) rotate(4deg); }
+}
+.celebrate.broke .cb-icon .ico { animation: none; filter: grayscale(1) brightness(.6); }
+.cb-title {
+  font-family: var(--display); font-size: 27px; font-weight: 800; line-height: 1.1;
+  color: var(--gold); text-align: center;
+  text-shadow: 0 2px 0 #6b4406, 0 4px 0 rgba(0,0,0,.5);
+}
+.celebrate.broke .cb-title { color: var(--parch-lo); text-shadow: 0 2px 0 rgba(0,0,0,.5); }
+.cb-big {
+  font-family: var(--display); font-size: 46px; font-weight: 800; line-height: 1;
+  color: #fff; font-variant-numeric: tabular-nums;
+  text-shadow: 0 3px 0 var(--ink);
+}
+.cb-sub {
+  font-size: var(--fs-body); color: var(--txt-dim); text-align: center; line-height: 1.5;
+}
+.cb-rewards { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 2px; }
+.cb-rewards span {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: var(--fs-title); color: var(--gold);
+  background: var(--bg0);
+  border: var(--px) solid var(--ink);
+  padding: 3px 9px;
+  animation: jland .4s var(--spring) both;
+}
+.cb-rewards span:nth-child(2) { animation-delay: .1s; }
+.cb-rewards span:nth-child(3) { animation-delay: .2s; }
+.cb-rewards .ico { width: 20px; height: 20px; }
+.cb-ok { width: 100%; margin-top: 6px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pixbtn.huge, .qclaim, .ev-tier.ready, .tk-row.ready, .av-row.ready,
+  .bonus-row.hot, .sk-hero .sk-flame, .cb-icon .ico, .cb-rays,
+  #tabbar button.active .ico { animation: none !important; }
+}
+
+/* the stamp a claim leaves behind: springs up out of the button, then fades */
+.claim-stamp {
+  position: fixed; z-index: 950; pointer-events: none;
+  transform: translate(-50%, -50%);
+  font-family: var(--display); font-size: var(--fs-title); font-weight: 800;
+  letter-spacing: .08em;
+  color: #2e1e02; background: var(--gold);
+  border: var(--px) solid var(--ink);
+  box-shadow: 0 3px 0 var(--ink);
+  padding: 3px 9px;
+  animation: jstamp .9s var(--spring) forwards;
+}
+@keyframes jstamp {
+  0%   { transform: translate(-50%, -50%) scale(.3) rotate(-8deg); opacity: 0; }
+  22%  { transform: translate(-50%, -60%) scale(1.12) rotate(3deg); opacity: 1; }
+  45%  { transform: translate(-50%, -66%) scale(1) rotate(0); opacity: 1; }
+  100% { transform: translate(-50%, -130%) scale(.94); opacity: 0; }
+}

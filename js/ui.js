@@ -90,6 +90,102 @@ const UI = (() => {
     renderJournal();
   }
 
+  /* A claim usually re-renders the list it came from, which would wipe any
+     class-based animation on the row before it drew a frame. So the feedback
+     lives on <body>: a stamped "CLAIMED" that springs up from where you pressed
+     and cannot be destroyed by the re-render underneath it. */
+  function popRow(btnEl, label) {
+    if (!btnEl) return;
+    const r = btnEl.getBoundingClientRect();
+    const p = el('div', 'claim-stamp', label || 'CLAIMED');
+    p.style.left = (r.left + r.width / 2) + 'px';
+    p.style.top = (r.top + r.height / 2) + 'px';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 900);
+    // and squash the row itself, for the frame or two before any re-render
+    const row = btnEl.closest('.tk-row, .av-row, .ev-tier, .quest, .offrow');
+    const t = row || btnEl;
+    t.classList.remove('claimed-pop');
+    void t.offsetWidth;
+    t.classList.add('claimed-pop');
+    setTimeout(() => t.classList.remove('claimed-pop'), 500);
+  }
+
+  /* ============ celebration ============
+     One full-screen moment, used for every "you did a thing" beat: streak
+     milestones, a broken run, the end of a session. Big bouncing icon, big
+     number, chunky Continue. Nothing here is subtle, on purpose. */
+  function celebrate(o) {
+    const root = el('div', 'celebrate ' + (o.kind || ''));
+    root.innerHTML = `
+      <div class="cb-rays"></div>
+      <div class="cb-inner">
+        <div class="cb-icon">${icon(o.icon || 'star', 'big')}</div>
+        <h2 class="cb-title">${o.title || ''}</h2>
+        ${o.big ? `<div class="cb-big">${o.big}</div>` : ''}
+        <p class="cb-sub">${o.sub || ''}</p>
+        ${(o.rewards && o.rewards.length)
+          ? `<div class="cb-rewards">${o.rewards.map(r => `<span>${r}</span>`).join('')}</div>` : ''}
+        <button class="pixbtn primary huge cb-ok"><b>${o.cta || 'Nice'}</b></button>
+      </div>`;
+    document.body.appendChild(root);
+    requestAnimationFrame(() => root.classList.add('in'));
+    confetti(o.kind === 'broke' ? 0 : 56);
+    if (o.kind === 'broke') Sound.fail(); else Sound.levelup();
+    const done = () => {
+      root.classList.add('out');
+      setTimeout(() => root.remove(), 300);
+      if (o.then) setTimeout(o.then, 160);
+    };
+    root.querySelector('.cb-ok').onclick = done;
+    root.onclick = ev => { if (ev.target === root) done(); };
+  }
+
+  /* ---- the streak sheet: the number, the calendar, the freezes ---- */
+  function showStreak() {
+    const s = Streak.st();
+    const nx = Streak.next();
+    const cal = Streak.calendar();
+    const box = el('div', 'streaksheet');
+    const dows = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    box.innerHTML = `
+      <div class="sk-hero ${s.count > 0 ? 'alive' : ''}">
+        <span class="sk-flame">${icon('streak', 'big')}</span>
+        <b class="sk-num">${s.count}</b>
+        <span class="sk-word">day${s.count === 1 ? '' : 's'} in a row</span>
+      </div>
+
+      <div class="sk-stats">
+        <div class="sk-stat"><b>${s.best || s.count}</b><span>best</span></div>
+        <div class="sk-stat"><b>+${Math.round((streakMult() - 1) * 100)}%</b><span>bonus</span></div>
+        <div class="sk-stat"><b>${s.freezes}</b><span>freezes</span></div>
+      </div>
+
+      <div class="sk-cal">
+        <div class="sk-dows">${dows.map(d => `<span>${d}</span>`).join('')}</div>
+        ${cal.map(row => `<div class="sk-week">${row.map(c =>
+          `<span class="sk-day ${c.hit === 'freeze' ? 'froze' : c.hit ? 'hit' : ''}
+            ${c.today ? 'today' : ''} ${c.future ? 'future' : ''}">${c.day}</span>`
+        ).join('')}</div>`).join('')}
+      </div>
+
+      ${nx ? `<div class="sk-next">Next milestone: <b>${nx.at} days</b>
+        · ${icon('gem')}${nx.gems} ${icon('gold')}${fmt(nx.gold)}
+        <span class="pixbar gold"><i style="width:${100 * s.count / nx.at}%"></i></span></div>`
+        : '<div class="sk-next">Every milestone taken. Extraordinary.</div>'}
+
+      <div class="sk-freeze">
+        <span class="sk-fz-txt">A <b>freeze</b> covers one missed day so the run
+          survives. You hold ${s.freezes} of ${Streak.FREEZE_MAX}.</span>
+        <button class="pixbtn gem sm sk-buy" ${s.freezes >= Streak.FREEZE_MAX ? 'disabled' : ''}>
+          <b>${s.freezes >= Streak.FREEZE_MAX ? 'Full' : 'Buy'}</b>
+          ${s.freezes >= Streak.FREEZE_MAX ? '' : `<span>${icon('gem')}${Streak.FREEZE_COST}</span>`}</button>
+      </div>`;
+    openModal(box);
+    const buy = box.querySelector('.sk-buy');
+    if (buy) buy.onclick = () => { if (Streak.buyFreeze()) { closeAllModals(); showStreak(); } };
+  }
+
   /* ---- extra goals: up to three, each with its own task and timer ---- */
   function renderSideGoals() {
     const w = $('#goals-card');
@@ -204,7 +300,7 @@ const UI = (() => {
         <span class="av-ic">${icon(a.icon)}</span>
         <span class="av-mid">
           <b>${a.name}</b>
-          <span class="av-bar"><i style="width:${pct}%"></i><em>${fmt(Math.min(p, a.need))} / ${fmt(a.need)}</em></span>
+          <span class="av-bar ${done ? 'full' : ''}"><i style="width:${pct}%"></i><em>${fmt(Math.min(p, a.need))} / ${fmt(a.need)}</em></span>
           <span class="av-pay">${Achievements.reward(a)}</span>
         </span>
         <button class="pixbtn ${done ? 'gold' : 'ghost'} tiny" data-av="${a.key}"
@@ -216,7 +312,7 @@ const UI = (() => {
         <span class="av-count">${Achievements.claimedCount()}/${Achievements.total()}</span></div>
       <div class="av-list">${rows || '<p class="hint-line">All done. Every single one.</p>'}</div>`;
     $$('#achv-card [data-av]', w).forEach(b => {
-      b.onclick = () => Achievements.claim(b.dataset.av, b);
+      b.onclick = () => { popRow(b); Achievements.claim(b.dataset.av, b); };
     });
   }
 
@@ -256,7 +352,7 @@ const UI = (() => {
     $$('#tasks-card [data-tk]', w).forEach(b => {
       const t = Tasks.LIST.find(x => x.key === b.dataset.tk);
       b.onclick = () => {
-        if (t.done() && !Tasks.state().claimed.includes(t.key)) Tasks.claim(t.key, b);
+        if (t.done() && !Tasks.state().claimed.includes(t.key)) { popRow(b); Tasks.claim(t.key, b); }
         else { Sound.click(); t.go(); }
       };
     });
@@ -280,7 +376,7 @@ const UI = (() => {
         <span class="ev-ic">${icon(e.icon, 'big')}</span>
         <span class="ev-name"><b>${e.name}</b><span>${e.blurb}</span></span>
       </div>
-      <div class="ev-bar"><i style="width:${Events.progressPct()}%"></i>
+      <div class="ev-bar ${Events.progressPct() >= 100 ? 'full' : ''}"><i style="width:${Events.progressPct()}%"></i>
         <b>${fmt(t.points)} / ${fmt(last)}</b></div>
       <div class="ev-track">${Events.TIERS.map((tier, i) => {
         const got = t.claimed.includes(i);
@@ -294,7 +390,7 @@ const UI = (() => {
       }).join('')}</div>`;
 
     $$('#event-card [data-ev]', w).forEach(b => {
-      b.onclick = () => { Events.claim(+b.dataset.ev); coinBurst(b, 6); };
+      b.onclick = () => { popRow(b); Events.claim(+b.dataset.ev); coinBurst(b, 6); };
     });
   }
 
@@ -840,6 +936,13 @@ const UI = (() => {
       const note = box.querySelector('#s-note').value.trim();
       const gk = S.session && S.session.goal;
       const r = gk ? Dream.completeSide(gk, mins, note) : Dream.completeSession(mins, note);
+      if (r.rungUp) {
+        setTimeout(() => celebrate({
+          icon: 'star', title: r.rungUp, big: 'RANK ' + Dream.rung(),
+          sub: `${Dream.hoursLogged().toFixed(1)} hours in. New rung on the ${Dream.def().name} ladder.`,
+          rewards: [], cta: 'Keep going',
+        }), 900);
+      }
       coinBurst(e.currentTarget, 8);
       closeAllModals();
       showSessionRewards(r);
@@ -2395,7 +2498,7 @@ const UI = (() => {
         </div>`;
       const btn = el('button', 'qclaim pixbtn gold tiny', q.claimed ? 'Claimed' : 'Claim');
       btn.disabled = !done || q.claimed;
-      btn.onclick = e => Quests.claim(q.qid, e.currentTarget);
+      btn.onclick = e => { popRow(e.currentTarget); Quests.claim(q.qid, e.currentTarget); };
       card.appendChild(btn);
       wrap.appendChild(card);
     }
@@ -3358,7 +3461,7 @@ const UI = (() => {
     renderCooldowns, tickCooldowns, renderPanels, togglePanel,
     renderMerge, mergeSpawnFx, mergeFuseFx, showMap,
     renderOffers, renderPromo, renderEvent, renderTasks, renderSideGoals,
-    renderAchievements, showTipCard, showReflectOffer,
+    renderAchievements, celebrate, showStreak, showTipCard, showReflectOffer,
     showAccount, renderAccount, showRestore, showArena, renderArena,
     renderBeasts, renderCollection, showCreature, showFeedPicker,
     renderFarm, waterGarden, showMealModal, showKcalTargetModal, renderFood,

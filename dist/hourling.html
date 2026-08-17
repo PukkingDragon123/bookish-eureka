@@ -3413,6 +3413,286 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
 .boot-bar i { transition: width .2s steps(4); }
 #boot img.boot-beast { border: 0; outline: 0; }
 
+/* ============ juice ============
+
+   Loaded last. The look stays pixel — hard edges, no soft corners, the same
+   palette — but the *feel* borrows from the habit apps that get this right: a
+   spring on everything you press, a bar that overshoots as it fills, a number
+   that pops when it changes, and a full-screen moment when something matters.
+
+   Springs are used for scale and position only. Colour, borders and layout
+   never ease, so nothing acquires the soft look of a web UI kit.          */
+
+:root {
+  /* one spring, used everywhere, so the whole app bounces on the same curve */
+  --spring: cubic-bezier(.18,1.62,.42,1);
+  --spring-soft: cubic-bezier(.22,1.34,.44,1);
+}
+
+/* ---------- buttons: press down, spring back ---------- */
+.pixbtn {
+  transition: transform .16s var(--spring), filter .1s linear, box-shadow .1s linear;
+}
+.pixbtn:active:not(:disabled) {
+  transform: translateY(5px) scale(.97);
+  box-shadow: 0 0 0 var(--ink);
+}
+/* the primary action on a screen breathes so the eye lands on it */
+.pixbtn.huge:not(:disabled), .qclaim:not(:disabled), .ev-tier.ready,
+.tk-row.ready .tk-btn, .av-row.ready .pixbtn {
+  animation: jnudge 2.4s var(--spring-soft) infinite;
+}
+@keyframes jnudge {
+  0%, 82%, 100% { transform: none; }
+  88%  { transform: translateY(-3px) scale(1.03); }
+  94%  { transform: translateY(0) scale(.99); }
+}
+
+/* ---------- bars: fill with an overshoot ---------- */
+.pixbar > i, .ev-bar > i, .av-bar > i, .boot-bar i, .sk-next .pixbar > i {
+  transition: width .5s var(--spring-soft);
+}
+/* a bar that just reached the end flashes once */
+.pixbar.full > i, .av-bar.full > i, .ev-bar.full > i { animation: jfull .5s steps(1) 2; }
+@keyframes jfull { 50% { filter: brightness(1.7); } }
+
+/* ---------- numbers: pop when they change ---------- */
+.hud-chip b.bumped { animation: jpop .38s var(--spring); display: inline-block; }
+@keyframes jpop {
+  0%   { transform: scale(1.5, .78); }
+  40%  { transform: scale(.9, 1.14); }
+  70%  { transform: scale(1.06, .97); }
+  100% { transform: scale(1); }
+}
+
+/* ---------- rows that just became claimable ---------- */
+.tk-row.ready, .av-row.ready, .ev-tier.ready, .bonus-row.hot {
+  animation: jready 1.6s var(--spring-soft) infinite;
+}
+@keyframes jready {
+  0%, 70%, 100% { transform: none; }
+  78% { transform: translateY(-2px); }
+  86% { transform: translateY(0); }
+}
+
+/* ---------- claiming: the row squashes as it pays out ---------- */
+.claimed-pop { animation: jclaim .44s var(--spring) both; }
+@keyframes jclaim {
+  0%   { transform: scale(1); }
+  28%  { transform: scale(1.06, .9); }
+  60%  { transform: scale(.96, 1.06); }
+  100% { transform: scale(1); }
+}
+
+/* ---------- tabs: the icon hops ---------- */
+#tabbar button.active .ico { animation: jhop .42s var(--spring); }
+@keyframes jhop {
+  0%   { transform: translateY(3px) scale(.8, 1.2); }
+  45%  { transform: translateY(-7px) scale(1.16, .88); }
+  75%  { transform: translateY(-1px) scale(.96, 1.04); }
+  100% { transform: translateY(-2px) scale(1); }
+}
+.tab.active { animation: jtab .3s var(--spring-soft) !important; }
+@keyframes jtab { from { opacity: .35; transform: translateY(12px); } }
+
+/* cards land with a small bounce rather than a slide */
+.card, .cdcard, .dexcard { animation: jland .34s var(--spring-soft) both; }
+@keyframes jland { from { transform: translateY(12px) scale(.98); opacity: 0; } }
+
+/* ============ the streak sheet ============ */
+.streaksheet { text-align: center; }
+.sk-hero {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  padding: 12px 0 10px;
+}
+.sk-flame { display: block; transform-origin: 50% 100%; }
+.sk-flame .ico {
+  width: 56px; height: 56px; image-rendering: pixelated;
+  filter: grayscale(.85) brightness(.7);
+}
+.sk-hero.alive .sk-flame { animation: jflame 1.5s var(--spring-soft) infinite; }
+.sk-hero.alive .sk-flame .ico {
+  filter: drop-shadow(0 0 10px rgba(255,157,77,.75));
+}
+@keyframes jflame {
+  0%,100% { transform: scale(1, 1) translateY(0); }
+  45%     { transform: scale(.94, 1.09) translateY(-5px); }
+  72%     { transform: scale(1.05, .95) translateY(0); }
+}
+.sk-num {
+  font-family: var(--display); font-size: 62px; font-weight: 800; line-height: 1;
+  color: #ff9d4d;
+  text-shadow: 0 3px 0 #7a3c0a, 0 6px 0 rgba(0,0,0,.5);
+  font-variant-numeric: tabular-nums;
+  animation: jnum .6s var(--spring) both;
+}
+@keyframes jnum { from { transform: scale(.3); opacity: 0; } }
+.sk-word {
+  font-size: var(--fs-meta); color: var(--txt-dim);
+  text-transform: uppercase; letter-spacing: .1em;
+}
+
+.sk-stats { display: flex; gap: 5px; margin: 4px 0 10px; }
+.sk-stat {
+  flex: 1; padding: 6px 2px;
+  background: var(--bg1);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--line); outline-offset: calc(var(--px) * -2);
+}
+.sk-stat b {
+  display: block; font-family: var(--display); font-size: var(--fs-lead);
+  color: var(--gold); font-variant-numeric: tabular-nums;
+}
+.sk-stat span {
+  font-size: var(--fs-micro); color: var(--txt-dim);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+
+.sk-cal {
+  background: var(--bg1);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--line); outline-offset: calc(var(--px) * -2);
+  padding: 7px 6px;
+}
+.sk-dows, .sk-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.sk-dows { margin-bottom: 4px; }
+.sk-dows span {
+  font-size: var(--fs-micro); color: var(--txt-dim);
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.sk-week + .sk-week { margin-top: 3px; }
+.sk-day {
+  aspect-ratio: 1; display: grid; place-items: center;
+  font-size: var(--fs-micro); color: var(--txt-dim);
+  background: var(--bg0); border: 1px solid var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.sk-day.hit {
+  background: #b8571a; color: #fff;
+  animation: jday .4s var(--spring) both;
+}
+.sk-day.froze { background: #1d5f7a; color: #cdf0ff; }
+.sk-day.today { outline: var(--px) solid var(--gold); outline-offset: -1px; }
+.sk-day.future { opacity: .32; }
+@keyframes jday { from { transform: scale(.2); } }
+
+.sk-next {
+  margin-top: 10px; font-size: var(--fs-meta); color: var(--txt-dim);
+  text-align: left; line-height: 1.6;
+}
+.sk-next b { color: var(--gold); }
+.sk-next .ico { width: 15px; height: 15px; vertical-align: -3px; }
+.sk-next .pixbar { margin-top: 5px; height: 10px; }
+
+.sk-freeze {
+  display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 8px;
+  text-align: left;
+  background: var(--bg1);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--gem); outline-offset: calc(var(--px) * -2);
+}
+.sk-fz-txt { flex: 1; font-size: var(--fs-meta); color: var(--txt-dim); line-height: 1.5; }
+.sk-fz-txt b { color: var(--gem); }
+.sk-freeze .pixbtn { flex: none; min-height: 42px; }
+
+/* ============ the celebration ============ */
+.celebrate {
+  position: fixed; inset: 0; z-index: 940;
+  display: flex; align-items: center; justify-content: center;
+  padding: 22px;
+  background: rgba(6,9,20,.9);
+  opacity: 0; transition: opacity .2s linear;
+}
+.celebrate.in { opacity: 1; }
+.celebrate.out { opacity: 0; }
+/* stepped rays, spinning slowly behind the icon */
+.cb-rays {
+  position: absolute; width: 150vmax; height: 150vmax;
+  background: repeating-conic-gradient(from 0deg,
+    rgba(255,194,71,.11) 0deg 7deg, transparent 7deg 20deg);
+  animation: cbspin 26s linear infinite;
+  pointer-events: none;
+}
+@keyframes cbspin { to { transform: rotate(360deg); } }
+.celebrate.broke .cb-rays { display: none; }
+.cb-inner {
+  position: relative; z-index: 1; width: 100%; max-width: 340px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  background: var(--bg1);
+  background-image: var(--grain);
+  border: var(--px) solid var(--ink);
+  outline: var(--px) solid var(--gold); outline-offset: calc(var(--px) * -2);
+  box-shadow: 0 6px 0 var(--ink), 0 18px 40px rgba(0,0,0,.6);
+  padding: 18px 16px 16px;
+  transform: scale(.7) translateY(20px);
+  transition: transform .42s var(--spring);
+}
+.celebrate.in .cb-inner { transform: none; }
+.celebrate.broke .cb-inner { outline-color: var(--line); }
+.cb-icon .ico {
+  width: 66px; height: 66px; image-rendering: pixelated;
+  animation: cbicon 1.5s var(--spring-soft) infinite;
+}
+@keyframes cbicon {
+  0%,100% { transform: scale(1) rotate(0); }
+  40%     { transform: scale(1.14, .9) rotate(-5deg); }
+  70%     { transform: scale(.96, 1.06) rotate(4deg); }
+}
+.celebrate.broke .cb-icon .ico { animation: none; filter: grayscale(1) brightness(.6); }
+.cb-title {
+  font-family: var(--display); font-size: 27px; font-weight: 800; line-height: 1.1;
+  color: var(--gold); text-align: center;
+  text-shadow: 0 2px 0 #6b4406, 0 4px 0 rgba(0,0,0,.5);
+}
+.celebrate.broke .cb-title { color: var(--parch-lo); text-shadow: 0 2px 0 rgba(0,0,0,.5); }
+.cb-big {
+  font-family: var(--display); font-size: 46px; font-weight: 800; line-height: 1;
+  color: #fff; font-variant-numeric: tabular-nums;
+  text-shadow: 0 3px 0 var(--ink);
+}
+.cb-sub {
+  font-size: var(--fs-body); color: var(--txt-dim); text-align: center; line-height: 1.5;
+}
+.cb-rewards { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 2px; }
+.cb-rewards span {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: var(--fs-title); color: var(--gold);
+  background: var(--bg0);
+  border: var(--px) solid var(--ink);
+  padding: 3px 9px;
+  animation: jland .4s var(--spring) both;
+}
+.cb-rewards span:nth-child(2) { animation-delay: .1s; }
+.cb-rewards span:nth-child(3) { animation-delay: .2s; }
+.cb-rewards .ico { width: 20px; height: 20px; }
+.cb-ok { width: 100%; margin-top: 6px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pixbtn.huge, .qclaim, .ev-tier.ready, .tk-row.ready, .av-row.ready,
+  .bonus-row.hot, .sk-hero .sk-flame, .cb-icon .ico, .cb-rays,
+  #tabbar button.active .ico { animation: none !important; }
+}
+
+/* the stamp a claim leaves behind: springs up out of the button, then fades */
+.claim-stamp {
+  position: fixed; z-index: 950; pointer-events: none;
+  transform: translate(-50%, -50%);
+  font-family: var(--display); font-size: var(--fs-title); font-weight: 800;
+  letter-spacing: .08em;
+  color: #2e1e02; background: var(--gold);
+  border: var(--px) solid var(--ink);
+  box-shadow: 0 3px 0 var(--ink);
+  padding: 3px 9px;
+  animation: jstamp .9s var(--spring) forwards;
+}
+@keyframes jstamp {
+  0%   { transform: translate(-50%, -50%) scale(.3) rotate(-8deg); opacity: 0; }
+  22%  { transform: translate(-50%, -60%) scale(1.12) rotate(3deg); opacity: 1; }
+  45%  { transform: translate(-50%, -66%) scale(1) rotate(0); opacity: 1; }
+  100% { transform: translate(-50%, -130%) scale(.94); opacity: 0; }
+}
+
 </style>
 </head>
 <body>
@@ -3429,7 +3709,7 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
         <span class="lvl-num" id="hud-lvl-num">1</span>
         <span class="pixbar xp"><i id="hud-xp-fill"></i></span>
       </button>
-      <div class="hud-chip streak-chip" title="Day streak"><i class="ico ico-streak"></i><b id="hud-streak">0</b></div>
+      <button id="hud-streak-btn" class="hud-chip streak-chip" title="Your streak"><i class="ico ico-streak"></i><b id="hud-streak">0</b></button>
       <div class="hud-chip gold-chip"><i class="ico ico-gold"></i><b id="hud-gold">0</b></div>
       <div class="hud-chip gem-chip"><i class="ico ico-gem"></i><b id="hud-gems">0</b></div>
       <button id="btn-settings" class="hud-chip icon-btn" title="Settings" aria-label="Settings"><span class="glyph-dots"></span></button>
@@ -4520,7 +4800,7 @@ function defaultState() {
     bossKills: 0,
     habits: {},          // hid -> {done: n, day: 'YYYY-MM-DD'}
     habitLog: {},        // day -> total habit completions (for streak)
-    streak: { count: 0, lastDay: null },
+    streak: { count: 0, lastDay: null, best: 0, freezes: 1, hit: {}, milestones: [] },
     meals: [],           // today's [{name, kcal, ts}]
     mealsDay: null,
     kcalTarget: 2000,
@@ -4953,6 +5233,8 @@ function bumpStreakToday() {
   if (S.streak.lastDay === yesterday) S.streak.count++;
   else S.streak.count = 1;
   S.streak.lastDay = today;
+  // history, best, freezes and the milestone celebration all live in Streak
+  if (typeof Streak !== 'undefined') Streak.markToday();
 }
 function streakMult() {
   return 1 + Math.min(0.5, Math.max(0, S.streak.count - 1) * 0.05);
@@ -7774,6 +8056,140 @@ const Achievements = (() => {
 
 </script>
 <script>
+/* ============ the streak ============
+
+   A streak only works if it is impossible to ignore and expensive to lose, so
+   this does four things the old counter did not:
+
+     * KEEPS HISTORY. Which days you actually turned up, so a calendar can be
+       drawn rather than a single number asserted.
+     * REMEMBERS YOUR BEST. Beating it is its own reward.
+     * SELLS A FREEZE. One missed day costs a freeze instead of the streak.
+       Bought with gems, spent automatically, and it says so.
+     * CELEBRATES MILESTONES. 3, 7, 14, 30, 60, 100, 200, 365 — each pays, each
+       gets the full-screen treatment once.
+
+   The freeze is applied lazily. Nothing runs in the background, so the check
+   happens when the app next opens: count the days between then and now, and if
+   exactly one was missed and a freeze is held, spend it and keep the run.   */
+'use strict';
+
+const Streak = (() => {
+  const FREEZE_COST = 60;
+  const FREEZE_MAX = 3;
+
+  const MILESTONES = [
+    { at: 3,   gems: 30,  gold: 1500,  name: 'Three days' },
+    { at: 7,   gems: 60,  gold: 4000,  name: 'One week' },
+    { at: 14,  gems: 100, gold: 9000,  name: 'Two weeks' },
+    { at: 30,  gems: 200, gold: 25000, name: 'One month' },
+    { at: 60,  gems: 350, gold: 60000, name: 'Two months' },
+    { at: 100, gems: 600, gold: 120000, name: 'One hundred days' },
+    { at: 200, gems: 1000, gold: 300000, name: 'Two hundred days' },
+    { at: 365, gems: 2500, gold: 900000, name: 'A full year' },
+  ];
+
+  function st() {
+    S.streak = S.streak || { count: 0, lastDay: null };
+    if (typeof S.streak.best !== 'number') S.streak.best = S.streak.count || 0;
+    if (typeof S.streak.freezes !== 'number') S.streak.freezes = 1;   // one free
+    if (!S.streak.hit || typeof S.streak.hit !== 'object') S.streak.hit = {};
+    if (!Array.isArray(S.streak.milestones)) S.streak.milestones = [];
+    return S.streak;
+  }
+
+  function daysBetween(a, b) {
+    const p = x => { const n = String(x).split('-').map(Number); return Date.UTC(n[0], n[1] - 1, n[2]); };
+    return Math.round((p(b) - p(a)) / 86400000);
+  }
+
+  /* called once at start-up, before anything reads the count */
+  function checkOnOpen() {
+    const s = st();
+    if (!s.lastDay) return null;
+    const gap = daysBetween(s.lastDay, todayStr());
+    if (gap <= 1) return null;                 // today or yesterday: run is alive
+    if (gap === 2 && s.freezes > 0) {          // exactly one day missed
+      s.freezes--;
+      s.lastDay = todayStr(-1);                // pretend yesterday counted
+      s.hit[s.lastDay] = 'freeze';
+      save();
+      return { froze: true, left: s.freezes };
+    }
+    const lost = s.count;
+    s.count = 0;
+    save();
+    return lost > 2 ? { broke: true, lost } : null;
+  }
+
+  /* the day counted: called from bumpStreakToday */
+  function markToday() {
+    const s = st();
+    const today = todayStr();
+    s.hit[today] = true;
+    // keep a rolling ~10 weeks; a calendar cannot show more than that anyway
+    const keys = Object.keys(s.hit).sort();
+    if (keys.length > 80) keys.slice(0, keys.length - 80).forEach(k => delete s.hit[k]);
+    if (s.count > (s.best || 0)) s.best = s.count;
+    const m = MILESTONES.find(x => x.at === s.count && !s.milestones.includes(x.at));
+    if (m) {
+      s.milestones.push(m.at);
+      grantGems(m.gems);
+      grantGold(m.gold);
+      save();
+      if (typeof UI !== 'undefined') {
+        UI.celebrate({
+          icon: 'streak', kind: 'streak',
+          title: `${s.count} day streak`,
+          sub: m.name + ' of showing up.',
+          rewards: [`${icon('gem')}${m.gems}`, `${icon('gold')}${fmt(m.gold)}`],
+        });
+      }
+    }
+    save();
+  }
+
+  function next() { return MILESTONES.find(m => m.at > st().count) || null; }
+  function buyFreeze() {
+    const s = st();
+    if (s.freezes >= FREEZE_MAX) { toast('Three is the most you can hold'); return false; }
+    if (S.player.gems < FREEZE_COST) { toast('Not enough gems'); return false; }
+    S.player.gems -= FREEZE_COST;
+    s.freezes++;
+    Sound.coin();
+    save();
+    if (typeof UI !== 'undefined') { UI.renderHud(); UI.showStreak(); }
+    return true;
+  }
+
+  /* the last 5 weeks as rows of 7, oldest first, Monday-aligned */
+  function calendar() {
+    const out = [];
+    const now = new Date();
+    const dow = (now.getDay() + 6) % 7;                  // Monday = 0
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dow - 28);
+    const s = st();
+    for (let w = 0; w < 5; w++) {
+      const row = [];
+      for (let d = 0; d < 7; d++) {
+        const dt = new Date(start.getFullYear(), start.getMonth(), start.getDate() + w * 7 + d);
+        const key = dt.getFullYear() + '-' +
+          String(dt.getMonth() + 1).padStart(2, '0') + '-' +
+          String(dt.getDate()).padStart(2, '0');
+        row.push({ key, day: dt.getDate(), hit: s.hit[key],
+                   future: dt > now, today: key === todayStr() });
+      }
+      out.push(row);
+    }
+    return out;
+  }
+
+  return { st, checkOnOpen, markToday, next, buyFreeze, calendar,
+           MILESTONES, FREEZE_COST, FREEZE_MAX };
+})();
+
+</script>
+<script>
 /* ============ Arena — rivals, duels and tournaments ============
 
    READ THIS BEFORE EXPECTING MATCHMAKING. Hourling is one static file with no
@@ -8393,9 +8809,9 @@ const Tasks = (() => {
     if (btnEl) coinBurst(btnEl, 5);
     if (done()) {
       grantGems(100);
-      confetti(70);
-      Sound.levelup();
-      toast('All of Vale\'s tasks done — 100 bonus gems', 'gold');
+      UI.celebrate({ icon: 'chest', title: 'Every task done',
+        sub: "That is Vale's whole list. The rest is up to you.",
+        rewards: [`${icon('gem')}100`], cta: 'Onward' });
     } else {
       toast(`${t.name} — reward taken`, 'gold');
     }
@@ -8636,6 +9052,102 @@ const UI = (() => {
     renderJournal();
   }
 
+  /* A claim usually re-renders the list it came from, which would wipe any
+     class-based animation on the row before it drew a frame. So the feedback
+     lives on <body>: a stamped "CLAIMED" that springs up from where you pressed
+     and cannot be destroyed by the re-render underneath it. */
+  function popRow(btnEl, label) {
+    if (!btnEl) return;
+    const r = btnEl.getBoundingClientRect();
+    const p = el('div', 'claim-stamp', label || 'CLAIMED');
+    p.style.left = (r.left + r.width / 2) + 'px';
+    p.style.top = (r.top + r.height / 2) + 'px';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 900);
+    // and squash the row itself, for the frame or two before any re-render
+    const row = btnEl.closest('.tk-row, .av-row, .ev-tier, .quest, .offrow');
+    const t = row || btnEl;
+    t.classList.remove('claimed-pop');
+    void t.offsetWidth;
+    t.classList.add('claimed-pop');
+    setTimeout(() => t.classList.remove('claimed-pop'), 500);
+  }
+
+  /* ============ celebration ============
+     One full-screen moment, used for every "you did a thing" beat: streak
+     milestones, a broken run, the end of a session. Big bouncing icon, big
+     number, chunky Continue. Nothing here is subtle, on purpose. */
+  function celebrate(o) {
+    const root = el('div', 'celebrate ' + (o.kind || ''));
+    root.innerHTML = `
+      <div class="cb-rays"></div>
+      <div class="cb-inner">
+        <div class="cb-icon">${icon(o.icon || 'star', 'big')}</div>
+        <h2 class="cb-title">${o.title || ''}</h2>
+        ${o.big ? `<div class="cb-big">${o.big}</div>` : ''}
+        <p class="cb-sub">${o.sub || ''}</p>
+        ${(o.rewards && o.rewards.length)
+          ? `<div class="cb-rewards">${o.rewards.map(r => `<span>${r}</span>`).join('')}</div>` : ''}
+        <button class="pixbtn primary huge cb-ok"><b>${o.cta || 'Nice'}</b></button>
+      </div>`;
+    document.body.appendChild(root);
+    requestAnimationFrame(() => root.classList.add('in'));
+    confetti(o.kind === 'broke' ? 0 : 56);
+    if (o.kind === 'broke') Sound.fail(); else Sound.levelup();
+    const done = () => {
+      root.classList.add('out');
+      setTimeout(() => root.remove(), 300);
+      if (o.then) setTimeout(o.then, 160);
+    };
+    root.querySelector('.cb-ok').onclick = done;
+    root.onclick = ev => { if (ev.target === root) done(); };
+  }
+
+  /* ---- the streak sheet: the number, the calendar, the freezes ---- */
+  function showStreak() {
+    const s = Streak.st();
+    const nx = Streak.next();
+    const cal = Streak.calendar();
+    const box = el('div', 'streaksheet');
+    const dows = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    box.innerHTML = `
+      <div class="sk-hero ${s.count > 0 ? 'alive' : ''}">
+        <span class="sk-flame">${icon('streak', 'big')}</span>
+        <b class="sk-num">${s.count}</b>
+        <span class="sk-word">day${s.count === 1 ? '' : 's'} in a row</span>
+      </div>
+
+      <div class="sk-stats">
+        <div class="sk-stat"><b>${s.best || s.count}</b><span>best</span></div>
+        <div class="sk-stat"><b>+${Math.round((streakMult() - 1) * 100)}%</b><span>bonus</span></div>
+        <div class="sk-stat"><b>${s.freezes}</b><span>freezes</span></div>
+      </div>
+
+      <div class="sk-cal">
+        <div class="sk-dows">${dows.map(d => `<span>${d}</span>`).join('')}</div>
+        ${cal.map(row => `<div class="sk-week">${row.map(c =>
+          `<span class="sk-day ${c.hit === 'freeze' ? 'froze' : c.hit ? 'hit' : ''}
+            ${c.today ? 'today' : ''} ${c.future ? 'future' : ''}">${c.day}</span>`
+        ).join('')}</div>`).join('')}
+      </div>
+
+      ${nx ? `<div class="sk-next">Next milestone: <b>${nx.at} days</b>
+        · ${icon('gem')}${nx.gems} ${icon('gold')}${fmt(nx.gold)}
+        <span class="pixbar gold"><i style="width:${100 * s.count / nx.at}%"></i></span></div>`
+        : '<div class="sk-next">Every milestone taken. Extraordinary.</div>'}
+
+      <div class="sk-freeze">
+        <span class="sk-fz-txt">A <b>freeze</b> covers one missed day so the run
+          survives. You hold ${s.freezes} of ${Streak.FREEZE_MAX}.</span>
+        <button class="pixbtn gem sm sk-buy" ${s.freezes >= Streak.FREEZE_MAX ? 'disabled' : ''}>
+          <b>${s.freezes >= Streak.FREEZE_MAX ? 'Full' : 'Buy'}</b>
+          ${s.freezes >= Streak.FREEZE_MAX ? '' : `<span>${icon('gem')}${Streak.FREEZE_COST}</span>`}</button>
+      </div>`;
+    openModal(box);
+    const buy = box.querySelector('.sk-buy');
+    if (buy) buy.onclick = () => { if (Streak.buyFreeze()) { closeAllModals(); showStreak(); } };
+  }
+
   /* ---- extra goals: up to three, each with its own task and timer ---- */
   function renderSideGoals() {
     const w = $('#goals-card');
@@ -8750,7 +9262,7 @@ const UI = (() => {
         <span class="av-ic">${icon(a.icon)}</span>
         <span class="av-mid">
           <b>${a.name}</b>
-          <span class="av-bar"><i style="width:${pct}%"></i><em>${fmt(Math.min(p, a.need))} / ${fmt(a.need)}</em></span>
+          <span class="av-bar ${done ? 'full' : ''}"><i style="width:${pct}%"></i><em>${fmt(Math.min(p, a.need))} / ${fmt(a.need)}</em></span>
           <span class="av-pay">${Achievements.reward(a)}</span>
         </span>
         <button class="pixbtn ${done ? 'gold' : 'ghost'} tiny" data-av="${a.key}"
@@ -8762,7 +9274,7 @@ const UI = (() => {
         <span class="av-count">${Achievements.claimedCount()}/${Achievements.total()}</span></div>
       <div class="av-list">${rows || '<p class="hint-line">All done. Every single one.</p>'}</div>`;
     $$('#achv-card [data-av]', w).forEach(b => {
-      b.onclick = () => Achievements.claim(b.dataset.av, b);
+      b.onclick = () => { popRow(b); Achievements.claim(b.dataset.av, b); };
     });
   }
 
@@ -8802,7 +9314,7 @@ const UI = (() => {
     $$('#tasks-card [data-tk]', w).forEach(b => {
       const t = Tasks.LIST.find(x => x.key === b.dataset.tk);
       b.onclick = () => {
-        if (t.done() && !Tasks.state().claimed.includes(t.key)) Tasks.claim(t.key, b);
+        if (t.done() && !Tasks.state().claimed.includes(t.key)) { popRow(b); Tasks.claim(t.key, b); }
         else { Sound.click(); t.go(); }
       };
     });
@@ -8826,7 +9338,7 @@ const UI = (() => {
         <span class="ev-ic">${icon(e.icon, 'big')}</span>
         <span class="ev-name"><b>${e.name}</b><span>${e.blurb}</span></span>
       </div>
-      <div class="ev-bar"><i style="width:${Events.progressPct()}%"></i>
+      <div class="ev-bar ${Events.progressPct() >= 100 ? 'full' : ''}"><i style="width:${Events.progressPct()}%"></i>
         <b>${fmt(t.points)} / ${fmt(last)}</b></div>
       <div class="ev-track">${Events.TIERS.map((tier, i) => {
         const got = t.claimed.includes(i);
@@ -8840,7 +9352,7 @@ const UI = (() => {
       }).join('')}</div>`;
 
     $$('#event-card [data-ev]', w).forEach(b => {
-      b.onclick = () => { Events.claim(+b.dataset.ev); coinBurst(b, 6); };
+      b.onclick = () => { popRow(b); Events.claim(+b.dataset.ev); coinBurst(b, 6); };
     });
   }
 
@@ -9386,6 +9898,13 @@ const UI = (() => {
       const note = box.querySelector('#s-note').value.trim();
       const gk = S.session && S.session.goal;
       const r = gk ? Dream.completeSide(gk, mins, note) : Dream.completeSession(mins, note);
+      if (r.rungUp) {
+        setTimeout(() => celebrate({
+          icon: 'star', title: r.rungUp, big: 'RANK ' + Dream.rung(),
+          sub: `${Dream.hoursLogged().toFixed(1)} hours in. New rung on the ${Dream.def().name} ladder.`,
+          rewards: [], cta: 'Keep going',
+        }), 900);
+      }
       coinBurst(e.currentTarget, 8);
       closeAllModals();
       showSessionRewards(r);
@@ -10941,7 +11460,7 @@ const UI = (() => {
         </div>`;
       const btn = el('button', 'qclaim pixbtn gold tiny', q.claimed ? 'Claimed' : 'Claim');
       btn.disabled = !done || q.claimed;
-      btn.onclick = e => Quests.claim(q.qid, e.currentTarget);
+      btn.onclick = e => { popRow(e.currentTarget); Quests.claim(q.qid, e.currentTarget); };
       card.appendChild(btn);
       wrap.appendChild(card);
     }
@@ -11904,7 +12423,7 @@ const UI = (() => {
     renderCooldowns, tickCooldowns, renderPanels, togglePanel,
     renderMerge, mergeSpawnFx, mergeFuseFx, showMap,
     renderOffers, renderPromo, renderEvent, renderTasks, renderSideGoals,
-    renderAchievements, showTipCard, showReflectOffer,
+    renderAchievements, celebrate, showStreak, showTipCard, showReflectOffer,
     showAccount, renderAccount, showRestore, showArena, renderArena,
     renderBeasts, renderCollection, showCreature, showFeedPicker,
     renderFarm, waterGarden, showMealModal, showKcalTargetModal, renderFood,
@@ -12003,6 +12522,7 @@ const PWA = (() => {
   $$('#tabbar button').forEach(b => b.onclick = () => UI.switchTab(b.dataset.tab));
   $('#btn-settings').onclick = () => UI.showSettings();
   $('#hud-level').onclick = () => toast(`${fmt(S.player.xp)} / ${fmt(xpForLevel(S.player.level))} XP to next level`);
+  $('#hud-streak-btn').onclick = () => UI.showStreak();
   $('#btn-boss').onclick = () => { Battle.challengeBoss(); Sound.click(); };
   $('#btn-map').onclick = () => UI.showMap();
   $('#btn-arena').onclick = () => UI.showArena();
@@ -12025,6 +12545,9 @@ const PWA = (() => {
      bug. `greet` is whatever should happen the moment the app is visible. */
   const fresh = !hadSave || !S.dream || !S.dream.key;
   let greet = null;
+  /* the streak is settled before anything reads it: a missed day either spends
+     a freeze or ends the run, and either way the player is told once */
+  const streakNews = hadSave ? Streak.checkOnOpen() : null;
   if (fresh) {
     UI.renderSceneBg();
   } else {
@@ -12064,6 +12587,21 @@ const PWA = (() => {
       };
       save();
     }
+  }
+  if (streakNews) {
+    const prev = greet;
+    greet = () => {
+      if (streakNews.froze) {
+        UI.celebrate({ icon: 'streak', kind: 'freeze', title: 'Streak frozen',
+          sub: `You missed a day and a freeze covered it. ${streakNews.left} left.`,
+          rewards: [] });
+      } else {
+        UI.celebrate({ icon: 'streak', kind: 'broke', title: 'Streak ended',
+          sub: `${streakNews.lost} days. Today is day one of the next one.`,
+          rewards: [] });
+      }
+      if (prev) setTimeout(prev, 900);
+    };
   }
   UI.renderAll();
 

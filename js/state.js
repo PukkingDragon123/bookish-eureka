@@ -69,7 +69,7 @@ function defaultState() {
     bossKills: 0,
     habits: {},          // hid -> {done: n, day: 'YYYY-MM-DD'}
     habitLog: {},        // day -> total habit completions (for streak)
-    streak: { count: 0, lastDay: null },
+    streak: { count: 0, lastDay: null, best: 0, freezes: 1, hit: {}, milestones: [] },
     meals: [],           // today's [{name, kcal, ts}]
     mealsDay: null,
     kcalTarget: 2000,
@@ -502,6 +502,8 @@ function bumpStreakToday() {
   if (S.streak.lastDay === yesterday) S.streak.count++;
   else S.streak.count = 1;
   S.streak.lastDay = today;
+  // history, best, freezes and the milestone celebration all live in Streak
+  if (typeof Streak !== 'undefined') Streak.markToday();
 }
 function streakMult() {
   return 1 + Math.min(0.5, Math.max(0, S.streak.count - 1) * 0.05);
