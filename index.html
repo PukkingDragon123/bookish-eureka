@@ -5,7 +5,7 @@
 <!-- viewport-fit=cover so the app can paint under a notch; zoom left ON,
      because disabling it is an accessibility failure, not a polish win -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#101529">
+<meta name="theme-color" content="#fbf6ea">
 <meta name="description" content="An idle RPG that runs on the hours you actually practise. Pick one thing to get good at, put the time in, and your party grows with you.">
 <title>Hourling</title>
 
@@ -24,6 +24,7 @@
 <link rel="stylesheet" href="css/moves.css">
 <link rel="stylesheet" href="css/farm-art.css">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/light.css">
 <link rel="stylesheet" href="css/cartoon.css">
 <link rel="stylesheet" href="css/juice.css">
 </head>
@@ -92,22 +93,7 @@
         <div id="today-quest-list"></div>
       </div>
 
-      <div id="today-challenge"></div>
-
       <div id="goals-card" class="card"></div>
-
-      <div id="tasks-card" class="card"></div>
-
-      <div id="event-card" class="card"></div>
-
-      <div id="promo-strip"></div>
-
-      <div id="offers-card" class="card"></div>
-
-      <div id="journal-card" class="card">
-        <div class="card-head"><i class="ico ico-book"></i> Practice journal</div>
-        <div id="journal-list"></div>
-      </div>
     </section>
 
     <!-- ~~~~~~~~~ BATTLE ~~~~~~~~~ -->
@@ -121,7 +107,6 @@
           <span id="stage-num">Stage 1-1</span>
         </div>
         <button id="btn-map" class="pixbtn tiny" title="Region map" aria-label="Region map"><i class="ico ico-map"></i></button>
-        <button id="btn-arena" class="pixbtn tiny" title="Arena" aria-label="Arena"><i class="ico ico-sword"></i></button>
         <div id="wave-pips"></div>
         <div id="boost-badge" class="hidden"><i class="ico ico-bolt"></i> x3 <b id="boost-time"></b></div>
         <button id="haste-btn" title="Speed combat up for 5 minutes"></button>
@@ -204,18 +189,15 @@
 
     <!-- ~~~~~~~~~ BEASTS ~~~~~~~~~ -->
     <section id="tab-beasts" class="tab">
+      <h2 class="tab-title"><i class="ico ico-mana"></i> Summon</h2>
+      <div id="banner-rail"></div>
+      <div id="pity-note" class="subtle"></div>
+
       <h2 class="tab-title">Your party <span class="subtle" id="party-count"></span></h2>
       <div id="party-slots"></div>
       <h2 class="tab-title"><i class="ico ico-book"></i> Beast dex <span class="subtle" id="dex-count"></span></h2>
       <div id="dex-filters"></div>
       <div id="collection-grid"></div>
-    </section>
-
-    <!-- ~~~~~~~~~ SUMMON ~~~~~~~~~ -->
-    <section id="tab-summon" class="tab">
-      <h2 class="tab-title"><i class="ico ico-mana"></i> Summoning banners</h2>
-      <div id="banner-rail"></div>
-      <div id="pity-note" class="subtle"></div>
     </section>
 
     <!-- ~~~~~~~~~ QUESTS ~~~~~~~~~ -->
@@ -224,6 +206,10 @@
         <div class="card-head"><i class="ico ico-chest"></i> Login rewards</div>
         <div id="login-row"></div>
       </div>
+      <div id="tasks-card" class="card"></div>
+
+      <div id="event-card" class="card"></div>
+
       <h2 class="tab-title">Challenge of the day</h2>
       <div id="challenge-card"></div>
       <h2 class="tab-title"><i class="ico ico-scroll"></i> Today's quests <span class="subtle" id="quest-day"></span></h2>
@@ -235,6 +221,13 @@
       <button id="btn-add-custom" class="pixbtn ghost wide"><span class="glyph-plus"></span> Create a habit</button>
       <div id="achv-card" class="card"></div>
 
+      <div id="offers-card" class="card"></div>
+
+      <div id="journal-card" class="card">
+        <div class="card-head"><i class="ico ico-book"></i> Practice journal</div>
+        <div id="journal-list"></div>
+      </div>
+
       <h2 class="tab-title">Milestones</h2>
       <div id="journey-panel"></div>
     </section>
@@ -245,7 +238,6 @@
     <button data-tab="battle"><i class="ico ico-sword"></i>Battle</button>
     <button data-tab="farm"><i class="ico ico-seed"></i>Garden</button>
     <button data-tab="beasts"><i class="ico ico-relic"></i>Beasts</button>
-    <button data-tab="summon"><i class="ico ico-mana"></i>Summon</button>
     <button data-tab="quests"><i class="ico ico-scroll"></i>Quests</button>
   </nav>
 </div>
@@ -275,9 +267,7 @@
 <script src="js/events.js"></script>
 <script src="js/achievements.js"></script>
 <script src="js/streak.js"></script>
-<script src="js/arena.js"></script>
 <script src="js/title.js"></script>
-<script src="js/dialog.js"></script>
 <script src="js/tasks.js"></script>
 <script src="js/summon.js"></script>
 <script src="js/ui.js"></script>

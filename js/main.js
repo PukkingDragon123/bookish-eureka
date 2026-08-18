@@ -15,7 +15,6 @@
   $('#hud-streak-btn').onclick = () => UI.showStreak();
   $('#btn-boss').onclick = () => { Battle.challengeBoss(); Sound.click(); };
   $('#btn-map').onclick = () => UI.showMap();
-  $('#btn-arena').onclick = () => UI.showArena();
   $('#haste-btn').onclick = () => buyHaste();
   $('#btn-log-meal').onclick = () => UI.showMealModal(true);
   $('#btn-kcal-target').onclick = () => UI.showKcalTargetModal();

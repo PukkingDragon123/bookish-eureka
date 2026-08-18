@@ -134,7 +134,7 @@ button { font-family: inherit; color: inherit; }
 }
 .pixbar {
   position: relative; display: block; height: 9px;
-  background: #0a0e1c;
+  background: var(--track);
   border: var(--px) solid var(--ink);
   overflow: hidden; flex: 1;
 }
@@ -455,7 +455,7 @@ button.hud-chip:active { transform: translateY(2px); }
 .sring { position: relative; width: 214px; height: 214px; margin: 6px 0; }
 .sring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 .sring circle { fill: none; stroke-width: 10; }
-.sring .track { stroke: #0a0e1c; }
+.sring .track { stroke: var(--track); }
 .sring .fill { stroke: var(--gold); stroke-dasharray: 597; transition: stroke-dashoffset 1s linear; }
 .sring .glow { stroke: rgba(255,209,92,.25); stroke-width: 18; }
 .sring-mid { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -483,7 +483,7 @@ button.hud-chip:active { transform: translateY(2px); }
 .sb-foe { right: 8px; flex-direction: column; align-items: center; gap: 2px; }
 .sb-party img { animation: pbob 2.4s steps(4, jump-none) infinite; transform: scaleX(-1); }
 .sb-foe img { animation: pbob 2.1s steps(4, jump-none) infinite; }
-.sb-hp { width: 34px; height: 4px; background: #0a0e1c; border: 1px solid var(--ink); }
+.sb-hp { width: 34px; height: 4px; background: var(--track); border: 1px solid var(--ink); }
 .sb-hp > i { display: block; height: 100%; background: var(--hp); }
 .sb-stats {
   display: flex; justify-content: space-around; gap: 8px; margin-top: 5px;
@@ -630,7 +630,7 @@ button.hud-chip:active { transform: translateY(2px); }
   border: var(--px) solid var(--ink);
   padding: 0 4px; margin-top: 1px;
 }
-.fighter .fhp { width: 40px; height: 5px; margin-top: 2px; background: #0a0e1c; border: 1px solid var(--ink); }
+.fighter .fhp { width: 40px; height: 5px; margin-top: 2px; background: var(--track); border: 1px solid var(--ink); }
 .fighter .fhp i { display: block; height: 100%; background: var(--good); }
 
 #skill-flash {
@@ -756,7 +756,7 @@ button.hud-chip:active { transform: translateY(2px); }
 }
 .cdmeter {
   width: 74px; height: 11px; flex: none;
-  background: #0a0e1c; border: var(--px) solid var(--ink);
+  background: var(--track); border: var(--px) solid var(--ink);
   position: relative; overflow: hidden;
 }
 .cdmeter i {
@@ -1083,7 +1083,7 @@ button.hud-chip:active { transform: translateY(2px); }
 #kcal-ring { position: relative; width: 84px; height: 84px; flex-shrink: 0; }
 #kcal-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 #kcal-ring circle { fill: none; stroke-width: 9; }
-#kcal-ring .track { stroke: #0a0e1c; }
+#kcal-ring .track { stroke: var(--track); }
 #kcal-ring .fill { stroke: var(--good); stroke-dasharray: 213.6; stroke-dashoffset: 213.6; transition: stroke-dashoffset .5s steps(10), stroke .2s; }
 #kcal-mid { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 #kcal-mid b { font-size: 18px; }
@@ -1256,7 +1256,7 @@ button.hud-chip:active { transform: translateY(2px); }
   border: var(--px) solid var(--ink);
   padding: 3px 6px;
 }
-.banner .bpity .pixbar { height: 7px; flex: 1; background: #0a0e1c; }
+.banner .bpity .pixbar { height: 7px; flex: 1; background: var(--track); }
 .banner .bpity .pixbar > i { background: var(--gem); }
 .banner .bpity b {
   font-size: var(--fs-micro); color: #fff; white-space: nowrap;
@@ -1330,7 +1330,7 @@ button.hud-chip:active { transform: translateY(2px); }
 .ritual .rdesc { font-size: 12.5px; color: var(--txt-dim); margin-top: 2px; line-height: 1.5; }
 .rreward { font-size: 12.5px; color: var(--mana); display: flex; align-items: center; gap: 3px; margin-top: 2px; flex-wrap: wrap; }
 .ritual .rprog { display: flex; gap: 2px; margin-top: 4px; }
-.ritual .rprog i { width: 12px; height: 6px; background: #0a0e1c; border: 1px solid var(--ink); }
+.ritual .rprog i { width: 12px; height: 6px; background: var(--track); border: 1px solid var(--ink); }
 .ritual .rprog i.f { background: var(--good); }
 .ritual .rbtn { flex-shrink: 0; white-space: nowrap; }
 
@@ -1461,7 +1461,7 @@ button.hud-chip:active { transform: translateY(2px); }
 .stag.sig { background: var(--gold-lo); color: #2e1e02; }
 .skillrow .spow {
   position: relative; height: 13px; margin-top: 5px;
-  background: #0a0e1c; border: 1px solid var(--ink); overflow: hidden;
+  background: var(--track); border: 1px solid var(--ink); overflow: hidden;
 }
 .skillrow .spow > i { display: block; height: 100%; opacity: .55; }
 .skillrow .spow > span {
@@ -1542,7 +1542,7 @@ button.hud-chip:active { transform: translateY(2px); }
 .timer-ring { position: relative; width: 168px; height: 168px; margin: 10px auto; }
 .timer-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 .timer-ring circle { fill: none; stroke-width: 11; }
-.timer-ring .track { stroke: #0a0e1c; }
+.timer-ring .track { stroke: var(--track); }
 .timer-ring .fill { stroke: var(--gem); transition: stroke-dashoffset 1s linear; }
 .timer-mid { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .timer-mid b { font-size: 28px; font-variant-numeric: tabular-nums; }
@@ -2115,7 +2115,7 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
 .tipcard .pixbtn.ready { animation: tagpulse 1.4s var(--ease) infinite; }
 .reflect-in {
   width: 100%; margin-top: 8px; padding: 10px;
-  background: #0a0e1c; color: var(--txt);
+  background: var(--track); color: var(--txt);
   border: var(--px) solid var(--ink); border-radius: 8px;
   font: inherit; font-size: 15px; resize: none;
 }
@@ -2259,7 +2259,7 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
 }
 .acc-steps { font-size: var(--fs-meta); color: var(--txt-dim); line-height: 1.6; margin: 0 0 8px 18px; }
 .acc-steps code {
-  background: #0a0e1c; padding: 1px 5px; border-radius: 4px;
+  background: var(--track); padding: 1px 5px; border-radius: 4px;
   font-size: var(--fs-label); color: var(--gem); user-select: text;
 }
 .acc-profiles { display: flex; flex-direction: column; gap: 6px; }
@@ -2277,13 +2277,13 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
 .acc-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
 .acc-in {
   width: 100%; margin-top: 6px; padding: 10px;
-  background: #0a0e1c; color: var(--txt);
+  background: var(--track); color: var(--txt);
   border: var(--px) solid var(--ink); border-radius: 8px;
   font: inherit; user-select: text;
 }
 .acc-code {
   width: 100%; margin-top: 8px; padding: 10px;
-  background: #0a0e1c; color: var(--gem);
+  background: var(--track); color: var(--gem);
   border: var(--px) solid var(--ink); border-radius: 8px;
   font-family: ui-monospace, monospace; font-size: 11px; line-height: 1.4;
   resize: none; user-select: all; word-break: break-all;
@@ -2374,85 +2374,10 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
 @media (max-height: 700px) {
 }
 
-/* ============================================================
-   ARENA — rivals by code, duels, tournaments
-   ============================================================ */
 #btn-arena { position: absolute; left: 8px; top: 92px; z-index: 6; }
 .arena { max-height: 76vh; overflow-y: auto; }
-.ar-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.ar-rank {
-  display: flex; flex-direction: column; padding: 8px 12px; border-radius: 10px;
-  background: var(--bg2); box-shadow: 0 0 0 1px var(--rk, var(--gold));
-}
-.ar-rank b { font-family: var(--display); font-size: var(--fs-title); color: var(--rk, var(--gold)); }
-.ar-rank span { font-size: var(--fs-label); color: var(--txt-dim); font-variant-numeric: tabular-nums; }
-.ar-rec { display: flex; flex-direction: column; gap: 2px; font-size: var(--fs-meta); }
-.ar-rec span:first-child { font-family: var(--display); font-size: var(--fs-lead); }
-.ar-honest {
-  font-size: var(--fs-meta); color: var(--parch-lo); line-height: 1.5;
-  background: rgba(255,194,71,.07); border-left: 3px solid var(--brass);
-  padding: 8px 10px; border-radius: 0 6px 6px 0; margin: 6px 0 10px;
-}
-.ar-sec { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
-.ar-list { display: flex; flex-direction: column; gap: 6px; }
-.ar-row {
-  display: flex; align-items: center; gap: 9px; width: 100%;
-  padding: 9px 11px; min-height: 56px;
-  background: var(--bg2); color: var(--txt); text-align: left;
-  border: var(--px) solid var(--ink); border-radius: 10px;
-  font: inherit; cursor: pointer;
-}
-.ar-row.static { cursor: default; }
-.ar-row:active:not(.static) { transform: scale(.98); }
-.ar-face { width: 38px; height: 38px; object-fit: contain; flex: none; image-rendering: pixelated; }
-.ar-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.ar-info b { font-size: var(--fs-body); }
-.ar-info span { font-size: var(--fs-label); color: var(--txt-dim); }
-.ar-tag {
-  font-style: normal; font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
-  background: var(--good); color: var(--ink); padding: 1px 5px; border-radius: 4px; margin-left: 4px;
-}
-.ar-pow {
-  font-family: var(--display); font-size: var(--fs-title); color: var(--gold);
-  font-variant-numeric: tabular-nums; flex: none;
-}
-.ar-bracket { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
-.ar-chip {
-  font-size: var(--fs-label); padding: 5px 9px; border-radius: 999px;
-  background: var(--bg2); border: 1px solid var(--line);
-}
-.ar-chip.me { background: var(--buddy-dim); border-color: var(--buddy); color: var(--txt); }
 
 /* the duel */
-.duel-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-.duel-side { flex: 1; display: flex; flex-direction: column; }
-.duel-side.right { text-align: right; }
-.duel-side b { font-family: var(--display); font-size: var(--fs-title); }
-.duel-side span { font-size: var(--fs-label); color: var(--txt-dim); font-variant-numeric: tabular-nums; }
-.duel-vs { font-size: var(--fs-label); color: var(--txt-dim); }
-.duel-bars { display: flex; gap: 8px; margin-bottom: 10px; }
-.duel-bars .pixbar { flex: 1; height: 12px; }
-.duel-bars i { display: block; height: 100%; background: var(--good); transition: width .35s var(--ease); }
-.duel-bars .pixbar:last-child i { background: var(--danger); }
-.duel-log { max-height: 34vh; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
-.duel-line { font-size: var(--fs-meta); color: var(--txt-dim); }
-.duel-line b { color: var(--txt); }
-.duel-line.reward { color: var(--gold); font-size: var(--fs-body); margin-top: 6px; }
-.duel-line.reward .ico { width: 16px; height: 16px; vertical-align: -3px; }
-.duel-result {
-  font-family: var(--display); font-size: 26px; text-align: center; margin: 6px 0;
-  animation: popin .4s var(--pop);
-}
-.duel-result.win { color: var(--gold); text-shadow: 0 0 14px rgba(255,194,71,.5); }
-.duel-result.lose { color: var(--danger); }
-.tr-list { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; }
-.tr-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  padding: 8px 10px; background: var(--bg2); border-radius: 8px; font-size: var(--fs-meta);
-}
-.tr-row.mine { box-shadow: 0 0 0 1px var(--buddy); }
-.tr-row .won { color: var(--good); font-weight: 600; }
-.tr-row .out { color: var(--txt-dim); text-decoration: line-through; }
 
 /* the house promo strip — the shape of a banner, but it only ever points at
    this app's own features, and the tag says where it came from */
@@ -2508,7 +2433,7 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
 
 .ev-bar {
   position: relative; height: 15px; margin: 8px 0 7px;
-  background: #0a0e1c; border: var(--px) solid var(--ink);
+  background: var(--track); border: var(--px) solid var(--ink);
   overflow: hidden;
 }
 .ev-bar > i {
@@ -2652,7 +2577,7 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
 .av-mid b { font-size: var(--fs-meta); }
 .av-bar {
   position: relative; display: block; height: 12px;
-  background: #0a0e1c; border: 1px solid var(--ink); overflow: hidden;
+  background: var(--track); border: 1px solid var(--ink); overflow: hidden;
 }
 .av-bar > i { display: block; height: 100%; background: var(--gold-lo); }
 .av-bar > em {

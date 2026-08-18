@@ -186,6 +186,19 @@ the habit apps that get it right, in `css/juice.css`, loaded last:
   broken run, a new rung on the ladder, Vale's list finished. Spinning stepped rays, a
   bouncing icon, the reward plates landing one after another.
 
+## Light, and one thing per screen
+
+The palette lives in `css/light.css`, loaded straight after `style.css`: a warm paper page,
+white cards with one solid edge underneath instead of a blur, a single saturated accent per
+action, and much more air than a dark theme needs. Everything downstream reads the same
+tokens, so the pixel borders and the spring animations followed the flip automatically.
+
+The screens were also thinned out. **Today** now holds four things — the dream banner, one
+focus card with one green button, the week's rhythm with the streak payoff, and your goals.
+Everything that used to pile up underneath it (Vale's list, the event track, the challenge,
+the odd jobs, the journal) moved to **Quests**, which is where you go when you want a list.
+Summon folded into **Beasts**, so the tab bar is five buttons instead of six.
+
 ## Look and feel
 
 Everything on screen is custom pixel art with no external dependencies:

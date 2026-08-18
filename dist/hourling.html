@@ -5,7 +5,7 @@
 <!-- viewport-fit=cover so the app can paint under a notch; zoom left ON,
      because disabling it is an accessibility failure, not a polish win -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#101529">
+<meta name="theme-color" content="#fbf6ea">
 <meta name="description" content="An idle RPG that runs on the hours you actually practise. Pick one thing to get good at, put the time in, and your party grows with you.">
 <title>Hourling</title>
 
@@ -523,7 +523,7 @@ button { font-family: inherit; color: inherit; }
 }
 .pixbar {
   position: relative; display: block; height: 9px;
-  background: #0a0e1c;
+  background: var(--track);
   border: var(--px) solid var(--ink);
   overflow: hidden; flex: 1;
 }
@@ -844,7 +844,7 @@ button.hud-chip:active { transform: translateY(2px); }
 .sring { position: relative; width: 214px; height: 214px; margin: 6px 0; }
 .sring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 .sring circle { fill: none; stroke-width: 10; }
-.sring .track { stroke: #0a0e1c; }
+.sring .track { stroke: var(--track); }
 .sring .fill { stroke: var(--gold); stroke-dasharray: 597; transition: stroke-dashoffset 1s linear; }
 .sring .glow { stroke: rgba(255,209,92,.25); stroke-width: 18; }
 .sring-mid { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -872,7 +872,7 @@ button.hud-chip:active { transform: translateY(2px); }
 .sb-foe { right: 8px; flex-direction: column; align-items: center; gap: 2px; }
 .sb-party img { animation: pbob 2.4s steps(4, jump-none) infinite; transform: scaleX(-1); }
 .sb-foe img { animation: pbob 2.1s steps(4, jump-none) infinite; }
-.sb-hp { width: 34px; height: 4px; background: #0a0e1c; border: 1px solid var(--ink); }
+.sb-hp { width: 34px; height: 4px; background: var(--track); border: 1px solid var(--ink); }
 .sb-hp > i { display: block; height: 100%; background: var(--hp); }
 .sb-stats {
   display: flex; justify-content: space-around; gap: 8px; margin-top: 5px;
@@ -1019,7 +1019,7 @@ button.hud-chip:active { transform: translateY(2px); }
   border: var(--px) solid var(--ink);
   padding: 0 4px; margin-top: 1px;
 }
-.fighter .fhp { width: 40px; height: 5px; margin-top: 2px; background: #0a0e1c; border: 1px solid var(--ink); }
+.fighter .fhp { width: 40px; height: 5px; margin-top: 2px; background: var(--track); border: 1px solid var(--ink); }
 .fighter .fhp i { display: block; height: 100%; background: var(--good); }
 
 #skill-flash {
@@ -1145,7 +1145,7 @@ button.hud-chip:active { transform: translateY(2px); }
 }
 .cdmeter {
   width: 74px; height: 11px; flex: none;
-  background: #0a0e1c; border: var(--px) solid var(--ink);
+  background: var(--track); border: var(--px) solid var(--ink);
   position: relative; overflow: hidden;
 }
 .cdmeter i {
@@ -1472,7 +1472,7 @@ button.hud-chip:active { transform: translateY(2px); }
 #kcal-ring { position: relative; width: 84px; height: 84px; flex-shrink: 0; }
 #kcal-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 #kcal-ring circle { fill: none; stroke-width: 9; }
-#kcal-ring .track { stroke: #0a0e1c; }
+#kcal-ring .track { stroke: var(--track); }
 #kcal-ring .fill { stroke: var(--good); stroke-dasharray: 213.6; stroke-dashoffset: 213.6; transition: stroke-dashoffset .5s steps(10), stroke .2s; }
 #kcal-mid { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 #kcal-mid b { font-size: 18px; }
@@ -1645,7 +1645,7 @@ button.hud-chip:active { transform: translateY(2px); }
   border: var(--px) solid var(--ink);
   padding: 3px 6px;
 }
-.banner .bpity .pixbar { height: 7px; flex: 1; background: #0a0e1c; }
+.banner .bpity .pixbar { height: 7px; flex: 1; background: var(--track); }
 .banner .bpity .pixbar > i { background: var(--gem); }
 .banner .bpity b {
   font-size: var(--fs-micro); color: #fff; white-space: nowrap;
@@ -1719,7 +1719,7 @@ button.hud-chip:active { transform: translateY(2px); }
 .ritual .rdesc { font-size: 12.5px; color: var(--txt-dim); margin-top: 2px; line-height: 1.5; }
 .rreward { font-size: 12.5px; color: var(--mana); display: flex; align-items: center; gap: 3px; margin-top: 2px; flex-wrap: wrap; }
 .ritual .rprog { display: flex; gap: 2px; margin-top: 4px; }
-.ritual .rprog i { width: 12px; height: 6px; background: #0a0e1c; border: 1px solid var(--ink); }
+.ritual .rprog i { width: 12px; height: 6px; background: var(--track); border: 1px solid var(--ink); }
 .ritual .rprog i.f { background: var(--good); }
 .ritual .rbtn { flex-shrink: 0; white-space: nowrap; }
 
@@ -1850,7 +1850,7 @@ button.hud-chip:active { transform: translateY(2px); }
 .stag.sig { background: var(--gold-lo); color: #2e1e02; }
 .skillrow .spow {
   position: relative; height: 13px; margin-top: 5px;
-  background: #0a0e1c; border: 1px solid var(--ink); overflow: hidden;
+  background: var(--track); border: 1px solid var(--ink); overflow: hidden;
 }
 .skillrow .spow > i { display: block; height: 100%; opacity: .55; }
 .skillrow .spow > span {
@@ -1931,7 +1931,7 @@ button.hud-chip:active { transform: translateY(2px); }
 .timer-ring { position: relative; width: 168px; height: 168px; margin: 10px auto; }
 .timer-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 .timer-ring circle { fill: none; stroke-width: 11; }
-.timer-ring .track { stroke: #0a0e1c; }
+.timer-ring .track { stroke: var(--track); }
 .timer-ring .fill { stroke: var(--gem); transition: stroke-dashoffset 1s linear; }
 .timer-mid { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .timer-mid b { font-size: 28px; font-variant-numeric: tabular-nums; }
@@ -2504,7 +2504,7 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
 .tipcard .pixbtn.ready { animation: tagpulse 1.4s var(--ease) infinite; }
 .reflect-in {
   width: 100%; margin-top: 8px; padding: 10px;
-  background: #0a0e1c; color: var(--txt);
+  background: var(--track); color: var(--txt);
   border: var(--px) solid var(--ink); border-radius: 8px;
   font: inherit; font-size: 15px; resize: none;
 }
@@ -2648,7 +2648,7 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
 }
 .acc-steps { font-size: var(--fs-meta); color: var(--txt-dim); line-height: 1.6; margin: 0 0 8px 18px; }
 .acc-steps code {
-  background: #0a0e1c; padding: 1px 5px; border-radius: 4px;
+  background: var(--track); padding: 1px 5px; border-radius: 4px;
   font-size: var(--fs-label); color: var(--gem); user-select: text;
 }
 .acc-profiles { display: flex; flex-direction: column; gap: 6px; }
@@ -2666,13 +2666,13 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
 .acc-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
 .acc-in {
   width: 100%; margin-top: 6px; padding: 10px;
-  background: #0a0e1c; color: var(--txt);
+  background: var(--track); color: var(--txt);
   border: var(--px) solid var(--ink); border-radius: 8px;
   font: inherit; user-select: text;
 }
 .acc-code {
   width: 100%; margin-top: 8px; padding: 10px;
-  background: #0a0e1c; color: var(--gem);
+  background: var(--track); color: var(--gem);
   border: var(--px) solid var(--ink); border-radius: 8px;
   font-family: ui-monospace, monospace; font-size: 11px; line-height: 1.4;
   resize: none; user-select: all; word-break: break-all;
@@ -2763,85 +2763,10 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
 @media (max-height: 700px) {
 }
 
-/* ============================================================
-   ARENA — rivals by code, duels, tournaments
-   ============================================================ */
 #btn-arena { position: absolute; left: 8px; top: 92px; z-index: 6; }
 .arena { max-height: 76vh; overflow-y: auto; }
-.ar-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.ar-rank {
-  display: flex; flex-direction: column; padding: 8px 12px; border-radius: 10px;
-  background: var(--bg2); box-shadow: 0 0 0 1px var(--rk, var(--gold));
-}
-.ar-rank b { font-family: var(--display); font-size: var(--fs-title); color: var(--rk, var(--gold)); }
-.ar-rank span { font-size: var(--fs-label); color: var(--txt-dim); font-variant-numeric: tabular-nums; }
-.ar-rec { display: flex; flex-direction: column; gap: 2px; font-size: var(--fs-meta); }
-.ar-rec span:first-child { font-family: var(--display); font-size: var(--fs-lead); }
-.ar-honest {
-  font-size: var(--fs-meta); color: var(--parch-lo); line-height: 1.5;
-  background: rgba(255,194,71,.07); border-left: 3px solid var(--brass);
-  padding: 8px 10px; border-radius: 0 6px 6px 0; margin: 6px 0 10px;
-}
-.ar-sec { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
-.ar-list { display: flex; flex-direction: column; gap: 6px; }
-.ar-row {
-  display: flex; align-items: center; gap: 9px; width: 100%;
-  padding: 9px 11px; min-height: 56px;
-  background: var(--bg2); color: var(--txt); text-align: left;
-  border: var(--px) solid var(--ink); border-radius: 10px;
-  font: inherit; cursor: pointer;
-}
-.ar-row.static { cursor: default; }
-.ar-row:active:not(.static) { transform: scale(.98); }
-.ar-face { width: 38px; height: 38px; object-fit: contain; flex: none; image-rendering: pixelated; }
-.ar-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.ar-info b { font-size: var(--fs-body); }
-.ar-info span { font-size: var(--fs-label); color: var(--txt-dim); }
-.ar-tag {
-  font-style: normal; font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
-  background: var(--good); color: var(--ink); padding: 1px 5px; border-radius: 4px; margin-left: 4px;
-}
-.ar-pow {
-  font-family: var(--display); font-size: var(--fs-title); color: var(--gold);
-  font-variant-numeric: tabular-nums; flex: none;
-}
-.ar-bracket { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
-.ar-chip {
-  font-size: var(--fs-label); padding: 5px 9px; border-radius: 999px;
-  background: var(--bg2); border: 1px solid var(--line);
-}
-.ar-chip.me { background: var(--buddy-dim); border-color: var(--buddy); color: var(--txt); }
 
 /* the duel */
-.duel-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-.duel-side { flex: 1; display: flex; flex-direction: column; }
-.duel-side.right { text-align: right; }
-.duel-side b { font-family: var(--display); font-size: var(--fs-title); }
-.duel-side span { font-size: var(--fs-label); color: var(--txt-dim); font-variant-numeric: tabular-nums; }
-.duel-vs { font-size: var(--fs-label); color: var(--txt-dim); }
-.duel-bars { display: flex; gap: 8px; margin-bottom: 10px; }
-.duel-bars .pixbar { flex: 1; height: 12px; }
-.duel-bars i { display: block; height: 100%; background: var(--good); transition: width .35s var(--ease); }
-.duel-bars .pixbar:last-child i { background: var(--danger); }
-.duel-log { max-height: 34vh; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
-.duel-line { font-size: var(--fs-meta); color: var(--txt-dim); }
-.duel-line b { color: var(--txt); }
-.duel-line.reward { color: var(--gold); font-size: var(--fs-body); margin-top: 6px; }
-.duel-line.reward .ico { width: 16px; height: 16px; vertical-align: -3px; }
-.duel-result {
-  font-family: var(--display); font-size: 26px; text-align: center; margin: 6px 0;
-  animation: popin .4s var(--pop);
-}
-.duel-result.win { color: var(--gold); text-shadow: 0 0 14px rgba(255,194,71,.5); }
-.duel-result.lose { color: var(--danger); }
-.tr-list { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; }
-.tr-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  padding: 8px 10px; background: var(--bg2); border-radius: 8px; font-size: var(--fs-meta);
-}
-.tr-row.mine { box-shadow: 0 0 0 1px var(--buddy); }
-.tr-row .won { color: var(--good); font-weight: 600; }
-.tr-row .out { color: var(--txt-dim); text-decoration: line-through; }
 
 /* the house promo strip — the shape of a banner, but it only ever points at
    this app's own features, and the tag says where it came from */
@@ -2897,7 +2822,7 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
 
 .ev-bar {
   position: relative; height: 15px; margin: 8px 0 7px;
-  background: #0a0e1c; border: var(--px) solid var(--ink);
+  background: var(--track); border: var(--px) solid var(--ink);
   overflow: hidden;
 }
 .ev-bar > i {
@@ -3041,7 +2966,7 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
 .av-mid b { font-size: var(--fs-meta); }
 .av-bar {
   position: relative; display: block; height: 12px;
-  background: #0a0e1c; border: 1px solid var(--ink); overflow: hidden;
+  background: var(--track); border: 1px solid var(--ink); overflow: hidden;
 }
 .av-bar > i { display: block; height: 100%; background: var(--gold-lo); }
 .av-bar > em {
@@ -3080,6 +3005,296 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
 }
 .streak-note b { color: var(--gold); }
 .streak-note .ico { width: 16px; height: 16px; vertical-align: -3px; }
+
+/* ============ the light theme ============
+
+   Loaded straight after style.css, so it only has to restate the palette and
+   the handful of rules that assumed a dark ground. Everything downstream —
+   cartoon.css, juice.css — reads the same tokens and follows automatically.
+
+   The model is the habit apps: a warm paper page, white cards with one solid
+   edge underneath instead of a blur, a single saturated accent per action, and
+   a lot more air than a dark theme can get away with. Pixel art keeps its hard
+   borders; what changes is that they are now light-on-light rather than
+   black-on-black, which is most of why the old screens read as busy.       */
+
+:root {
+  /* ground */
+  --ink:      #d5cab2;   /* every border. was near-black; now a paper edge   */
+  --edge:     #c3b697;   /* the solid bottom edge that makes a thing pressable */
+  --bg0:      #fbf6ea;   /* the page                                        */
+  --bg1:      #ffffff;   /* cards                                           */
+  --bg2:      #fffdf7;   /* cards, one step warmer                          */
+  --bg3:      #f4ecd9;   /* raised / selected                               */
+  --bg-lift:  #ece0c6;
+  --line:     #e9e0cb;
+  --line-hi:  #d3c6a6;
+  --track:    #ece3cf;   /* the inside of every progress bar                */
+
+  --parch:    #4a4453;
+  --parch-lo: #6f6779;
+
+  --txt:      #2c2836;
+  --txt-dim:  #726b80;
+  --txt-ink:  #2c2836;
+
+  /* one saturated accent per meaning, tuned for white */
+  --brass:    #b8791a;
+  --gold:     #f5a623;
+  --gold-lo:  #e08c00;
+  --gem:      #17a5e8;
+  --mana:     #8b5cf6;
+  --ess:      #12b981;
+  --hp:       #ef4444;
+  --xp:       #f59e0b;
+  --good:     #58a700;
+  --leaf:     #4caf50;
+  --sky:      #38a3f1;
+  --danger:   #e03e3e;
+
+  --rare:      #2f8fe8;
+  --epic:      #9333ea;
+  --legendary: #e0930d;
+
+  /* paper texture instead of the dark scanline grain */
+  --grain: repeating-linear-gradient(90deg,
+    rgba(0,0,0,.014) 0 2px, transparent 2px 9px);
+  --hard: 0 4px 0 var(--edge);
+}
+
+html, body { background: var(--bg0); }
+#app {
+  background: var(--bg0);
+  border-left-color: var(--line);
+  border-right-color: var(--line);
+}
+
+/* ---- cards: white, one solid edge, real air around them ---- */
+.card {
+  background: var(--bg1);
+  border: var(--px) solid var(--ink);
+  outline: 0;
+  box-shadow: 0 3px 0 var(--edge);
+  margin: 10px 12px;
+  padding: 12px;
+}
+.card-head {
+  color: var(--brass);
+  border-bottom-color: var(--line);
+  font-size: var(--fs-label);
+  letter-spacing: .1em;
+  margin-bottom: 9px;
+}
+
+/* ---- buttons: a darker tint of themselves underneath ---- */
+.pixbtn {
+  background: var(--bg1);
+  color: var(--txt);
+  outline: 0;
+  border: var(--px) solid var(--ink);
+  box-shadow: 0 4px 0 var(--edge);
+  font-weight: 700;
+}
+.pixbtn span { color: var(--txt-dim); }
+.pixbtn.primary { background: #6d4bb5; border-color: #4e3287; box-shadow: 0 4px 0 #4e3287; color: #fff; }
+.pixbtn.primary span { color: rgba(255,255,255,.82); }
+.pixbtn.good    { background: var(--good); border-color: #3f7a00; box-shadow: 0 4px 0 #3f7a00; color: #fff; }
+.pixbtn.good span { color: rgba(255,255,255,.85); }
+.pixbtn.gem     { background: var(--gem); border-color: #0d7cb0; box-shadow: 0 4px 0 #0d7cb0; color: #fff; }
+.pixbtn.gem span { color: rgba(255,255,255,.85); }
+.pixbtn.gold    { background: var(--gold); border-color: #b87400; box-shadow: 0 4px 0 #b87400; color: #3d2600; }
+.pixbtn.gold span { color: #5c3a00; }
+.pixbtn.danger  { background: var(--danger); border-color: #a52626; box-shadow: 0 4px 0 #a52626; color: #fff; }
+.pixbtn.ghost   { background: var(--bg1); color: var(--txt-dim); border-color: var(--line-hi); box-shadow: 0 3px 0 var(--line-hi); }
+.pixbtn.tiny    { box-shadow: 0 3px 0 var(--edge); }
+.pixbtn.huge    { box-shadow: 0 5px 0 var(--edge); animation: none; }
+.pixbtn.primary.huge { box-shadow: 0 5px 0 #4e3287; }
+.pixbtn.gold.huge    { box-shadow: 0 5px 0 #b87400; }
+.pixbtn.good.huge    { box-shadow: 0 5px 0 #3f7a00; }
+.pixbtn:focus-visible { outline: 2px solid var(--gem); outline-offset: 2px; }
+
+/* ---- no embossed text on paper ---- */
+.card *, .modal *, .pixbtn, .hud-chip, #tabbar button,
+.quest *, .tk-row *, .av-row *, .sg-row *, .ev-tier *, .accrow * {
+  text-shadow: none;
+}
+/* except where it sits on artwork */
+#today-hero *, #scene *, .banner *, #boot *, .celebrate .cb-title,
+.dmg-float, #skill-flash { text-shadow: revert; }
+
+/* ---- HUD: one quiet strip, not two rows of boxes ---- */
+#hud {
+  background: var(--bg1);
+  border-bottom: var(--px) solid var(--ink);
+  box-shadow: 0 2px 0 var(--edge);
+  gap: 3px;
+}
+.hud-chip {
+  background: var(--bg3);
+  border: var(--px) solid var(--ink);
+  outline: 0;
+  padding: 4px 8px;
+  font-weight: 700;
+}
+.hud-row + .hud-row { margin-top: 3px; }
+/* the second row carries the soft currencies: same data, a fraction of the ink */
+.hud-row:last-child .hud-chip {
+  background: transparent; border: 0; padding: 1px 4px;
+}
+.hud-row:last-child .hud-chip b { font-size: var(--fs-meta); }
+.mana-chip .pixbar { height: 8px; }
+.lvl-num { background: var(--gold); color: #3d2600; border-color: var(--edge); }
+.gold-chip b { color: var(--brass); }
+.gem-chip b  { color: #0d7cb0; }
+.ess-chip b  { color: #0f8f64; }
+.seed-chip b { color: #3d8b40; }
+.streak-chip b { color: #e2661a; }
+
+/* ---- tab bar: a filled pill under the active tab ---- */
+#tabbar {
+  background: var(--bg1);
+  border-top: var(--px) solid var(--ink);
+  box-shadow: 0 -2px 0 var(--line);
+}
+#tabbar button {
+  color: var(--txt-dim); border-top: 0; background: none;
+  font-size: var(--fs-micro); font-weight: 700;
+}
+#tabbar button .ico { filter: grayscale(.5) opacity(.65); }
+#tabbar button.active { color: var(--good); background: none; }
+#tabbar button.active .ico { filter: none; }
+#tabbar button.active::before {
+  content: ''; position: absolute; inset: 3px 6px auto 6px; height: 3px;
+  background: var(--good);
+}
+#tabbar button { position: relative; }
+
+/* ---- bars ---- */
+.pixbar {
+  background: var(--track);
+  border: var(--px) solid var(--ink);
+}
+.pixbar > b { color: #fff; }
+.pixbar::after { display: none; }        /* the dark inner sheen */
+
+/* ---- panels, rows, inputs ---- */
+.panel-box { background: rgba(255,255,255,.92); outline-color: var(--line-hi); }
+.tk-row, .av-row, .sg-row, .ev-tier, .accrow, .bonus-row, .offrow,
+.quest, .ritual, .sk-stat, .sk-cal, .sk-freeze, .goalcard {
+  background: var(--bg1);
+  outline-color: var(--line);
+  box-shadow: 0 2px 0 var(--edge);
+}
+.tk-box, .av-ic, .sg-ic, .ev-ic { background: var(--bg3); }
+.reflect-in, .acc-in, .acc-code, input, textarea, select {
+  background: var(--bg1); color: var(--txt); border-color: var(--ink);
+}
+.subtle, .hint-line { color: var(--txt-dim); }
+.linkbtn { color: var(--gem); }
+
+/* modals sit on a warm scrim, not a black one */
+.modal { background: var(--bg1); background-image: var(--grain); outline: 0;
+  box-shadow: 0 5px 0 var(--edge), 0 18px 40px rgba(80,60,20,.18); }
+#modal-root .backdrop, .modal-back { background: rgba(60,45,20,.42); }
+
+/* the battle scene and the banners keep their dark interiors */
+#scene, #scene *, .banner, .banner * { --track: #131a2e; }
+.foe .fplate, .fighter .flvl, #stage-plate, #boost-badge {
+  color: #fff;
+}
+.celebrate { background: rgba(60,45,20,.55); }
+.cb-inner { background: var(--bg1); outline: 0; border-color: var(--ink);
+  box-shadow: 0 6px 0 var(--edge), 0 18px 40px rgba(60,45,20,.28); }
+.cb-sub { color: var(--txt-dim); }
+.cb-rewards span { background: var(--bg3); }
+.cb-rays { background: repeating-conic-gradient(from 0deg,
+  rgba(245,166,35,.13) 0deg 7deg, transparent 7deg 20deg); }
+
+/* toasts read as notes on paper */
+.toast { background: var(--bg1); color: var(--txt);
+  border: var(--px) solid var(--ink); box-shadow: 0 3px 0 var(--edge); }
+
+/* ---- surfaces that were hard-coded dark ---- */
+/* Today's focus is the biggest thing on the home screen; it becomes a white
+   card with a coloured left edge rather than a navy slab. */
+.focus {
+  background: var(--bg1);
+  background-image: none;
+  border: var(--px) solid var(--ink);
+  outline: 0;
+  box-shadow: 0 3px 0 var(--edge);
+  border-left: 6px solid var(--good);
+  padding: 14px;
+}
+.focus::before { display: none; }
+.focus .f-label { color: var(--good); }
+.focus .f-task { color: var(--txt); font-weight: 700; }
+.focus .f-meta, .focus .f-rest { color: var(--txt-dim); }
+.focus.done-focus { border-left-color: var(--gold); }
+
+.challenge {
+  background: var(--bg1); background-image: none;
+  border: var(--px) solid var(--ink); outline: 0;
+  box-shadow: 0 3px 0 var(--edge);
+  border-left: 6px solid var(--gem);
+}
+.mslot { background: var(--bg3); }
+.dreamcard.on, .lvlcard.on { background: #fff6de; }
+.lu-row.unlock { background: #fff6de; }
+.daypick button.on { background: var(--good); border-color: #3f7a00; }
+.rday.hit { background: var(--good); }
+.rday { background: var(--bg3); color: var(--txt-dim); }
+.rday.on { background: var(--bg1); color: var(--txt); }
+.rday.today { outline-color: var(--gold); }
+.rstat { background: var(--bg1); box-shadow: 0 2px 0 var(--edge); }
+.rstat.hot { outline-color: var(--good); }
+.rstat.hot b { color: var(--good); }
+
+/* the hero band and the timer overlays stay dark: they are artwork */
+#today-hero, #session-overlay, #wish-overlay, #scene, .banner { color: #fff; }
+#today-hero .hero-rank, #today-hero .hero-ladder b { color: #ffe6b0; }
+#today-hero .hero-dream, #today-hero #hero-dreamname { color: #fff; }
+#today-hero .hero-why { color: rgba(255,255,255,.85); }
+#session-overlay .subtle, #session-overlay .s-hint { color: #c9c4d6; }
+
+/* ---- HUD numbers must never be clipped ---- */
+.hud-row > .hud-chip b { overflow: visible; text-overflow: clip; }
+.hud-chip { font-size: 13.5px; }
+.level-chip .pixbar { width: 34px; }
+@media (max-width: 359px) {
+  .hud-chip { padding: 3px 5px; font-size: 12.5px; }
+  .level-chip .pixbar { width: 24px; }
+}
+
+/* ---- the one main action is green, the way a habit app does it ---- */
+.focus .pixbtn.primary, .focus .pixbtn.huge {
+  background: var(--good); border-color: #3f7a00; box-shadow: 0 5px 0 #3f7a00; color: #fff;
+}
+.focus .pixbtn.primary span { color: rgba(255,255,255,.85); }
+
+/* ---- anything sitting on the battle art keeps light text ---- */
+#haste-btn, #haste-btn * { color: #fff; }
+#scene .pixbtn { color: #fff; }
+#stage-plate { background: rgba(20,14,6,.82); outline-color: rgba(255,255,255,.5); }
+#stage-area { color: #ffd98a; }
+#stage-num { color: #e6dcc8; }
+#wave-pips i { border-color: rgba(0,0,0,.5); }
+
+/* the cooldown strip and forge sit on paper now */
+.cdcard { background: var(--bg1); border-color: var(--ink);
+  outline: var(--px) solid var(--line); box-shadow: 0 2px 0 var(--edge); }
+.cd-head { color: var(--brass); }
+.cdrow .cdname { color: var(--txt); }
+#ult-wrap { background: var(--bg1); border-bottom: var(--px) solid var(--ink); }
+#quest-log { background: var(--bg1); }
+.panel-head { color: var(--brass); }
+#battle-below { background: var(--bg0); }
+
+/* the pity meter sits on the banner's dark plate, so it keeps a dark interior */
+.banner .bpity .pixbar { background: #131a2e; border-color: rgba(0,0,0,.55); }
+.banner .bpity { border-color: rgba(0,0,0,.55); }
+/* health bars over the battle art, likewise */
+.foe .fplate .pixbar, .fighter .fhp, .sb-hp { background: #131a2e; border-color: rgba(0,0,0,.55); }
 
 /* ============ the cartoon layer ============
 
@@ -3760,22 +3975,7 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
         <div id="today-quest-list"></div>
       </div>
 
-      <div id="today-challenge"></div>
-
       <div id="goals-card" class="card"></div>
-
-      <div id="tasks-card" class="card"></div>
-
-      <div id="event-card" class="card"></div>
-
-      <div id="promo-strip"></div>
-
-      <div id="offers-card" class="card"></div>
-
-      <div id="journal-card" class="card">
-        <div class="card-head"><i class="ico ico-book"></i> Practice journal</div>
-        <div id="journal-list"></div>
-      </div>
     </section>
 
     <!-- ~~~~~~~~~ BATTLE ~~~~~~~~~ -->
@@ -3789,7 +3989,6 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
           <span id="stage-num">Stage 1-1</span>
         </div>
         <button id="btn-map" class="pixbtn tiny" title="Region map" aria-label="Region map"><i class="ico ico-map"></i></button>
-        <button id="btn-arena" class="pixbtn tiny" title="Arena" aria-label="Arena"><i class="ico ico-sword"></i></button>
         <div id="wave-pips"></div>
         <div id="boost-badge" class="hidden"><i class="ico ico-bolt"></i> x3 <b id="boost-time"></b></div>
         <button id="haste-btn" title="Speed combat up for 5 minutes"></button>
@@ -3872,18 +4071,15 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
 
     <!-- ~~~~~~~~~ BEASTS ~~~~~~~~~ -->
     <section id="tab-beasts" class="tab">
+      <h2 class="tab-title"><i class="ico ico-mana"></i> Summon</h2>
+      <div id="banner-rail"></div>
+      <div id="pity-note" class="subtle"></div>
+
       <h2 class="tab-title">Your party <span class="subtle" id="party-count"></span></h2>
       <div id="party-slots"></div>
       <h2 class="tab-title"><i class="ico ico-book"></i> Beast dex <span class="subtle" id="dex-count"></span></h2>
       <div id="dex-filters"></div>
       <div id="collection-grid"></div>
-    </section>
-
-    <!-- ~~~~~~~~~ SUMMON ~~~~~~~~~ -->
-    <section id="tab-summon" class="tab">
-      <h2 class="tab-title"><i class="ico ico-mana"></i> Summoning banners</h2>
-      <div id="banner-rail"></div>
-      <div id="pity-note" class="subtle"></div>
     </section>
 
     <!-- ~~~~~~~~~ QUESTS ~~~~~~~~~ -->
@@ -3892,6 +4088,10 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
         <div class="card-head"><i class="ico ico-chest"></i> Login rewards</div>
         <div id="login-row"></div>
       </div>
+      <div id="tasks-card" class="card"></div>
+
+      <div id="event-card" class="card"></div>
+
       <h2 class="tab-title">Challenge of the day</h2>
       <div id="challenge-card"></div>
       <h2 class="tab-title"><i class="ico ico-scroll"></i> Today's quests <span class="subtle" id="quest-day"></span></h2>
@@ -3903,6 +4103,13 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
       <button id="btn-add-custom" class="pixbtn ghost wide"><span class="glyph-plus"></span> Create a habit</button>
       <div id="achv-card" class="card"></div>
 
+      <div id="offers-card" class="card"></div>
+
+      <div id="journal-card" class="card">
+        <div class="card-head"><i class="ico ico-book"></i> Practice journal</div>
+        <div id="journal-list"></div>
+      </div>
+
       <h2 class="tab-title">Milestones</h2>
       <div id="journey-panel"></div>
     </section>
@@ -3913,7 +4120,6 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
     <button data-tab="battle"><i class="ico ico-sword"></i>Battle</button>
     <button data-tab="farm"><i class="ico ico-seed"></i>Garden</button>
     <button data-tab="beasts"><i class="ico ico-relic"></i>Beasts</button>
-    <button data-tab="summon"><i class="ico ico-mana"></i>Summon</button>
     <button data-tab="quests"><i class="ico ico-scroll"></i>Quests</button>
   </nav>
 </div>
@@ -4074,11 +4280,14 @@ function applyBuddyTheme() {
   const type = cid && C_BY_ID[cid] ? C_BY_ID[cid].types[0] : null;
   const c = (type && TYPE_COLORS[type]) || '#ffc247';
   const r = document.documentElement;
-  r.style.setProperty('--buddy', c);
-  r.style.setProperty('--buddy-dim', mixHex(c, '#101529', 0.55));
-  r.style.setProperty('--buddy-glow', hexAlpha(c, 0.34));
-  r.style.setProperty('--buddy-soft', mixHex(c, '#101529', 0.94));
-  r.style.setProperty('--buddy-hi', mixHex(c, '#ffffff', 0.4));
+  /* On a light page the accent has to be darkened, not lightened, or it
+     disappears into the paper. --buddy is the readable ink version; --buddy-dim
+     is a hairline for borders; --buddy-soft is a wash for backgrounds. */
+  r.style.setProperty('--buddy', mixHex(c, '#3a2a10', 0.34));
+  r.style.setProperty('--buddy-dim', mixHex(c, '#ffffff', 0.55));
+  r.style.setProperty('--buddy-glow', hexAlpha(c, 0.26));
+  r.style.setProperty('--buddy-soft', mixHex(c, '#ffffff', 0.9));
+  r.style.setProperty('--buddy-hi', mixHex(c, '#2a1c06', 0.5));
   r.dataset.buddyType = type || '';
   r.dataset.haste = (typeof isHasted === 'function' && isHasted()) ? '1' : '';
 }
@@ -4811,7 +5020,7 @@ function defaultState() {
     quests: { day: null, list: [] },
     summons: { total: 0, sinceRare: 0 },
     settings: { sound: true, panels: { upgrades: false, fusion: false },
-                welcomed: false, metArena: false },
+                welcomed: false },
     tutorial: {},
     lastSeen: Date.now(),
     starterCid: null,
@@ -4828,8 +5037,6 @@ function defaultState() {
     lab: { points: 5, serums: 0, rolls: 0 },
     login: { cycle: 0, lastDay: null },
     challenge: { day: null, idx: 0, done: false },
-    /* arena: local rating, rivals added by code, tournament in progress */
-    arena: { rating: 1000, wins: 0, losses: 0, rivals: [], tourney: null, day: null, fights: 0 },
     /* in-app reward offers: daily caps + tip-card cooldown */
     offers: { day: null, used: {}, lastTip: 0, insured: false },
     regionProgress: {},
@@ -4876,7 +5083,7 @@ function sanitize() {
   if (!S.party.length && Object.keys(S.beasts).length) S.party = [Object.keys(S.beasts)[0]];
   if (S.starterCid && !C_BY_ID[S.starterCid]) S.starterCid = null;
   const d = defaultState();
-  for (const k of ['upgrades', 'merge', 'farm', 'lab', 'login', 'challenge', 'regionProgress', 'dream', 'offers', 'arena', 'event', 'achv', 'stats', 'comeback']) {
+  for (const k of ['upgrades', 'merge', 'farm', 'lab', 'login', 'challenge', 'regionProgress', 'dream', 'offers', 'event', 'achv', 'stats', 'comeback']) {
     if (typeof S[k] !== 'object' || S[k] === null) S[k] = d[k];
   }
   if (typeof S.merge.up !== 'object' || S.merge.up === null) S.merge.up = { slots: 0, tier: 0, luck: 0, energy: 0, rarity: 0 };
@@ -7383,7 +7590,6 @@ const Quests = (() => {
       { key: 'summon', icon: 'mana', name: 'Perform a summon', target: 1, reward: { gems: 6, ess: 10 } },
       { key: 'merge', icon: 'relic', name: 'Fuse 4 pieces of gear', target: 4, reward: { gems: 7, seeds: 1 } },
       { key: 'levelup_beast', icon: 'star', name: 'Level a beast twice', target: 2, reward: { gems: 6, gold: true } },
-      { key: 'duel', icon: 'sword', name: 'Win a duel in the Arena', target: 1, reward: { gems: 10, gold: true } },
       { key: 'harvest', icon: 'seed', name: 'Harvest 4 crops', target: 4, reward: { gems: 6, seeds: 2 } },
     ],
     core: [
@@ -7977,9 +8183,6 @@ const Achievements = (() => {
     tiers('tier', 'relic', n => `Forge a tier-${n} piece`,
           () => Math.max(0, ...(S.merge.board || []).map(i => (i && i.tier) || 0)),
           [3, 5, 7, 9], step(30, 1000)),
-    tiers('arena', 'sword', n => n === 1 ? 'Win your first duel' : `Win ${n} duels`,
-          () => (S.arena.wins || 0),
-          [1, 10, 50], step(35, 1200)),
     tiers('quest', 'scroll', n => `Claim ${n} quests`, () => (S.stats.questsClaimed || 0),
           [10, 100, 500], step(30, 1100, 0, 3)),
     tiers('goal', 'sunrise', n => `Run ${n} goals at once`, () => 1 + (S.sideGoals || []).length,
@@ -8190,253 +8393,6 @@ const Streak = (() => {
 
 </script>
 <script>
-/* ============ Arena — rivals, duels and tournaments ============
-
-   READ THIS BEFORE EXPECTING MATCHMAKING. Hourling is one static file with no
-   server, so there is no lobby, no matchmaking queue and no live opponent.
-   What there is instead is genuine and works offline:
-
-     * Your team can be exported as a RIVAL CODE — a short string holding a
-       snapshot of your party (who, what level, how strong).
-     * Paste a friend's code and they become a standing rival you can fight
-       whenever you like. You really are fighting their team as it was when
-       they made the code, not an invention.
-     * Everyone else in here is an NPC challenger, scaled around your power.
-     * Duels and tournaments are simulated locally, blow by blow, from both
-       teams' real stats.
-
-   So it is asynchronous PvP by exchanged codes, not online PvP. Anything
-   claiming otherwise would need a backend this app does not have, and the UI
-   says so out loud rather than implying a server exists.                    */
-'use strict';
-
-const Arena = (() => {
-  const CODE_VER = 'HR1';
-  const START_RATING = 1000;
-
-  /* NPC challengers. Fixed personalities so the ladder has faces, with power
-     derived from yours so they stay relevant as you grow. */
-  const NPCS = [
-    { id: 'npc_rin',  name: 'Rin the Patient',   blurb: 'Never rushes a rung', k: 0.72, cid: '02_00' },
-    { id: 'npc_hob',  name: 'Hob',               blurb: 'All offence, no plan', k: 0.86, cid: '17_02' },
-    { id: 'npc_mira', name: 'Mira Dawnwake',     blurb: 'Practises before sunrise', k: 1.0, cid: '13_00' },
-    { id: 'npc_sable',name: 'Sable',             blurb: 'Fights out of spite', k: 1.15, cid: '14_08' },
-    { id: 'npc_vale', name: 'Professor Vale',    blurb: 'Wants to see your form', k: 1.3, cid: '08_12' },
-    { id: 'npc_orin', name: 'Orin of the Falls', blurb: 'Ten years, same drill', k: 1.55, cid: '12_02' },
-    { id: 'npc_kess', name: 'Kess',              blurb: 'Undefeated, allegedly', k: 1.9, cid: '17_06' },
-  ];
-
-  function st() {
-    if (!S.arena || typeof S.arena !== 'object') {
-      S.arena = { rating: START_RATING, wins: 0, losses: 0, rivals: [], tourney: null, day: null, fights: 0 };
-    }
-    const a = S.arena;
-    if (!Array.isArray(a.rivals)) a.rivals = [];
-    if (typeof a.rating !== 'number') a.rating = START_RATING;
-    a.wins |= 0; a.losses |= 0; a.fights |= 0;
-    if (a.day !== todayStr()) { a.day = todayStr(); a.fights = 0; }
-    return a;
-  }
-
-  /* ---------------- team snapshots ---------------- */
-  function myTeam() {
-    const members = S.party.filter(cid => C_BY_ID[cid]).slice(0, 4).map(cid => ({
-      cid, lv: (S.beasts[cid] && S.beasts[cid].level) | 0 || 1,
-    }));
-    return {
-      name: Account.active().name || 'Player',
-      power: Battle.combatPower(),
-      lvl: S.player.level,
-      members,
-    };
-  }
-
-  function exportCode() {
-    const t = myTeam();
-    const compact = [t.name.slice(0, 18), t.power, t.lvl,
-                     t.members.map(m => m.cid + ':' + m.lv).join(',')].join('|');
-    return CODE_VER + '.' + btoa(unescape(encodeURIComponent(compact)));
-  }
-
-  function parseCode(code) {
-    try {
-      code = String(code || '').trim().replace(/\s+/g, '');
-      if (code.indexOf(CODE_VER + '.') !== 0) throw 0;
-      const raw = decodeURIComponent(escape(atob(code.slice(CODE_VER.length + 1))));
-      const [name, power, lvl, mem] = raw.split('|');
-      const members = (mem || '').split(',').filter(Boolean).map(s => {
-        const [cid, lv] = s.split(':');
-        return C_BY_ID[cid] ? { cid, lv: clamp(lv | 0, 1, 200) } : null;
-      }).filter(Boolean);
-      if (!members.length) throw 0;
-      return { name: (name || 'Rival').slice(0, 18), power: Math.max(1, power | 0),
-               lvl: Math.max(1, lvl | 0), members, rival: true };
-    } catch (e) { return null; }
-  }
-
-  function addRival(code) {
-    const t = parseCode(code);
-    if (!t) { toast('That is not a rival code'); return false; }
-    const a = st();
-    if (a.rivals.some(r => r.name === t.name && r.power === t.power)) {
-      toast(`${t.name} is already on your list`);
-      return false;
-    }
-    if (a.rivals.length >= 8) a.rivals.shift();
-    t.id = 'rv_' + Date.now().toString(36);
-    a.rivals.push(t);
-    save();
-    toast(`${t.name} added as a rival`, 'gold');
-    return true;
-  }
-
-  function removeRival(id) {
-    const a = st();
-    a.rivals = a.rivals.filter(r => r.id !== id);
-    save();
-  }
-
-  /* an NPC team built around your own power, so the ladder keeps meaning */
-  function npcTeam(n) {
-    const base = Math.max(40, Battle.combatPower());
-    const c = C_BY_ID[n.cid] || SUMMON_POOL[0];
-    return {
-      id: n.id, name: n.name, blurb: n.blurb, npc: true,
-      power: Math.round(base * n.k),
-      lvl: Math.max(1, Math.round(S.player.level * n.k)),
-      members: [{ cid: c.id, lv: Math.max(1, Math.round(S.player.level * n.k)) }],
-    };
-  }
-
-  function opponents() {
-    return NPCS.map(npcTeam).concat(st().rivals.map(r => ({ ...r })));
-  }
-
-  /* ---------------- the duel ----------------
-     Both sides are reduced to power, then trade blows over a handful of
-     rounds. Randomness is wide enough that an underdog can win but narrow
-     enough that power still decides most fights. Returns a log the UI can
-     play out beat by beat. */
-  function duel(mine, theirs) {
-    let a = Math.max(1, mine.power), b = Math.max(1, theirs.power);
-    let ah = 100, bh = 100;
-    const log = [];
-    for (let round = 1; round <= 6 && ah > 0 && bh > 0; round++) {
-      const aRoll = a * rnd(0.72, 1.34);
-      const bRoll = b * rnd(0.72, 1.34);
-      const total = aRoll + bRoll;
-      const aHit = Math.round(28 * (aRoll / total) * 2);
-      const bHit = Math.round(28 * (bRoll / total) * 2);
-      bh = Math.max(0, bh - aHit);
-      if (bh > 0) ah = Math.max(0, ah - bHit);
-      log.push({ round, aHit, bHit: bh > 0 ? bHit : 0, ah, bh });
-    }
-    const won = bh <= 0 || ah > bh;
-    return { won, log, ah, bh };
-  }
-
-  function ratingDelta(mine, theirs, won) {
-    const exp = 1 / (1 + Math.pow(10, ((theirs.power || 1) - (mine.power || 1)) / 400));
-    return Math.round(28 * ((won ? 1 : 0) - exp));
-  }
-
-  const DAILY_FIGHTS = 10;
-  function fightsLeft() { return Math.max(0, DAILY_FIGHTS - st().fights); }
-
-  function fight(oppId) {
-    const a = st();
-    if (fightsLeft() <= 0) { toast('No duels left today — they reset tomorrow'); return null; }
-    const opp = opponents().find(o => o.id === oppId);
-    if (!opp) return null;
-    const mine = myTeam();
-    const res = duel(mine, opp);
-    a.fights++;
-    const d = ratingDelta(mine, opp, res.won);
-    a.rating = Math.max(0, a.rating + d);
-    if (res.won) a.wins++; else a.losses++;
-
-    // winning pays; losing still pays a little, so laddering is never a waste
-    const reward = res.won
-      ? { gems: 6 + Math.round(Math.max(0, d) / 3), gold: Math.round(300 * Math.pow(1.15, globalStage())) }
-      : { gems: 1, gold: Math.round(80 * Math.pow(1.15, globalStage())) };
-    grantGems(reward.gems);
-    grantGold(reward.gold);
-    Quests.progress('arena', 1);
-    save();
-    return { ...res, opp, mine, delta: d, reward };
-  }
-
-  /* ---------------- tournament ----------------
-     Eight entrants, three rounds, single elimination. The bracket is drawn
-     once and stored, so it survives a reload mid-run. */
-  function startTournament() {
-    const a = st();
-    const pool = opponents();
-    // seven challengers around your level, shuffled
-    const picks = pool.slice().sort(() => Math.random() - 0.5).slice(0, 7);
-    while (picks.length < 7) picks.push(npcTeam(NPCS[picks.length % NPCS.length]));
-    const me = { ...myTeam(), id: 'me', me: true };
-    const entrants = picks.concat([me]).sort(() => Math.random() - 0.5);
-    a.tourney = { round: 0, entrants, alive: entrants.map(e => e.id), history: [], done: false, won: false };
-    save();
-    return a.tourney;
-  }
-
-  /* play one round of the bracket, returning what happened */
-  function tourneyRound() {
-    const a = st();
-    const t = a.tourney;
-    if (!t || t.done) return null;
-    const alive = t.alive.map(id => t.entrants.find(e => e.id === id)).filter(Boolean);
-    const pairs = [];
-    for (let i = 0; i < alive.length; i += 2) pairs.push([alive[i], alive[i + 1]]);
-    const results = [];
-    const nextAlive = [];
-    for (const [x, y] of pairs) {
-      if (!y) { nextAlive.push(x.id); results.push({ bye: true, x }); continue; }
-      const r = duel(x, y);
-      const winner = r.won ? x : y;
-      nextAlive.push(winner.id);
-      results.push({ x, y, winner, mine: x.me || y.me, iWon: winner.me === true });
-    }
-    t.round++;
-    t.alive = nextAlive;
-    t.history.push(results);
-    const meAlive = nextAlive.indexOf('me') >= 0;
-    if (!meAlive || nextAlive.length <= 1) {
-      t.done = true;
-      t.won = meAlive && nextAlive.length <= 1;
-      // placing pays out once, scaled by how far you got
-      const placed = t.won ? 'win' : t.round >= 3 ? 'final' : t.round === 2 ? 'semi' : 'first';
-      const pay = { win: { gems: 60, gold: 4000 }, final: { gems: 30, gold: 2000 },
-                    semi: { gems: 15, gold: 900 }, first: { gems: 5, gold: 300 } }[placed];
-      grantGems(pay.gems); grantGold(pay.gold);
-      t.payout = pay; t.placed = placed;
-      if (t.won) { a.rating += 40; Quests.progress('arena', 3); }
-    }
-    save();
-    return { results, done: t.done, won: t.won, round: t.round, payout: t.payout, placed: t.placed };
-  }
-
-  function tourney() { return st().tourney; }
-  function clearTournament() { st().tourney = null; save(); }
-
-  function rank() {
-    const r = st().rating;
-    if (r >= 1600) return { name: 'Ascendant', col: '#ffc247' };
-    if (r >= 1400) return { name: 'Champion', col: '#b47cff' };
-    if (r >= 1200) return { name: 'Contender', col: '#45a6ff' };
-    if (r >= 1050) return { name: 'Challenger', col: '#4ade80' };
-    return { name: 'Newcomer', col: '#8f9bb8' };
-  }
-
-  return { st, myTeam, exportCode, parseCode, addRival, removeRival, opponents,
-           fight, fightsLeft, DAILY_FIGHTS, startTournament, tourneyRound,
-           tourney, clearTournament, rank, duel };
-})();
-
-</script>
-<script>
 /* ============ boot ============
 
    One screen before the game: a loading screen that hands straight over. No
@@ -8456,7 +8412,6 @@ const Title = (() => {
     'A missed day is one day. Two in a row is a habit.',
     'Bosses hit hard. Bring the type they are weak to.',
     'Gems buy five minutes of triple-speed combat.',
-    'Rival codes let you fight a friend\'s team.',
     'Scrap junk gear for shards. Shards push a good piece further.',
     'Watering the garden is free. Practice does it for you.',
     'Type advantage beats levels more often than you would think.',
@@ -8565,145 +8520,6 @@ const Title = (() => {
   }
 
   return { boot };
-})();
-
-</script>
-<script>
-/* ============ speech: one dialogue box for the whole game ============
-
-   Every character line in Hourling goes through here, so a conversation looks
-   and behaves the same wherever it happens: a comic bubble with a tail, the
-   speaker's portrait, text that types itself, and a tap anywhere to hurry it.
-
-   A beat is { text, mood, choices }. Choices turn the beat into a real
-   question — the promise resolves with the value the player picked, so a
-   caller can branch on it. Without choices the beat just advances.          */
-'use strict';
-
-const Dialog = (() => {
-  let root = null, typer = null, done = null;
-
-  const MOODS = ['calm', 'up', 'think', 'cheer'];
-
-  function speaking() { return !!root; }
-
-  /* say([beat, …]) -> Promise resolving with the last chosen value (or null) */
-  function say(beats, opts) {
-    opts = opts || {};
-    close();
-    return new Promise(resolve => {
-      let i = 0, answer = null;
-      root = el('div', 'dlg-root' + (opts.veil ? ' veiled' : ''));
-      // a text window, the way a pixel RPG draws one: portrait framed inside
-      // the box, name on a plate notched into the top edge, choices stacked in
-      // a command window above it
-      root.innerHTML = `
-        <div class="dlg-veil"></div>
-        <div class="dlg-wrap">
-          <div class="dlg-choices"></div>
-          <div class="dlg-box">
-            <div class="dlg-name">${opts.name || 'Professor Vale'}</div>
-            <div class="dlg-inner">
-              <div class="dlg-port">
-                <img src="${assetUrl(opts.portrait || 'assets/ui/npc.png')}" alt="">
-              </div>
-              <p class="dlg-text"></p>
-            </div>
-            <span class="dlg-more"></span>
-          </div>
-        </div>`;
-      document.body.appendChild(root);
-      requestAnimationFrame(() => root.classList.add('in'));
-
-      const bubble = root.querySelector('.dlg-box');
-      const port = root.querySelector('.dlg-port');
-
-      function beat() {
-        const b = beats[i];
-        if (!b) return finish();
-        port.dataset.mood = MOODS.includes(b.mood) ? b.mood : 'calm';
-        port.classList.remove('bump');
-        void port.offsetWidth;
-        port.classList.add('bump');
-        type(b.text, () => {
-          if (b.choices) showChoices(b.choices);
-          else root.querySelector('.dlg-more').classList.add('on');
-        });
-      }
-
-      function showChoices(list) {
-        const wrap = root.querySelector('.dlg-choices');
-        wrap.innerHTML = '';
-        list.forEach((c, n) => {
-          const b = el('button', 'dlg-choice');
-          b.style.animationDelay = (n * 60) + 'ms';
-          b.textContent = c.label;
-          b.onclick = ev => {
-            ev.stopPropagation();
-            Sound.click();
-            answer = c.value !== undefined ? c.value : c.label;
-            wrap.innerHTML = '';
-            if (c.then) { beats = c.then; i = 0; return beat(); }
-            if (c.end) return finish();
-            i++; beat();
-          };
-          wrap.appendChild(b);
-        });
-        wrap.classList.add('on');
-      }
-
-      function type(text, after) {
-        const p = root.querySelector('.dlg-text');
-        root.querySelector('.dlg-more').classList.remove('on');
-        root.querySelector('.dlg-choices').classList.remove('on');
-        clearInterval(typer);
-        p.textContent = '';
-        let n = 0;
-        typer = setInterval(() => {
-          n += 2;
-          p.textContent = text.slice(0, n);
-          if (n >= text.length) { clearInterval(typer); typer = null; after(); }
-        }, 16);
-        root.dataset.full = text;
-        root.dataset.after = '1';
-        root._after = after;
-      }
-
-      // tap anywhere on the box: finish the typing, or move to the next beat
-      bubble.parentNode.onclick = ev => {
-        if (ev.target.closest('.dlg-choice')) return;
-        if (typer) {                                   // hurry the typewriter
-          clearInterval(typer); typer = null;
-          root.querySelector('.dlg-text').textContent = root.dataset.full;
-          if (root._after) root._after();
-          return;
-        }
-        if (root.querySelector('.dlg-choices').classList.contains('on')) return;
-        Sound.click();
-        i++; beat();
-      };
-
-      function finish() {
-        close();
-        resolve(answer);
-      }
-      done = finish;
-      beat();
-    });
-  }
-
-  function close() {
-    clearInterval(typer); typer = null;
-    if (root) {
-      const r = root;
-      r.classList.add('out');
-      setTimeout(() => r.remove(), 260);
-      root = null;
-    }
-    done = null;
-  }
-
-  return { say, close, speaking };
 })();
 
 </script>
@@ -9016,8 +8832,7 @@ const UI = (() => {
     $('#view').scrollTop = 0;
     Sound.click();
     if (name === 'today') renderToday();
-    if (name === 'beasts') renderBeasts();
-    if (name === 'summon') renderSummon();
+    if (name === 'beasts') { renderBeasts(); renderSummon(); }
     if (name === 'farm') renderFarm();
     if (name === 'quests') { renderQuests(); markQuestDot(false); }
     if (name === 'battle') {
@@ -9042,14 +8857,8 @@ const UI = (() => {
     renderHero();
     renderFocus();
     renderRhythm();
-    renderSideGoals();
-    renderTasks();
-    renderEvent();
     renderTodayQuests();
-    renderChallengeInto($('#today-challenge'));
-    renderPromo();
-    renderOffers();
-    renderJournal();
+    renderSideGoals();
   }
 
   /* A claim usually re-renders the list it came from, which would wipe any
@@ -9356,63 +9165,6 @@ const UI = (() => {
     });
   }
 
-
-  /* The promo strip sits where a mobile game would run a banner ad. It only
-     ever advertises this app's own features, and it says so — there is no ad
-     network here and nothing on it costs money. It rotates to whatever is
-     actually worth your attention right now. */
-  function renderPromo() {
-    const w = $('#promo-strip');
-    if (!w) return;
-    const cards = [];
-    // a claimable event tier outranks everything else on the strip
-    if (Events.readyCount() > 0) {
-      cards.push({ icon: 'star', kind: 'event',
-                   title: `${Events.current().name} reward ready`,
-                   sub: `${Events.readyCount()} tier${Events.readyCount() > 1 ? 's' : ''} waiting`,
-                   cta: 'Claim' });
-    }
-    const t = Arena.tourney();
-    if (t && !t.done) {
-      cards.push({ icon: 'sword', kind: 'arena', title: `Tournament · round ${t.round + 1}`,
-                   sub: 'Your bracket is waiting', cta: 'Fight' });
-    } else if (Arena.fightsLeft() > 0) {
-      cards.push({ icon: 'sword', kind: 'arena', title: 'Arena is open',
-                   sub: `${Arena.fightsLeft()} duels left today`, cta: 'Enter' });
-    }
-    if (!S.challenge.done) {
-      cards.push({ icon: 'star', kind: 'quests', title: "Today's challenge",
-                   sub: 'One odd task, paid in gems', cta: 'See it' });
-    }
-    if (Offers.readyCount() > 0) {
-      cards.push({ icon: 'chest', kind: 'offers', title: 'Free rewards ready',
-                   sub: `${Offers.readyCount()} waiting`, cta: 'Collect' });
-    }
-    if (S.merge.energy >= Merge.energyMax()) {
-      cards.push({ icon: 'portal', kind: 'battle', title: 'Forge wheel is full',
-                   sub: 'Spend the charges before they cap', cta: 'Open' });
-    }
-    if (!cards.length) { w.innerHTML = ''; return; }
-    const c = cards[Math.floor(Date.now() / 20000) % cards.length];
-    w.innerHTML = `
-      <button class="promo" data-go="${c.kind}">
-        <span class="promo-tag">notice</span>
-        <span class="promo-ic">${icon(c.icon)}</span>
-        <span class="promo-txt"><b>${c.title}</b><span>${c.sub}</span></span>
-        <span class="promo-cta">${c.cta}</span>
-      </button>`;
-    w.querySelector('.promo').onclick = () => {
-      Sound.click();
-      if (c.kind === 'event') {
-        switchTab('today');
-        const e = $('#event-card');
-        if (e) e.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      } else if (c.kind === 'arena') { switchTab('battle'); showArena(); }
-      else if (c.kind === 'offers') { const o = $('#offers-card'); if (o) o.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-      else if (c.kind === 'battle') { switchTab('battle'); S.settings.panels.fusion = true; renderMerge(); }
-      else switchTab(c.kind);
-    };
-  }
 
   /* ================= free rewards (in-app offers) ================= */
   function renderOffers() {
@@ -11436,7 +11188,11 @@ const UI = (() => {
   function renderQuests() {
     Quests.generateToday();
     renderLoginRow();
+    renderTasks();
+    renderEvent();
     renderChallengeInto($('#challenge-card'));
+    renderOffers();
+    renderJournal();
     renderRituals();
     $('#quest-day').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
     const wrap = $('#quest-list');
@@ -11961,192 +11717,6 @@ const UI = (() => {
   }
 
   /* ================= settings / welcome ================= */
-  /* ================= arena ================= */
-  function showArena() {
-    const box = el('div', 'arena');
-    openModal(box);
-    renderArena();
-    // Vale introduces the place once, and only once
-    if (!S.settings.metArena) {
-      S.settings.metArena = true;
-      save();
-      Dialog.say([
-        { text: 'The Arena. Everyone here is a real team someone sent you.', mood: 'up',
-          choices: [{ label: 'How do I get rivals?' }, { label: 'Got it', end: true }] },
-        { text: 'Swap codes with a friend. Their party fights exactly as they left it.',
-          mood: 'think' },
-      ]);
-    }
-  }
-
-  function renderArena() {
-    const box = $('#modal-root .arena');
-    if (!box) return;
-    const a = Arena.st();
-    const rk = Arena.rank();
-    const t = Arena.tourney();
-
-    box.innerHTML = `<h3>${icon('sword')} Arena</h3>
-      <div class="ar-top">
-        <div class="ar-rank" style="--rk:${rk.col}">
-          <b>${rk.name}</b><span>${a.rating} rating</span>
-        </div>
-        <div class="ar-rec">
-          <span>${a.wins}W ${a.losses}L</span>
-          <span class="subtle">${Arena.fightsLeft()}/${Arena.DAILY_FIGHTS} duels left today</span>
-        </div>
-      </div>
-
-      <p class="ar-honest">Swap a <b>rival code</b> with a friend and their team
-        shows up here to fight. Everyone else is a wandering challenger.</p>
-
-      <div class="acc-btns">
-        <button class="pixbtn sm" data-ar="mycode">Copy my rival code</button>
-        <button class="pixbtn sm ghost" data-ar="addrival">Add a friend's code</button>
-      </div>
-
-      ${t && !t.done ? `<div class="ar-sec">
-        <div class="acc-h">Tournament — round ${t.round + 1} of 3</div>
-        <div class="ar-bracket">${(t.alive || []).map(id => {
-          const e = t.entrants.find(x => x.id === id);
-          return `<span class="ar-chip${e && e.me ? ' me' : ''}">${e ? e.name : '?'}</span>`;
-        }).join('')}</div>
-        <div class="acc-btns"><button class="pixbtn primary sm" data-ar="tround"><b>Fight round ${t.round + 1}</b></button>
-          <button class="pixbtn ghost sm" data-ar="tquit">Withdraw</button></div>
-      </div>` : `<div class="ar-sec">
-        <div class="acc-h">Tournament</div>
-        <p class="acc-note">Eight entrants, three rounds. Every placing pays gems.</p>
-        <div class="acc-btns"><button class="pixbtn gold sm" data-ar="tstart"><b>Enter tournament</b></button></div>
-      </div>`}
-
-      <div class="ar-sec">
-        <div class="acc-h">Challengers</div>
-        <div class="ar-list">${Arena.opponents().map(o => `
-          <button class="ar-row" data-fight="${o.id}">
-            <img class="ar-face" src="${o.members && o.members[0] ? sprite(o.members[0].cid) : ''}" alt="">
-            <span class="ar-info">
-              <b>${o.name}${o.rival ? ' <i class="ar-tag">friend</i>' : ''}</b>
-              <span>${o.blurb || (o.members.length + ' beast' + (o.members.length > 1 ? 's' : '') + ' · Lv.' + o.lvl)}</span>
-            </span>
-            <span class="ar-pow">${fmt(o.power)}</span>
-          </button>`).join('')}</div>
-      </div>
-
-      ${a.rivals.length ? `<div class="ar-sec">
-        <div class="acc-h">Your rivals</div>
-        <div class="ar-list">${a.rivals.map(r => `
-          <div class="ar-row static">
-            <span class="ar-info"><b>${r.name}</b><span>power ${fmt(r.power)}</span></span>
-            <button class="pixbtn ghost tiny" data-drop="${r.id}">Remove</button>
-          </div>`).join('')}</div>
-      </div>` : ''}`;
-
-    $$('#modal-root [data-fight]', box).forEach(b => {
-      b.onclick = () => {
-        const res = Arena.fight(b.dataset.fight);
-        if (res) showDuel(res);
-      };
-    });
-    $$('#modal-root [data-drop]', box).forEach(b => {
-      b.onclick = () => { Arena.removeRival(b.dataset.drop); renderArena(); };
-    });
-    $$('#modal-root [data-ar]', box).forEach(b => {
-      b.onclick = async () => {
-        const k = b.dataset.ar;
-        if (k === 'mycode') {
-          const code = Arena.exportCode();
-          try { await navigator.clipboard.writeText(code); } catch (e) {}
-          showCodeSheet(code);
-        } else if (k === 'addrival') {
-          const c = prompt("Paste your friend's rival code");
-          if (c && Arena.addRival(c)) renderArena();
-        } else if (k === 'tstart') {
-          Arena.startTournament(); renderArena();
-        } else if (k === 'tquit') {
-          Arena.clearTournament(); renderArena();
-        } else if (k === 'tround') {
-          const r = Arena.tourneyRound();
-          if (r) showTourneyRound(r);
-        }
-      };
-    });
-  }
-
-  /* a duel plays out rather than resolving into a number */
-  function showDuel(res) {
-    const box = el('div', 'duel');
-    const me = res.mine, them = res.opp;
-    box.innerHTML = `
-      <div class="duel-head">
-        <span class="duel-side"><b>${me.name}</b><span>${fmt(me.power)}</span></span>
-        <span class="duel-vs">vs</span>
-        <span class="duel-side right"><b>${them.name}</b><span>${fmt(them.power)}</span></span>
-      </div>
-      <div class="duel-bars">
-        <span class="pixbar hp"><i class="duel-a" style="width:100%"></i></span>
-        <span class="pixbar hp"><i class="duel-b" style="width:100%"></i></span>
-      </div>
-      <div class="duel-log"></div>
-      <div class="mrow"></div>`;
-    const back = openModal(box, { noClose: true });
-    const logEl = box.querySelector('.duel-log');
-    const A = box.querySelector('.duel-a'), B = box.querySelector('.duel-b');
-    let i = 0;
-    const step = () => {
-      if (i >= res.log.length) return finishDuel();
-      const r = res.log[i++];
-      A.style.width = r.ah + '%';
-      B.style.width = r.bh + '%';
-      const line = el('div', 'duel-line',
-        `<b>Round ${r.round}</b> you hit ${r.aHit}${r.bHit ? ` · they hit ${r.bHit}` : ''}`);
-      logEl.appendChild(line);
-      logEl.scrollTop = logEl.scrollHeight;
-      Sound.hit();
-      setTimeout(step, 420);
-    };
-    const finishDuel = () => {
-      const won = res.won;
-      const tag = el('div', 'duel-result ' + (won ? 'win' : 'lose'),
-        won ? 'VICTORY' : 'DEFEAT');
-      box.insertBefore(tag, logEl);
-      const d = res.delta;
-      logEl.appendChild(el('div', 'duel-line reward',
-        `${d >= 0 ? '+' : ''}${d} rating · ${icon('gem')}+${res.reward.gems} · ${icon('gold')}+${fmt(res.reward.gold)}`));
-      if (won) { confetti(24); Sound.levelup(); } else Sound.fail();
-      const ok = el('button', 'pixbtn primary sm', '<b>Back to the arena</b>');
-      ok.onclick = () => { closeModal(back); renderHud(); showArena(); };
-      box.querySelector('.mrow').appendChild(ok);
-    };
-    setTimeout(step, 350);
-  }
-
-  function showTourneyRound(r) {
-    const box = el('div', 'sreveal');
-    const mine = r.results.find(x => x.mine);
-    box.innerHTML = `<h2>${r.done ? (r.won ? 'Tournament won' : 'Knocked out') : 'Round ' + r.round}</h2>
-      <div class="tr-list">${r.results.map(m => m.bye
-        ? `<div class="tr-row"><span>${m.x.name}</span><span class="subtle">bye</span></div>`
-        : `<div class="tr-row${m.mine ? ' mine' : ''}">
-             <span class="${m.winner === m.x ? 'won' : 'out'}">${m.x.name}</span>
-             <span class="subtle">vs</span>
-             <span class="${m.winner === m.y ? 'won' : 'out'}">${m.y.name}</span>
-           </div>`).join('')}</div>
-      ${r.done && r.payout ? `<p class="subtle" style="text-align:center;margin-top:8px">
-        ${icon('gem')}+${r.payout.gems} · ${icon('gold')}+${fmt(r.payout.gold)}</p>` : ''}
-      <div class="mrow"></div>`;
-    const back = openModal(box);
-    const ok = el('button', 'pixbtn primary sm', `<b>${r.done ? 'Done' : 'Next round'}</b>`);
-    ok.onclick = () => {
-      closeModal(back);
-      if (r.done) Arena.clearTournament();
-      renderHud(); showArena();
-    };
-    box.querySelector('.mrow').appendChild(ok);
-    if (r.won) { confetti(50); Sound.levelup(); }
-    else if (mine && !mine.iWon) Sound.fail();
-    else Sound.quest();
-  }
-
   /* ================= profiles and backup codes ================= */
   let accountBack = null;
   function showAccount() {
@@ -12406,7 +11976,7 @@ const UI = (() => {
     renderMerge();
     if (S.dream && S.dream.key) renderToday();
     if (activeTab === 'beasts') renderBeasts();
-    if (activeTab === 'summon') renderSummon();
+    if (activeTab === 'beasts') renderSummon();
     if (activeTab === 'farm') renderFarm();
     if (activeTab === 'quests') renderQuests();
   }
@@ -12422,9 +11992,9 @@ const UI = (() => {
     showDefeat, hideDefeat, showEncounter, renderQuestLog, renderUpgrades,
     renderCooldowns, tickCooldowns, renderPanels, togglePanel,
     renderMerge, mergeSpawnFx, mergeFuseFx, showMap,
-    renderOffers, renderPromo, renderEvent, renderTasks, renderSideGoals,
+    renderOffers, renderEvent, renderTasks, renderSideGoals,
     renderAchievements, celebrate, showStreak, showTipCard, showReflectOffer,
-    showAccount, renderAccount, showRestore, showArena, renderArena,
+    showAccount, renderAccount, showRestore,
     renderBeasts, renderCollection, showCreature, showFeedPicker,
     renderFarm, waterGarden, showMealModal, showKcalTargetModal, renderFood,
     renderSummon, playWish, showSummonReveal,
@@ -12525,7 +12095,6 @@ const PWA = (() => {
   $('#hud-streak-btn').onclick = () => UI.showStreak();
   $('#btn-boss').onclick = () => { Battle.challengeBoss(); Sound.click(); };
   $('#btn-map').onclick = () => UI.showMap();
-  $('#btn-arena').onclick = () => UI.showArena();
   $('#haste-btn').onclick = () => buyHaste();
   $('#btn-log-meal').onclick = () => UI.showMealModal(true);
   $('#btn-kcal-target').onclick = () => UI.showKcalTargetModal();

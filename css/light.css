@@ -1,0 +1,289 @@
+/* ============ the light theme ============
+
+   Loaded straight after style.css, so it only has to restate the palette and
+   the handful of rules that assumed a dark ground. Everything downstream —
+   cartoon.css, juice.css — reads the same tokens and follows automatically.
+
+   The model is the habit apps: a warm paper page, white cards with one solid
+   edge underneath instead of a blur, a single saturated accent per action, and
+   a lot more air than a dark theme can get away with. Pixel art keeps its hard
+   borders; what changes is that they are now light-on-light rather than
+   black-on-black, which is most of why the old screens read as busy.       */
+
+:root {
+  /* ground */
+  --ink:      #d5cab2;   /* every border. was near-black; now a paper edge   */
+  --edge:     #c3b697;   /* the solid bottom edge that makes a thing pressable */
+  --bg0:      #fbf6ea;   /* the page                                        */
+  --bg1:      #ffffff;   /* cards                                           */
+  --bg2:      #fffdf7;   /* cards, one step warmer                          */
+  --bg3:      #f4ecd9;   /* raised / selected                               */
+  --bg-lift:  #ece0c6;
+  --line:     #e9e0cb;
+  --line-hi:  #d3c6a6;
+  --track:    #ece3cf;   /* the inside of every progress bar                */
+
+  --parch:    #4a4453;
+  --parch-lo: #6f6779;
+
+  --txt:      #2c2836;
+  --txt-dim:  #726b80;
+  --txt-ink:  #2c2836;
+
+  /* one saturated accent per meaning, tuned for white */
+  --brass:    #b8791a;
+  --gold:     #f5a623;
+  --gold-lo:  #e08c00;
+  --gem:      #17a5e8;
+  --mana:     #8b5cf6;
+  --ess:      #12b981;
+  --hp:       #ef4444;
+  --xp:       #f59e0b;
+  --good:     #58a700;
+  --leaf:     #4caf50;
+  --sky:      #38a3f1;
+  --danger:   #e03e3e;
+
+  --rare:      #2f8fe8;
+  --epic:      #9333ea;
+  --legendary: #e0930d;
+
+  /* paper texture instead of the dark scanline grain */
+  --grain: repeating-linear-gradient(90deg,
+    rgba(0,0,0,.014) 0 2px, transparent 2px 9px);
+  --hard: 0 4px 0 var(--edge);
+}
+
+html, body { background: var(--bg0); }
+#app {
+  background: var(--bg0);
+  border-left-color: var(--line);
+  border-right-color: var(--line);
+}
+
+/* ---- cards: white, one solid edge, real air around them ---- */
+.card {
+  background: var(--bg1);
+  border: var(--px) solid var(--ink);
+  outline: 0;
+  box-shadow: 0 3px 0 var(--edge);
+  margin: 10px 12px;
+  padding: 12px;
+}
+.card-head {
+  color: var(--brass);
+  border-bottom-color: var(--line);
+  font-size: var(--fs-label);
+  letter-spacing: .1em;
+  margin-bottom: 9px;
+}
+
+/* ---- buttons: a darker tint of themselves underneath ---- */
+.pixbtn {
+  background: var(--bg1);
+  color: var(--txt);
+  outline: 0;
+  border: var(--px) solid var(--ink);
+  box-shadow: 0 4px 0 var(--edge);
+  font-weight: 700;
+}
+.pixbtn span { color: var(--txt-dim); }
+.pixbtn.primary { background: #6d4bb5; border-color: #4e3287; box-shadow: 0 4px 0 #4e3287; color: #fff; }
+.pixbtn.primary span { color: rgba(255,255,255,.82); }
+.pixbtn.good    { background: var(--good); border-color: #3f7a00; box-shadow: 0 4px 0 #3f7a00; color: #fff; }
+.pixbtn.good span { color: rgba(255,255,255,.85); }
+.pixbtn.gem     { background: var(--gem); border-color: #0d7cb0; box-shadow: 0 4px 0 #0d7cb0; color: #fff; }
+.pixbtn.gem span { color: rgba(255,255,255,.85); }
+.pixbtn.gold    { background: var(--gold); border-color: #b87400; box-shadow: 0 4px 0 #b87400; color: #3d2600; }
+.pixbtn.gold span { color: #5c3a00; }
+.pixbtn.danger  { background: var(--danger); border-color: #a52626; box-shadow: 0 4px 0 #a52626; color: #fff; }
+.pixbtn.ghost   { background: var(--bg1); color: var(--txt-dim); border-color: var(--line-hi); box-shadow: 0 3px 0 var(--line-hi); }
+.pixbtn.tiny    { box-shadow: 0 3px 0 var(--edge); }
+.pixbtn.huge    { box-shadow: 0 5px 0 var(--edge); animation: none; }
+.pixbtn.primary.huge { box-shadow: 0 5px 0 #4e3287; }
+.pixbtn.gold.huge    { box-shadow: 0 5px 0 #b87400; }
+.pixbtn.good.huge    { box-shadow: 0 5px 0 #3f7a00; }
+.pixbtn:focus-visible { outline: 2px solid var(--gem); outline-offset: 2px; }
+
+/* ---- no embossed text on paper ---- */
+.card *, .modal *, .pixbtn, .hud-chip, #tabbar button,
+.quest *, .tk-row *, .av-row *, .sg-row *, .ev-tier *, .accrow * {
+  text-shadow: none;
+}
+/* except where it sits on artwork */
+#today-hero *, #scene *, .banner *, #boot *, .celebrate .cb-title,
+.dmg-float, #skill-flash { text-shadow: revert; }
+
+/* ---- HUD: one quiet strip, not two rows of boxes ---- */
+#hud {
+  background: var(--bg1);
+  border-bottom: var(--px) solid var(--ink);
+  box-shadow: 0 2px 0 var(--edge);
+  gap: 3px;
+}
+.hud-chip {
+  background: var(--bg3);
+  border: var(--px) solid var(--ink);
+  outline: 0;
+  padding: 4px 8px;
+  font-weight: 700;
+}
+.hud-row + .hud-row { margin-top: 3px; }
+/* the second row carries the soft currencies: same data, a fraction of the ink */
+.hud-row:last-child .hud-chip {
+  background: transparent; border: 0; padding: 1px 4px;
+}
+.hud-row:last-child .hud-chip b { font-size: var(--fs-meta); }
+.mana-chip .pixbar { height: 8px; }
+.lvl-num { background: var(--gold); color: #3d2600; border-color: var(--edge); }
+.gold-chip b { color: var(--brass); }
+.gem-chip b  { color: #0d7cb0; }
+.ess-chip b  { color: #0f8f64; }
+.seed-chip b { color: #3d8b40; }
+.streak-chip b { color: #e2661a; }
+
+/* ---- tab bar: a filled pill under the active tab ---- */
+#tabbar {
+  background: var(--bg1);
+  border-top: var(--px) solid var(--ink);
+  box-shadow: 0 -2px 0 var(--line);
+}
+#tabbar button {
+  color: var(--txt-dim); border-top: 0; background: none;
+  font-size: var(--fs-micro); font-weight: 700;
+}
+#tabbar button .ico { filter: grayscale(.5) opacity(.65); }
+#tabbar button.active { color: var(--good); background: none; }
+#tabbar button.active .ico { filter: none; }
+#tabbar button.active::before {
+  content: ''; position: absolute; inset: 3px 6px auto 6px; height: 3px;
+  background: var(--good);
+}
+#tabbar button { position: relative; }
+
+/* ---- bars ---- */
+.pixbar {
+  background: var(--track);
+  border: var(--px) solid var(--ink);
+}
+.pixbar > b { color: #fff; }
+.pixbar::after { display: none; }        /* the dark inner sheen */
+
+/* ---- panels, rows, inputs ---- */
+.panel-box { background: rgba(255,255,255,.92); outline-color: var(--line-hi); }
+.tk-row, .av-row, .sg-row, .ev-tier, .accrow, .bonus-row, .offrow,
+.quest, .ritual, .sk-stat, .sk-cal, .sk-freeze, .goalcard {
+  background: var(--bg1);
+  outline-color: var(--line);
+  box-shadow: 0 2px 0 var(--edge);
+}
+.tk-box, .av-ic, .sg-ic, .ev-ic { background: var(--bg3); }
+.reflect-in, .acc-in, .acc-code, input, textarea, select {
+  background: var(--bg1); color: var(--txt); border-color: var(--ink);
+}
+.subtle, .hint-line { color: var(--txt-dim); }
+.linkbtn { color: var(--gem); }
+
+/* modals sit on a warm scrim, not a black one */
+.modal { background: var(--bg1); background-image: var(--grain); outline: 0;
+  box-shadow: 0 5px 0 var(--edge), 0 18px 40px rgba(80,60,20,.18); }
+#modal-root .backdrop, .modal-back { background: rgba(60,45,20,.42); }
+
+/* the battle scene and the banners keep their dark interiors */
+#scene, #scene *, .banner, .banner * { --track: #131a2e; }
+.foe .fplate, .fighter .flvl, #stage-plate, #boost-badge {
+  color: #fff;
+}
+.celebrate { background: rgba(60,45,20,.55); }
+.cb-inner { background: var(--bg1); outline: 0; border-color: var(--ink);
+  box-shadow: 0 6px 0 var(--edge), 0 18px 40px rgba(60,45,20,.28); }
+.cb-sub { color: var(--txt-dim); }
+.cb-rewards span { background: var(--bg3); }
+.cb-rays { background: repeating-conic-gradient(from 0deg,
+  rgba(245,166,35,.13) 0deg 7deg, transparent 7deg 20deg); }
+
+/* toasts read as notes on paper */
+.toast { background: var(--bg1); color: var(--txt);
+  border: var(--px) solid var(--ink); box-shadow: 0 3px 0 var(--edge); }
+
+/* ---- surfaces that were hard-coded dark ---- */
+/* Today's focus is the biggest thing on the home screen; it becomes a white
+   card with a coloured left edge rather than a navy slab. */
+.focus {
+  background: var(--bg1);
+  background-image: none;
+  border: var(--px) solid var(--ink);
+  outline: 0;
+  box-shadow: 0 3px 0 var(--edge);
+  border-left: 6px solid var(--good);
+  padding: 14px;
+}
+.focus::before { display: none; }
+.focus .f-label { color: var(--good); }
+.focus .f-task { color: var(--txt); font-weight: 700; }
+.focus .f-meta, .focus .f-rest { color: var(--txt-dim); }
+.focus.done-focus { border-left-color: var(--gold); }
+
+.challenge {
+  background: var(--bg1); background-image: none;
+  border: var(--px) solid var(--ink); outline: 0;
+  box-shadow: 0 3px 0 var(--edge);
+  border-left: 6px solid var(--gem);
+}
+.mslot { background: var(--bg3); }
+.dreamcard.on, .lvlcard.on { background: #fff6de; }
+.lu-row.unlock { background: #fff6de; }
+.daypick button.on { background: var(--good); border-color: #3f7a00; }
+.rday.hit { background: var(--good); }
+.rday { background: var(--bg3); color: var(--txt-dim); }
+.rday.on { background: var(--bg1); color: var(--txt); }
+.rday.today { outline-color: var(--gold); }
+.rstat { background: var(--bg1); box-shadow: 0 2px 0 var(--edge); }
+.rstat.hot { outline-color: var(--good); }
+.rstat.hot b { color: var(--good); }
+
+/* the hero band and the timer overlays stay dark: they are artwork */
+#today-hero, #session-overlay, #wish-overlay, #scene, .banner { color: #fff; }
+#today-hero .hero-rank, #today-hero .hero-ladder b { color: #ffe6b0; }
+#today-hero .hero-dream, #today-hero #hero-dreamname { color: #fff; }
+#today-hero .hero-why { color: rgba(255,255,255,.85); }
+#session-overlay .subtle, #session-overlay .s-hint { color: #c9c4d6; }
+
+/* ---- HUD numbers must never be clipped ---- */
+.hud-row > .hud-chip b { overflow: visible; text-overflow: clip; }
+.hud-chip { font-size: 13.5px; }
+.level-chip .pixbar { width: 34px; }
+@media (max-width: 359px) {
+  .hud-chip { padding: 3px 5px; font-size: 12.5px; }
+  .level-chip .pixbar { width: 24px; }
+}
+
+/* ---- the one main action is green, the way a habit app does it ---- */
+.focus .pixbtn.primary, .focus .pixbtn.huge {
+  background: var(--good); border-color: #3f7a00; box-shadow: 0 5px 0 #3f7a00; color: #fff;
+}
+.focus .pixbtn.primary span { color: rgba(255,255,255,.85); }
+
+/* ---- anything sitting on the battle art keeps light text ---- */
+#haste-btn, #haste-btn * { color: #fff; }
+#scene .pixbtn { color: #fff; }
+#stage-plate { background: rgba(20,14,6,.82); outline-color: rgba(255,255,255,.5); }
+#stage-area { color: #ffd98a; }
+#stage-num { color: #e6dcc8; }
+#wave-pips i { border-color: rgba(0,0,0,.5); }
+
+/* the cooldown strip and forge sit on paper now */
+.cdcard { background: var(--bg1); border-color: var(--ink);
+  outline: var(--px) solid var(--line); box-shadow: 0 2px 0 var(--edge); }
+.cd-head { color: var(--brass); }
+.cdrow .cdname { color: var(--txt); }
+#ult-wrap { background: var(--bg1); border-bottom: var(--px) solid var(--ink); }
+#quest-log { background: var(--bg1); }
+.panel-head { color: var(--brass); }
+#battle-below { background: var(--bg0); }
+
+/* the pity meter sits on the banner's dark plate, so it keeps a dark interior */
+.banner .bpity .pixbar { background: #131a2e; border-color: rgba(0,0,0,.55); }
+.banner .bpity { border-color: rgba(0,0,0,.55); }
+/* health bars over the battle art, likewise */
+.foe .fplate .pixbar, .fighter .fhp, .sb-hp { background: #131a2e; border-color: rgba(0,0,0,.55); }

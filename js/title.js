@@ -17,7 +17,6 @@ const Title = (() => {
     'A missed day is one day. Two in a row is a habit.',
     'Bosses hit hard. Bring the type they are weak to.',
     'Gems buy five minutes of triple-speed combat.',
-    'Rival codes let you fight a friend\'s team.',
     'Scrap junk gear for shards. Shards push a good piece further.',
     'Watering the garden is free. Practice does it for you.',
     'Type advantage beats levels more often than you would think.',

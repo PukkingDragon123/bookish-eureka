@@ -42,7 +42,6 @@ const Quests = (() => {
       { key: 'summon', icon: 'mana', name: 'Perform a summon', target: 1, reward: { gems: 6, ess: 10 } },
       { key: 'merge', icon: 'relic', name: 'Fuse 4 pieces of gear', target: 4, reward: { gems: 7, seeds: 1 } },
       { key: 'levelup_beast', icon: 'star', name: 'Level a beast twice', target: 2, reward: { gems: 6, gold: true } },
-      { key: 'duel', icon: 'sword', name: 'Win a duel in the Arena', target: 1, reward: { gems: 10, gold: true } },
       { key: 'harvest', icon: 'seed', name: 'Harvest 4 crops', target: 4, reward: { gems: 6, seeds: 2 } },
     ],
     core: [

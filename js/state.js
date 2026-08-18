@@ -80,7 +80,7 @@ function defaultState() {
     quests: { day: null, list: [] },
     summons: { total: 0, sinceRare: 0 },
     settings: { sound: true, panels: { upgrades: false, fusion: false },
-                welcomed: false, metArena: false },
+                welcomed: false },
     tutorial: {},
     lastSeen: Date.now(),
     starterCid: null,
@@ -97,8 +97,6 @@ function defaultState() {
     lab: { points: 5, serums: 0, rolls: 0 },
     login: { cycle: 0, lastDay: null },
     challenge: { day: null, idx: 0, done: false },
-    /* arena: local rating, rivals added by code, tournament in progress */
-    arena: { rating: 1000, wins: 0, losses: 0, rivals: [], tourney: null, day: null, fights: 0 },
     /* in-app reward offers: daily caps + tip-card cooldown */
     offers: { day: null, used: {}, lastTip: 0, insured: false },
     regionProgress: {},
@@ -145,7 +143,7 @@ function sanitize() {
   if (!S.party.length && Object.keys(S.beasts).length) S.party = [Object.keys(S.beasts)[0]];
   if (S.starterCid && !C_BY_ID[S.starterCid]) S.starterCid = null;
   const d = defaultState();
-  for (const k of ['upgrades', 'merge', 'farm', 'lab', 'login', 'challenge', 'regionProgress', 'dream', 'offers', 'arena', 'event', 'achv', 'stats', 'comeback']) {
+  for (const k of ['upgrades', 'merge', 'farm', 'lab', 'login', 'challenge', 'regionProgress', 'dream', 'offers', 'event', 'achv', 'stats', 'comeback']) {
     if (typeof S[k] !== 'object' || S[k] === null) S[k] = d[k];
   }
   if (typeof S.merge.up !== 'object' || S.merge.up === null) S.merge.up = { slots: 0, tier: 0, luck: 0, energy: 0, rarity: 0 };

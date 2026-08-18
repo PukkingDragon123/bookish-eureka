@@ -54,8 +54,7 @@ const UI = (() => {
     $('#view').scrollTop = 0;
     Sound.click();
     if (name === 'today') renderToday();
-    if (name === 'beasts') renderBeasts();
-    if (name === 'summon') renderSummon();
+    if (name === 'beasts') { renderBeasts(); renderSummon(); }
     if (name === 'farm') renderFarm();
     if (name === 'quests') { renderQuests(); markQuestDot(false); }
     if (name === 'battle') {
@@ -80,14 +79,8 @@ const UI = (() => {
     renderHero();
     renderFocus();
     renderRhythm();
-    renderSideGoals();
-    renderTasks();
-    renderEvent();
     renderTodayQuests();
-    renderChallengeInto($('#today-challenge'));
-    renderPromo();
-    renderOffers();
-    renderJournal();
+    renderSideGoals();
   }
 
   /* A claim usually re-renders the list it came from, which would wipe any
@@ -394,63 +387,6 @@ const UI = (() => {
     });
   }
 
-
-  /* The promo strip sits where a mobile game would run a banner ad. It only
-     ever advertises this app's own features, and it says so — there is no ad
-     network here and nothing on it costs money. It rotates to whatever is
-     actually worth your attention right now. */
-  function renderPromo() {
-    const w = $('#promo-strip');
-    if (!w) return;
-    const cards = [];
-    // a claimable event tier outranks everything else on the strip
-    if (Events.readyCount() > 0) {
-      cards.push({ icon: 'star', kind: 'event',
-                   title: `${Events.current().name} reward ready`,
-                   sub: `${Events.readyCount()} tier${Events.readyCount() > 1 ? 's' : ''} waiting`,
-                   cta: 'Claim' });
-    }
-    const t = Arena.tourney();
-    if (t && !t.done) {
-      cards.push({ icon: 'sword', kind: 'arena', title: `Tournament · round ${t.round + 1}`,
-                   sub: 'Your bracket is waiting', cta: 'Fight' });
-    } else if (Arena.fightsLeft() > 0) {
-      cards.push({ icon: 'sword', kind: 'arena', title: 'Arena is open',
-                   sub: `${Arena.fightsLeft()} duels left today`, cta: 'Enter' });
-    }
-    if (!S.challenge.done) {
-      cards.push({ icon: 'star', kind: 'quests', title: "Today's challenge",
-                   sub: 'One odd task, paid in gems', cta: 'See it' });
-    }
-    if (Offers.readyCount() > 0) {
-      cards.push({ icon: 'chest', kind: 'offers', title: 'Free rewards ready',
-                   sub: `${Offers.readyCount()} waiting`, cta: 'Collect' });
-    }
-    if (S.merge.energy >= Merge.energyMax()) {
-      cards.push({ icon: 'portal', kind: 'battle', title: 'Forge wheel is full',
-                   sub: 'Spend the charges before they cap', cta: 'Open' });
-    }
-    if (!cards.length) { w.innerHTML = ''; return; }
-    const c = cards[Math.floor(Date.now() / 20000) % cards.length];
-    w.innerHTML = `
-      <button class="promo" data-go="${c.kind}">
-        <span class="promo-tag">notice</span>
-        <span class="promo-ic">${icon(c.icon)}</span>
-        <span class="promo-txt"><b>${c.title}</b><span>${c.sub}</span></span>
-        <span class="promo-cta">${c.cta}</span>
-      </button>`;
-    w.querySelector('.promo').onclick = () => {
-      Sound.click();
-      if (c.kind === 'event') {
-        switchTab('today');
-        const e = $('#event-card');
-        if (e) e.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      } else if (c.kind === 'arena') { switchTab('battle'); showArena(); }
-      else if (c.kind === 'offers') { const o = $('#offers-card'); if (o) o.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-      else if (c.kind === 'battle') { switchTab('battle'); S.settings.panels.fusion = true; renderMerge(); }
-      else switchTab(c.kind);
-    };
-  }
 
   /* ================= free rewards (in-app offers) ================= */
   function renderOffers() {
@@ -2474,7 +2410,11 @@ const UI = (() => {
   function renderQuests() {
     Quests.generateToday();
     renderLoginRow();
+    renderTasks();
+    renderEvent();
     renderChallengeInto($('#challenge-card'));
+    renderOffers();
+    renderJournal();
     renderRituals();
     $('#quest-day').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
     const wrap = $('#quest-list');
@@ -2999,192 +2939,6 @@ const UI = (() => {
   }
 
   /* ================= settings / welcome ================= */
-  /* ================= arena ================= */
-  function showArena() {
-    const box = el('div', 'arena');
-    openModal(box);
-    renderArena();
-    // Vale introduces the place once, and only once
-    if (!S.settings.metArena) {
-      S.settings.metArena = true;
-      save();
-      Dialog.say([
-        { text: 'The Arena. Everyone here is a real team someone sent you.', mood: 'up',
-          choices: [{ label: 'How do I get rivals?' }, { label: 'Got it', end: true }] },
-        { text: 'Swap codes with a friend. Their party fights exactly as they left it.',
-          mood: 'think' },
-      ]);
-    }
-  }
-
-  function renderArena() {
-    const box = $('#modal-root .arena');
-    if (!box) return;
-    const a = Arena.st();
-    const rk = Arena.rank();
-    const t = Arena.tourney();
-
-    box.innerHTML = `<h3>${icon('sword')} Arena</h3>
-      <div class="ar-top">
-        <div class="ar-rank" style="--rk:${rk.col}">
-          <b>${rk.name}</b><span>${a.rating} rating</span>
-        </div>
-        <div class="ar-rec">
-          <span>${a.wins}W ${a.losses}L</span>
-          <span class="subtle">${Arena.fightsLeft()}/${Arena.DAILY_FIGHTS} duels left today</span>
-        </div>
-      </div>
-
-      <p class="ar-honest">Swap a <b>rival code</b> with a friend and their team
-        shows up here to fight. Everyone else is a wandering challenger.</p>
-
-      <div class="acc-btns">
-        <button class="pixbtn sm" data-ar="mycode">Copy my rival code</button>
-        <button class="pixbtn sm ghost" data-ar="addrival">Add a friend's code</button>
-      </div>
-
-      ${t && !t.done ? `<div class="ar-sec">
-        <div class="acc-h">Tournament — round ${t.round + 1} of 3</div>
-        <div class="ar-bracket">${(t.alive || []).map(id => {
-          const e = t.entrants.find(x => x.id === id);
-          return `<span class="ar-chip${e && e.me ? ' me' : ''}">${e ? e.name : '?'}</span>`;
-        }).join('')}</div>
-        <div class="acc-btns"><button class="pixbtn primary sm" data-ar="tround"><b>Fight round ${t.round + 1}</b></button>
-          <button class="pixbtn ghost sm" data-ar="tquit">Withdraw</button></div>
-      </div>` : `<div class="ar-sec">
-        <div class="acc-h">Tournament</div>
-        <p class="acc-note">Eight entrants, three rounds. Every placing pays gems.</p>
-        <div class="acc-btns"><button class="pixbtn gold sm" data-ar="tstart"><b>Enter tournament</b></button></div>
-      </div>`}
-
-      <div class="ar-sec">
-        <div class="acc-h">Challengers</div>
-        <div class="ar-list">${Arena.opponents().map(o => `
-          <button class="ar-row" data-fight="${o.id}">
-            <img class="ar-face" src="${o.members && o.members[0] ? sprite(o.members[0].cid) : ''}" alt="">
-            <span class="ar-info">
-              <b>${o.name}${o.rival ? ' <i class="ar-tag">friend</i>' : ''}</b>
-              <span>${o.blurb || (o.members.length + ' beast' + (o.members.length > 1 ? 's' : '') + ' · Lv.' + o.lvl)}</span>
-            </span>
-            <span class="ar-pow">${fmt(o.power)}</span>
-          </button>`).join('')}</div>
-      </div>
-
-      ${a.rivals.length ? `<div class="ar-sec">
-        <div class="acc-h">Your rivals</div>
-        <div class="ar-list">${a.rivals.map(r => `
-          <div class="ar-row static">
-            <span class="ar-info"><b>${r.name}</b><span>power ${fmt(r.power)}</span></span>
-            <button class="pixbtn ghost tiny" data-drop="${r.id}">Remove</button>
-          </div>`).join('')}</div>
-      </div>` : ''}`;
-
-    $$('#modal-root [data-fight]', box).forEach(b => {
-      b.onclick = () => {
-        const res = Arena.fight(b.dataset.fight);
-        if (res) showDuel(res);
-      };
-    });
-    $$('#modal-root [data-drop]', box).forEach(b => {
-      b.onclick = () => { Arena.removeRival(b.dataset.drop); renderArena(); };
-    });
-    $$('#modal-root [data-ar]', box).forEach(b => {
-      b.onclick = async () => {
-        const k = b.dataset.ar;
-        if (k === 'mycode') {
-          const code = Arena.exportCode();
-          try { await navigator.clipboard.writeText(code); } catch (e) {}
-          showCodeSheet(code);
-        } else if (k === 'addrival') {
-          const c = prompt("Paste your friend's rival code");
-          if (c && Arena.addRival(c)) renderArena();
-        } else if (k === 'tstart') {
-          Arena.startTournament(); renderArena();
-        } else if (k === 'tquit') {
-          Arena.clearTournament(); renderArena();
-        } else if (k === 'tround') {
-          const r = Arena.tourneyRound();
-          if (r) showTourneyRound(r);
-        }
-      };
-    });
-  }
-
-  /* a duel plays out rather than resolving into a number */
-  function showDuel(res) {
-    const box = el('div', 'duel');
-    const me = res.mine, them = res.opp;
-    box.innerHTML = `
-      <div class="duel-head">
-        <span class="duel-side"><b>${me.name}</b><span>${fmt(me.power)}</span></span>
-        <span class="duel-vs">vs</span>
-        <span class="duel-side right"><b>${them.name}</b><span>${fmt(them.power)}</span></span>
-      </div>
-      <div class="duel-bars">
-        <span class="pixbar hp"><i class="duel-a" style="width:100%"></i></span>
-        <span class="pixbar hp"><i class="duel-b" style="width:100%"></i></span>
-      </div>
-      <div class="duel-log"></div>
-      <div class="mrow"></div>`;
-    const back = openModal(box, { noClose: true });
-    const logEl = box.querySelector('.duel-log');
-    const A = box.querySelector('.duel-a'), B = box.querySelector('.duel-b');
-    let i = 0;
-    const step = () => {
-      if (i >= res.log.length) return finishDuel();
-      const r = res.log[i++];
-      A.style.width = r.ah + '%';
-      B.style.width = r.bh + '%';
-      const line = el('div', 'duel-line',
-        `<b>Round ${r.round}</b> you hit ${r.aHit}${r.bHit ? ` · they hit ${r.bHit}` : ''}`);
-      logEl.appendChild(line);
-      logEl.scrollTop = logEl.scrollHeight;
-      Sound.hit();
-      setTimeout(step, 420);
-    };
-    const finishDuel = () => {
-      const won = res.won;
-      const tag = el('div', 'duel-result ' + (won ? 'win' : 'lose'),
-        won ? 'VICTORY' : 'DEFEAT');
-      box.insertBefore(tag, logEl);
-      const d = res.delta;
-      logEl.appendChild(el('div', 'duel-line reward',
-        `${d >= 0 ? '+' : ''}${d} rating · ${icon('gem')}+${res.reward.gems} · ${icon('gold')}+${fmt(res.reward.gold)}`));
-      if (won) { confetti(24); Sound.levelup(); } else Sound.fail();
-      const ok = el('button', 'pixbtn primary sm', '<b>Back to the arena</b>');
-      ok.onclick = () => { closeModal(back); renderHud(); showArena(); };
-      box.querySelector('.mrow').appendChild(ok);
-    };
-    setTimeout(step, 350);
-  }
-
-  function showTourneyRound(r) {
-    const box = el('div', 'sreveal');
-    const mine = r.results.find(x => x.mine);
-    box.innerHTML = `<h2>${r.done ? (r.won ? 'Tournament won' : 'Knocked out') : 'Round ' + r.round}</h2>
-      <div class="tr-list">${r.results.map(m => m.bye
-        ? `<div class="tr-row"><span>${m.x.name}</span><span class="subtle">bye</span></div>`
-        : `<div class="tr-row${m.mine ? ' mine' : ''}">
-             <span class="${m.winner === m.x ? 'won' : 'out'}">${m.x.name}</span>
-             <span class="subtle">vs</span>
-             <span class="${m.winner === m.y ? 'won' : 'out'}">${m.y.name}</span>
-           </div>`).join('')}</div>
-      ${r.done && r.payout ? `<p class="subtle" style="text-align:center;margin-top:8px">
-        ${icon('gem')}+${r.payout.gems} · ${icon('gold')}+${fmt(r.payout.gold)}</p>` : ''}
-      <div class="mrow"></div>`;
-    const back = openModal(box);
-    const ok = el('button', 'pixbtn primary sm', `<b>${r.done ? 'Done' : 'Next round'}</b>`);
-    ok.onclick = () => {
-      closeModal(back);
-      if (r.done) Arena.clearTournament();
-      renderHud(); showArena();
-    };
-    box.querySelector('.mrow').appendChild(ok);
-    if (r.won) { confetti(50); Sound.levelup(); }
-    else if (mine && !mine.iWon) Sound.fail();
-    else Sound.quest();
-  }
-
   /* ================= profiles and backup codes ================= */
   let accountBack = null;
   function showAccount() {
@@ -3444,7 +3198,7 @@ const UI = (() => {
     renderMerge();
     if (S.dream && S.dream.key) renderToday();
     if (activeTab === 'beasts') renderBeasts();
-    if (activeTab === 'summon') renderSummon();
+    if (activeTab === 'beasts') renderSummon();
     if (activeTab === 'farm') renderFarm();
     if (activeTab === 'quests') renderQuests();
   }
@@ -3460,9 +3214,9 @@ const UI = (() => {
     showDefeat, hideDefeat, showEncounter, renderQuestLog, renderUpgrades,
     renderCooldowns, tickCooldowns, renderPanels, togglePanel,
     renderMerge, mergeSpawnFx, mergeFuseFx, showMap,
-    renderOffers, renderPromo, renderEvent, renderTasks, renderSideGoals,
+    renderOffers, renderEvent, renderTasks, renderSideGoals,
     renderAchievements, celebrate, showStreak, showTipCard, showReflectOffer,
-    showAccount, renderAccount, showRestore, showArena, renderArena,
+    showAccount, renderAccount, showRestore,
     renderBeasts, renderCollection, showCreature, showFeedPicker,
     renderFarm, waterGarden, showMealModal, showKcalTargetModal, renderFood,
     renderSummon, playWish, showSummonReveal,
