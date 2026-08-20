@@ -38,6 +38,11 @@
   --epic:      #b47cff;
   --legendary: #ffc247;
 
+  /* the inside of every progress bar, and the solid edge under everything you
+     can press — the two values the old sheet hard-coded in sixteen places */
+  --track:    #0a0e1c;
+  --edge:     #060810;
+
   --px: 2px;
   --grain: repeating-linear-gradient(90deg, rgba(0,0,0,.10) 0 2px, transparent 2px 7px, rgba(255,255,255,.028) 7px 9px, transparent 9px 15px);
   --hard: 0 4px 0 var(--ink);

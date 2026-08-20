@@ -2462,7 +2462,15 @@ const UI = (() => {
     const row = $('#login-row');
     row.innerHTML = '';
     const claimIdx = Quests.loginClaimable();
-    const cur = S.login.cycle % 7;
+    // the ladder is fourteen days long now; this still said seven, so days 8-14
+    // were drawn as unclaimed no matter how far through the cycle you were
+    const cur = S.login.cycle % Quests.LOGIN.length;
+    const head = $('#login-row-wrap .card-head');
+    if (head) {
+      let tag = head.querySelector('.login-of');
+      if (!tag) { tag = el('span', 'login-of'); head.appendChild(tag); }
+      tag.textContent = `day ${cur + 1} of ${Quests.LOGIN.length}`;
+    }
     Quests.LOGIN.forEach((r, i) => {
       const isToday = i === claimIdx;
       const d = el('div', 'login-day' + (i < cur ? ' claimed' : '') + (isToday ? ' today' : ''));
@@ -2473,6 +2481,9 @@ const UI = (() => {
       };
       row.appendChild(d);
     });
+    // keep today's chest in view without making the player swipe for it
+    const t = row.querySelector('.login-day.today') || row.children[cur];
+    if (t) row.scrollLeft = Math.max(0, t.offsetLeft - 8);
   }
 
   function renderChallengeInto(wrap) {
@@ -2879,7 +2890,7 @@ const UI = (() => {
       renderAll();
       const d = Dream.DREAMS[draft.key];
       toast(`${C_BY_ID[draft.starter].name} joins you. ${d.name} starts today.`, 'gold');
-      // Vale's task board is waiting on Today; nothing needs to interrupt
+      // Vale's board is waiting on Quests; nothing needs to interrupt here
       renderTasks();
     }
 
@@ -3066,7 +3077,7 @@ const UI = (() => {
     row.appendChild(hap);
     if (!Tasks.done()) {
       const tut = el('button', 'pixbtn ghost sm', "Vale's tasks");
-      tut.onclick = () => { closeAllModals(); switchTab('today');
+      tut.onclick = () => { closeAllModals(); switchTab('quests');
         const c = $('#tasks-card');
         if (c) c.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
       row.appendChild(tut);

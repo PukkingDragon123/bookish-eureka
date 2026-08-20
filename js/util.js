@@ -134,14 +134,16 @@ function applyBuddyTheme() {
   const type = cid && C_BY_ID[cid] ? C_BY_ID[cid].types[0] : null;
   const c = (type && TYPE_COLORS[type]) || '#ffc247';
   const r = document.documentElement;
-  /* On a light page the accent has to be darkened, not lightened, or it
-     disappears into the paper. --buddy is the readable ink version; --buddy-dim
-     is a hairline for borders; --buddy-soft is a wash for backgrounds. */
-  r.style.setProperty('--buddy', mixHex(c, '#3a2a10', 0.34));
-  r.style.setProperty('--buddy-dim', mixHex(c, '#ffffff', 0.55));
-  r.style.setProperty('--buddy-glow', hexAlpha(c, 0.26));
-  r.style.setProperty('--buddy-soft', mixHex(c, '#ffffff', 0.9));
-  r.style.setProperty('--buddy-hi', mixHex(c, '#2a1c06', 0.5));
+  r.style.setProperty('--buddy', c);
+  r.style.setProperty('--buddy-dim', mixHex(c, '#101529', 0.55));
+  r.style.setProperty('--buddy-glow', hexAlpha(c, 0.34));
+  r.style.setProperty('--buddy-soft', mixHex(c, '#101529', 0.94));
+  r.style.setProperty('--buddy-hi', mixHex(c, '#ffffff', 0.4));
+  /* the two the primary button needs: its own shadow, and a label dark enough
+     to read on a fully saturated fill. Darkening the accent instead (the old
+     --buddy-dim) turned a warm starter's main button muddy brown. */
+  r.style.setProperty('--buddy-deep', mixHex(c, '#000000', 0.46));
+  r.style.setProperty('--buddy-ink', mixHex(c, '#120a04', 0.8));
   r.dataset.buddyType = type || '';
   r.dataset.haste = (typeof isHasted === 'function' && isHasted()) ? '1' : '';
 }
