@@ -186,33 +186,24 @@ the habit apps that get it right, in `css/juice.css`, loaded last:
   broken run, a new rung on the ladder, Vale's list finished. Spinning stepped rays, a
   bouncing icon, the reward plates landing one after another.
 
-## One accent, one thing per screen
+## One thing per screen
 
-A light theme was tried here and thrown out — a paper page fights pixel art, and the
-sprites are all lit for a dark ground. The app is dark indigo again. What survived the
-experiment is the structure, which lives in `css/polish.css`, loaded straight after
-`style.css`:
+A light theme was tried here and thrown out. A paper page fights pixel art, every sprite in
+the set is lit for a dark ground, and it simply did not look like this game. The palette in
+`css/style.css` is the original dark indigo and nothing overrides it — the restyling layer
+that came with the experiment is gone too, so the cards, chips, bars and buttons are the
+colours they always were.
 
-* **One card shape.** Every card is the same panel: pixel border, an inset hairline, and a
-  solid `--edge` bar underneath instead of a blur. No card is a special case.
-* **One accent per screen**, taken from your starter's element. On Today that is the focus
-  card — an accent left edge and a full-strength accent button — and nothing else. The
-  goals card used to ring itself green and the quest list drew a third colour; both are
-  the same quiet edge as everything else now.
-* **Every primary button is that accent at full strength**, with its own deep edge shadow
-  and a label dark enough to read on it (`--buddy-deep`, `--buddy-ink`). The old rule
-  filled it with the accent mixed halfway into the page, which on a warm starter came out
-  muddy brown.
-* **The HUD is one loud row and one quiet one.** Level, streak, gold and gems get plates;
-  mana, essence and seeds are bare numbers. Nothing is ever clipped to `99...`.
-* **The tab bar** marks the active tab with an accent bar along the top edge, not a glow.
+What stayed is the decluttering. **Today** holds four things — the dream banner, one focus
+card with one button, the week's rhythm with the streak payoff, and your goals. Everything
+that used to pile up underneath it (Vale's list, the login ladder, the event track, the
+challenge, the odd jobs, the journal, achievements) lives on **Quests**, which is where you
+go when you want a list. Summon folded into **Beasts**, so the tab bar is five buttons
+instead of six.
 
-The screens were also thinned out. **Today** holds four things — the dream banner, one
-focus card with one button, the week's rhythm with the streak payoff, and your goals.
-Everything that used to pile up underneath it (Vale's list, the login ladder, the event
-track, the challenge, the odd jobs, the journal, achievements) moved to **Quests**, which
-is where you go when you want a list. Summon folded into **Beasts**, so the tab bar is
-five buttons instead of six.
+The HUD keeps its two rows of chips, with two things fixed: a currency is never ellipsised
+to `1...` any more, and the chips step down a size below 390px and again below 344px so the
+top row still fits on one line on a small phone with seven figures of gold in it.
 
 ## Look and feel
 

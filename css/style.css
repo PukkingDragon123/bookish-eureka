@@ -38,10 +38,9 @@
   --epic:      #b47cff;
   --legendary: #ffc247;
 
-  /* the inside of every progress bar, and the solid edge under everything you
-     can press — the two values the old sheet hard-coded in sixteen places */
+  /* the inside of every progress bar — the one value the old sheet hard-coded
+     in sixteen places */
   --track:    #0a0e1c;
-  --edge:     #060810;
 
   --px: 2px;
   --grain: repeating-linear-gradient(90deg, rgba(0,0,0,.10) 0 2px, transparent 2px 7px, rgba(255,255,255,.028) 7px 9px, transparent 9px 15px);
@@ -217,9 +216,31 @@ button { font-family: inherit; color: inherit; }
 #app.modal-open #hud { z-index: 0; }
 /* the HUD is one row of chips and it must never push the page wider than the
    screen: a five-figure gold count on a 320px phone used to do exactly that */
-.hud-row { display: flex; align-items: center; gap: 4px; min-width: 0; }
-.hud-row > .hud-chip { min-width: 0; }
-.hud-row > .hud-chip b { overflow: hidden; text-overflow: ellipsis; }
+/* wraps rather than overflows: a huge gold count on a 320px phone drops the
+   last chip to a second line instead of pushing the page sideways */
+.hud-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; min-width: 0; }
+/* a currency ellipsised to "1..." is worse than no number at all, so the value
+   never shrinks — the chips around it tighten up on a narrow phone instead */
+.hud-row > .hud-chip { min-width: 0; flex: 0 0 auto; }
+.hud-row > .hud-chip b { overflow: visible; text-overflow: clip; flex: none; }
+.hud-row > .mana-chip { flex: 1 1 auto; }
+/* narrower than a modern phone: every chip a notch smaller so the top row
+   still fits on one line with five figures of gold in it */
+@media (max-width: 389px) {
+  .hud-chip { padding: 2px 4px; font-size: 12.5px; gap: 3px; }
+  .hud-row { gap: 3px; }
+  .hud-chip .ico { width: 16px; height: 16px; }
+  .level-chip .pixbar { width: 20px; }
+}
+@media (max-width: 344px) {
+  .hud-chip { padding: 2px 3px; font-size: 11.5px; gap: 2px; }
+  .hud-row { gap: 2px; }
+  .hud-chip .ico { width: 14px; height: 14px; }
+  /* on the narrowest phones the XP bar is the first thing to go: the level
+     number carries the same information in a fifth of the width */
+  .level-chip .pixbar { display: none; }
+  .level-chip .lvl-num { font-size: 11.5px; }
+}
 .hud-row + .hud-row { margin-top: 4px; }
 .hud-chip {
   display: flex; align-items: center; gap: 4px;
@@ -238,6 +259,9 @@ button { font-family: inherit; color: inherit; }
 .seed-chip b { color: var(--leaf); }
 .streak-chip b { color: #ff9d4d; }
 button.hud-chip { cursor: pointer; }
+/* the settings chip always sits at the end of the row, so if a millionaire's
+   gold count wraps the row, it lands at the right edge and reads as deliberate */
+#btn-settings.hud-chip { margin-left: auto; }
 button.hud-chip:active { transform: translateY(2px); }
 .level-chip { gap: 5px; }
 .lvl-num {
@@ -1284,7 +1308,29 @@ button.hud-chip:active { transform: translateY(2px); }
 .relic .rbonus { color: var(--gold); display: block; }
 
 /* ============ quests ============ */
-#login-row { display: flex; gap: 4px; }
+#login-row {
+  display: flex; gap: 4px;
+  /* the ladder is fourteen days wide: let it scroll instead of squeezing */
+  overflow-x: auto; overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  padding-bottom: 3px;
+  -webkit-overflow-scrolling: touch;
+}
+#login-row .login-day { scroll-snap-align: start; flex: 0 0 auto; }
+#login-row-wrap { position: relative; }
+/* a fade at the right edge, so it is obvious there is more */
+#login-row-wrap::after {
+  content: ''; position: absolute; right: var(--px); bottom: 14px;
+  width: 26px; top: 44px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--bg1));
+}
+/* "day 10 of 14" in the card head, so the ladder says where you are */
+.login-of {
+  margin-left: auto; color: var(--gold);
+  font-family: var(--ui); font-size: var(--fs-micro);
+  letter-spacing: normal; text-transform: none;
+  font-variant-numeric: tabular-nums;
+}
 .login-day {
   flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
   background: var(--bg1); border: var(--px) solid var(--ink);

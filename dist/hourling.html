@@ -427,10 +427,9 @@
   --epic:      #b47cff;
   --legendary: #ffc247;
 
-  /* the inside of every progress bar, and the solid edge under everything you
-     can press — the two values the old sheet hard-coded in sixteen places */
+  /* the inside of every progress bar — the one value the old sheet hard-coded
+     in sixteen places */
   --track:    #0a0e1c;
-  --edge:     #060810;
 
   --px: 2px;
   --grain: repeating-linear-gradient(90deg, rgba(0,0,0,.10) 0 2px, transparent 2px 7px, rgba(255,255,255,.028) 7px 9px, transparent 9px 15px);
@@ -606,9 +605,31 @@ button { font-family: inherit; color: inherit; }
 #app.modal-open #hud { z-index: 0; }
 /* the HUD is one row of chips and it must never push the page wider than the
    screen: a five-figure gold count on a 320px phone used to do exactly that */
-.hud-row { display: flex; align-items: center; gap: 4px; min-width: 0; }
-.hud-row > .hud-chip { min-width: 0; }
-.hud-row > .hud-chip b { overflow: hidden; text-overflow: ellipsis; }
+/* wraps rather than overflows: a huge gold count on a 320px phone drops the
+   last chip to a second line instead of pushing the page sideways */
+.hud-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; min-width: 0; }
+/* a currency ellipsised to "1..." is worse than no number at all, so the value
+   never shrinks — the chips around it tighten up on a narrow phone instead */
+.hud-row > .hud-chip { min-width: 0; flex: 0 0 auto; }
+.hud-row > .hud-chip b { overflow: visible; text-overflow: clip; flex: none; }
+.hud-row > .mana-chip { flex: 1 1 auto; }
+/* narrower than a modern phone: every chip a notch smaller so the top row
+   still fits on one line with five figures of gold in it */
+@media (max-width: 389px) {
+  .hud-chip { padding: 2px 4px; font-size: 12.5px; gap: 3px; }
+  .hud-row { gap: 3px; }
+  .hud-chip .ico { width: 16px; height: 16px; }
+  .level-chip .pixbar { width: 20px; }
+}
+@media (max-width: 344px) {
+  .hud-chip { padding: 2px 3px; font-size: 11.5px; gap: 2px; }
+  .hud-row { gap: 2px; }
+  .hud-chip .ico { width: 14px; height: 14px; }
+  /* on the narrowest phones the XP bar is the first thing to go: the level
+     number carries the same information in a fifth of the width */
+  .level-chip .pixbar { display: none; }
+  .level-chip .lvl-num { font-size: 11.5px; }
+}
 .hud-row + .hud-row { margin-top: 4px; }
 .hud-chip {
   display: flex; align-items: center; gap: 4px;
@@ -627,6 +648,9 @@ button { font-family: inherit; color: inherit; }
 .seed-chip b { color: var(--leaf); }
 .streak-chip b { color: #ff9d4d; }
 button.hud-chip { cursor: pointer; }
+/* the settings chip always sits at the end of the row, so if a millionaire's
+   gold count wraps the row, it lands at the right edge and reads as deliberate */
+#btn-settings.hud-chip { margin-left: auto; }
 button.hud-chip:active { transform: translateY(2px); }
 .level-chip { gap: 5px; }
 .lvl-num {
@@ -1673,7 +1697,29 @@ button.hud-chip:active { transform: translateY(2px); }
 .relic .rbonus { color: var(--gold); display: block; }
 
 /* ============ quests ============ */
-#login-row { display: flex; gap: 4px; }
+#login-row {
+  display: flex; gap: 4px;
+  /* the ladder is fourteen days wide: let it scroll instead of squeezing */
+  overflow-x: auto; overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  padding-bottom: 3px;
+  -webkit-overflow-scrolling: touch;
+}
+#login-row .login-day { scroll-snap-align: start; flex: 0 0 auto; }
+#login-row-wrap { position: relative; }
+/* a fade at the right edge, so it is obvious there is more */
+#login-row-wrap::after {
+  content: ''; position: absolute; right: var(--px); bottom: 14px;
+  width: 26px; top: 44px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--bg1));
+}
+/* "day 10 of 14" in the card head, so the ladder says where you are */
+.login-of {
+  margin-left: auto; color: var(--gold);
+  font-family: var(--ui); font-size: var(--fs-micro);
+  letter-spacing: normal; text-transform: none;
+  font-variant-numeric: tabular-nums;
+}
 .login-day {
   flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
   background: var(--bg1); border: var(--px) solid var(--ink);
@@ -3011,315 +3057,6 @@ h2.tab-title .subtle { color: var(--buddy-dim); }
 .streak-note b { color: var(--gold); }
 .streak-note .ico { width: 16px; height: 16px; vertical-align: -3px; }
 
-/* ============ the polish layer ============
-
-   Loaded straight after style.css. It does not change the palette — the game is
-   dark indigo and stays that way. What it does is finish the parts that were
-   only sketched: one shared card shape, one solid edge under everything you can
-   press, a HUD that reads as one strip instead of two rows of boxes, a tab bar
-   with a real active state, and the focus card promoted to the hero it is.
-
-   The rule the whole sheet follows: every surface gets a hard 2px ink border, a
-   hairline inner outline in --line, and a solid 3-4px edge below it. Nothing
-   blurs, nothing glows unless it is a reward.                              */
-
-/* ---------- one card shape, used everywhere ---------- */
-.card {
-  background: var(--bg1);
-  background-image: var(--grain);
-  border: var(--px) solid var(--ink);
-  outline: var(--px) solid var(--line);
-  outline-offset: calc(var(--px) * -2);
-  box-shadow: 0 4px 0 var(--edge);
-  margin: 11px 11px;
-  padding: 12px 11px;
-}
-.card-head {
-  font-family: var(--display);
-  font-size: var(--fs-label);
-  letter-spacing: .12em;
-  color: var(--brass);
-  border-bottom: var(--px) solid var(--line);
-  padding-bottom: 7px;
-  margin-bottom: 10px;
-}
-.card-head .ico { width: 18px; height: 18px; }
-.tab-title {
-  font-family: var(--display);
-  letter-spacing: .06em;
-  padding: 14px 13px 4px;
-}
-
-/* ---------- buttons: a darker tint of themselves underneath ---------- */
-.pixbtn { box-shadow: 0 4px 0 var(--edge); font-weight: 700; }
-.pixbtn.primary { box-shadow: 0 4px 0 #3b2568; }
-.pixbtn.good    { box-shadow: 0 4px 0 #2f5b18; }
-.pixbtn.gem     { box-shadow: 0 4px 0 #0f4c5c; }
-.pixbtn.gold    { box-shadow: 0 4px 0 #8a5c05; }
-.pixbtn.danger  { box-shadow: 0 4px 0 #6b1f1f; }
-.pixbtn.ghost   { box-shadow: 0 3px 0 var(--edge); }
-.pixbtn.tiny    { box-shadow: 0 3px 0 var(--edge); }
-.pixbtn.huge    { box-shadow: 0 6px 0 var(--edge); animation: none; }
-.pixbtn.primary.huge { box-shadow: 0 6px 0 #3b2568; }
-.pixbtn.good.huge    { box-shadow: 0 6px 0 #2f5b18; }
-.pixbtn.gold.huge    { box-shadow: 0 6px 0 #8a5c05; }
-
-/* ---------- HUD: one strong row, one quiet one ---------- */
-#hud {
-  background: var(--bg1);
-  background-image: var(--grain);
-  border-bottom: var(--px) solid var(--ink);
-  box-shadow: 0 3px 0 var(--edge);
-  gap: 3px;
-}
-.hud-chip {
-  background: var(--bg2);
-  border: var(--px) solid var(--ink);
-  outline: var(--px) solid var(--line);
-  outline-offset: calc(var(--px) * -2);
-  padding: 4px 8px;
-  font-size: 13.5px; font-weight: 700;
-}
-.hud-row + .hud-row { margin-top: 3px; }
-/* the soft currencies: same data, a fraction of the ink */
-.hud-row:last-child .hud-chip {
-  background: transparent; border: 0; outline: 0; padding: 1px 5px;
-}
-.hud-row:last-child .hud-chip b { font-size: var(--fs-meta); }
-/* and never clip a number: the old overflow guard ellipsised five-figure gold */
-.hud-row > .hud-chip b { overflow: visible; text-overflow: clip; }
-.level-chip .pixbar { width: 34px; }
-@media (max-width: 359px) {
-  .hud-chip { padding: 3px 5px; font-size: 12.5px; }
-  .level-chip .pixbar { width: 24px; }
-}
-
-/* ---------- tab bar: a real active state ---------- */
-#tabbar {
-  background: var(--bg1);
-  background-image: var(--grain);
-  border-top: var(--px) solid var(--ink);
-}
-#tabbar button {
-  position: relative; border-top: 0; background: none;
-  color: var(--txt-dim);
-  font-size: var(--fs-micro); font-weight: 700;
-  letter-spacing: .03em;
-}
-#tabbar button .ico { filter: grayscale(.6) brightness(.75); }
-#tabbar button.active { color: var(--buddy, var(--gold)); background: var(--bg2); }
-#tabbar button.active .ico { filter: none; }
-#tabbar button.active::before {
-  content: ''; position: absolute; left: 8px; right: 8px; top: 0; height: 3px;
-  background: var(--buddy, var(--gold));
-}
-
-/* ---------- Today's focus, promoted ---------- */
-/* It is the one thing the whole app exists to make you press, so it reads as a
-   plate with the accent down its edge rather than another card in the stack. */
-.focus {
-  background: var(--bg1);
-  background-image: var(--grain);
-  border: var(--px) solid var(--ink);
-  outline: var(--px) solid var(--line);
-  outline-offset: calc(var(--px) * -2);
-  border-left: 6px solid var(--buddy, var(--gold));
-  box-shadow: 0 5px 0 var(--edge);
-  padding: 14px 13px;
-}
-.focus::before { display: none; }
-.focus .f-label { color: var(--buddy, var(--gold)); letter-spacing: .12em; }
-.focus .f-task { font-family: var(--display); font-size: var(--fs-lead); line-height: 1.35; }
-.focus .f-actions { margin-top: 12px; }
-.focus.done-focus { border-left-color: var(--good); outline-color: var(--good); }
-.challenge {
-  border-left: 6px solid var(--gem);
-  box-shadow: 0 4px 0 var(--edge);
-}
-
-/* ---------- rows: one shape for every claimable line ---------- */
-.tk-row, .av-row, .sg-row, .accrow, .bonus-row, .offrow, .quest, .ritual,
-.sk-stat, .sk-cal, .sk-freeze, .goalcard, .ev-tier, .cdcard, .upcard {
-  box-shadow: 0 3px 0 var(--edge);
-}
-.rstat { background: var(--bg1); box-shadow: 0 3px 0 var(--edge); }
-.rday { box-shadow: 0 2px 0 var(--edge); }
-
-/* ---------- bars ---------- */
-.pixbar {
-  background: var(--track);
-  border: var(--px) solid var(--ink);
-}
-.pixbar::after { display: none; }        /* the old inner sheen muddied every bar */
-
-/* ---------- modals ---------- */
-.modal {
-  box-shadow: 0 6px 0 var(--edge), 0 20px 44px rgba(0,0,0,.6);
-  padding: 15px 13px;
-}
-.modal h3 {
-  font-family: var(--display); letter-spacing: .04em;
-  padding-bottom: 9px; margin-bottom: 10px;
-  border-bottom: var(--px) solid var(--line);
-}
-.sectitle {
-  font-family: var(--display); font-size: var(--fs-label);
-  letter-spacing: .12em; text-transform: uppercase;
-  color: var(--brass);
-  margin: 14px 0 7px; padding-bottom: 5px;
-  border-bottom: var(--px) solid var(--line);
-}
-
-/* ---------- battle: the strip under the scene reads as one unit ---------- */
-#ult-wrap {
-  background: var(--bg1);
-  border-bottom: var(--px) solid var(--ink);
-  box-shadow: 0 3px 0 var(--edge);
-}
-#battle-below { background: var(--bg0); }
-.cdcard { background: var(--bg1); }
-
-/* ---------- the accent, finished ----------
-   --buddy-dim was mixed 55% toward the page, which on a warm starter produced
-   a muddy brown for the app's single most important button. The accent surfaces
-   get a defined role each instead: a saturated fill, a bright outline, and an
-   edge that is the fill's own shadow rather than a leftover purple.        */
-.focus .pixbtn.huge {
-  background: var(--buddy);
-  background-image: linear-gradient(180deg, rgba(255,255,255,.22), transparent 55%);
-  border: var(--px) solid var(--buddy-deep);
-  outline: 0;
-  box-shadow: 0 6px 0 var(--buddy-deep), 0 0 22px var(--buddy-glow);
-  color: var(--buddy-ink);
-  text-shadow: 0 1px 0 rgba(255,255,255,.25);
-  font-weight: 800;
-}
-.focus .pixbtn.huge span { color: var(--buddy-ink); opacity: .8; }
-.focus .pixbtn.huge:active:not(:disabled) {
-  box-shadow: 0 0 0 var(--buddy-deep), 0 0 22px var(--buddy-glow);
-}
-/* the card edge and the tab indicator share the same accent, so the eye links them */
-.focus { border-left-color: var(--buddy); }
-#tabbar button.active { box-shadow: none; }
-
-/* keep card borders readable: --buddy-dim as a border is nearly invisible on
-   a warm accent, so cards keep the ink line and use the accent only inside */
-.card, .panel { border-color: var(--ink) !important; }
-.card-head { border-bottom-color: var(--line); }
-.cdcard { border-color: var(--ink); outline: var(--px) solid var(--line);
-  outline-offset: calc(var(--px) * -2); }
-#hud { border-bottom-color: var(--ink); }
-#tabbar { border-top-color: var(--ink); }
-#hud, #tabbar { background: var(--bg1); background-image: var(--grain); }
-body { background: var(--bg0); }
-
-/* ---------- empty states, so no card ever reads as broken ---------- */
-.empty-note {
-  padding: 14px 6px; text-align: center;
-  font-size: var(--fs-meta); color: var(--txt-dim); line-height: 1.6;
-}
-.empty-note .ico { width: 26px; height: 26px; display: block; margin: 0 auto 6px;
-  filter: grayscale(.7) brightness(.8); }
-
-/* ---------- the plan button belongs in the corner, not over the beast ---------- */
-#hero-edit {
-  top: 8px; right: 8px;
-  background: rgba(10,14,28,.72);
-  border: var(--px) solid var(--ink);
-  outline: var(--px) solid rgba(255,255,255,.28);
-  outline-offset: calc(var(--px) * -2);
-  color: #ffe6b0;
-  font-size: var(--fs-micro); font-weight: 700;
-  letter-spacing: .08em; text-transform: uppercase;
-  padding: 4px 8px;
-}
-
-/* ---------- the login ladder is fourteen wide: let it scroll, and say where
-             you are in it ---------- */
-#login-row {
-  overflow-x: auto; overflow-y: hidden;
-  scroll-snap-type: x proximity;
-  padding-bottom: 3px;
-  -webkit-overflow-scrolling: touch;
-}
-#login-row .login-day { scroll-snap-align: start; flex: 0 0 auto; }
-#login-row-wrap { position: relative; }
-/* a fade at the right edge, so it is obvious there is more */
-#login-row-wrap::after {
-  content: ''; position: absolute; right: var(--px); bottom: 14px;
-  width: 26px; top: 44px; pointer-events: none;
-  background: linear-gradient(90deg, transparent, var(--bg1));
-}
-.login-of {
-  margin-left: auto; color: var(--gold);
-  font-family: var(--ui); font-size: var(--fs-micro);
-  letter-spacing: normal; text-transform: none;
-  font-variant-numeric: tabular-nums;
-}
-
-/* ---------- one primary look, everywhere ----------
-   .pixbtn.primary was filled with --buddy-dim, the accent mixed halfway into
-   the page. On a warm starter that came out muddy brown, and the summon rail
-   drew it next to a purple edge shadow. Same treatment as the focus button
-   instead: full-strength accent, its own deep edge, a label dark enough to
-   read on it. */
-.pixbtn.primary {
-  background: var(--buddy);
-  background-image: linear-gradient(180deg, rgba(255,255,255,.2), transparent 55%);
-  border: var(--px) solid var(--buddy-deep);
-  outline: 0;
-  box-shadow: 0 4px 0 var(--buddy-deep);
-  color: var(--buddy-ink);
-  text-shadow: 0 1px 0 rgba(255,255,255,.22);
-  font-weight: 800;
-}
-.pixbtn.primary:active { box-shadow: 0 1px 0 var(--buddy-deep); }
-
-/* ---------- the dex entry is a screen, not a sheet of paper ----------
-   A white block was the one bright thing in a dark app. Keep the framed-page
-   idea, read it as the dex display. */
-.dexbox {
-  background: var(--track);
-  background-image: repeating-linear-gradient(180deg,
-    rgba(255,255,255,.028) 0 2px, transparent 2px 4px);
-  color: #cdd6f5;
-  outline-color: var(--line);
-}
-.dexbox .dexlabel { color: var(--gold); }
-
-/* ---------- one accent per screen ----------
-   Today carried three border colours at once: the focus card's accent, the
-   quest list, and a green ring on the goals card. Only the focus card earns a
-   colour; the rest are the same quiet edge as every other card. */
-#goals-card { outline-color: var(--line); }
-
-/* ---------- an empty garden bed is one thing ----------
-   It used to draw a chip at the top of the cell and a hole at the bottom, so
-   nine beds read as eighteen objects. Hole first, label under it, and the
-   hollow the colour of dug soil rather than a navy void. */
-.plotcell.empty-plot .plabel {
-  top: auto; bottom: 4px;
-  background: rgba(18,10,4,.78);
-  border-color: rgba(120,86,48,.75);
-  color: rgba(240,226,200,.66);
-  font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
-}
-.plotcell.empty-plot .emptymark {
-  margin-bottom: 22px;
-  background: #24160a;
-  border-color: #5c3c1e;
-  box-shadow: inset 0 3px 5px rgba(0,0,0,.8), 0 1px 0 rgba(255,226,182,.16);
-}
-/* the cost inside a primary button carries its currency colour, which is a
-   light lavender — unreadable once the fill is a saturated accent */
-.pixbtn.primary b, .pixbtn.primary span, .pixbtn.primary i { color: var(--buddy-ink); }
-/* same for the other filled variants: an amount inside a button reads as the
-   button's label, not as its currency. A lavender mana figure on teal or a
-   cyan gem figure on amber is a contrast hole. */
-.pixbtn.gem b, .pixbtn.gem span   { color: #eafaff; }
-.pixbtn.good b, .pixbtn.good span { color: #f2ffe8; }
-.pixbtn.gold b, .pixbtn.gold span { color: #2e1e02; }
-
 /* ============ the cartoon layer ============
 
    Loaded last, on purpose. Everything here is presentation: a hand-inked
@@ -4309,11 +4046,6 @@ function applyBuddyTheme() {
   r.style.setProperty('--buddy-glow', hexAlpha(c, 0.34));
   r.style.setProperty('--buddy-soft', mixHex(c, '#101529', 0.94));
   r.style.setProperty('--buddy-hi', mixHex(c, '#ffffff', 0.4));
-  /* the two the primary button needs: its own shadow, and a label dark enough
-     to read on a fully saturated fill. Darkening the accent instead (the old
-     --buddy-dim) turned a warm starter's main button muddy brown. */
-  r.style.setProperty('--buddy-deep', mixHex(c, '#000000', 0.46));
-  r.style.setProperty('--buddy-ink', mixHex(c, '#120a04', 0.8));
   r.dataset.buddyType = type || '';
   r.dataset.haste = (typeof isHasted === 'function' && isHasted()) ? '1' : '';
 }
